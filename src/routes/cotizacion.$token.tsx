@@ -44,7 +44,7 @@ function PublicQuotationPage() {
   }
 
   const q = data.quotation;
-  const urls = data.imageUrls;
+  const urls: string[] = data.imageUrls ?? [];
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
 
   return (
