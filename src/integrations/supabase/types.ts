@@ -79,15 +79,29 @@ export type Database = {
       }
       quotations: {
         Row: {
+          accommodation_address: string | null
+          accommodation_description: string | null
+          accommodation_name: string | null
+          accommodation_services: string | null
+          cancellation_policy: string | null
           client_id: string | null
           created_at: string
           currency: string
           destination: string | null
           expires_at: string | null
+          guest_email: string | null
+          guest_first_name: string | null
+          guest_last_name: string | null
+          guest_whatsapp: string | null
           id: string
+          images: string[]
+          nights: number | null
           notes: string | null
+          pax_count: number | null
+          price_per_night: number | null
           share_token: string
           status: Database["public"]["Enums"]["quotation_status"]
+          taxes: number | null
           title: string
           total_amount: number | null
           travel_end: string | null
@@ -96,15 +110,29 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accommodation_address?: string | null
+          accommodation_description?: string | null
+          accommodation_name?: string | null
+          accommodation_services?: string | null
+          cancellation_policy?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           expires_at?: string | null
+          guest_email?: string | null
+          guest_first_name?: string | null
+          guest_last_name?: string | null
+          guest_whatsapp?: string | null
           id?: string
+          images?: string[]
+          nights?: number | null
           notes?: string | null
+          pax_count?: number | null
+          price_per_night?: number | null
           share_token?: string
           status?: Database["public"]["Enums"]["quotation_status"]
+          taxes?: number | null
           title: string
           total_amount?: number | null
           travel_end?: string | null
@@ -113,15 +141,29 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accommodation_address?: string | null
+          accommodation_description?: string | null
+          accommodation_name?: string | null
+          accommodation_services?: string | null
+          cancellation_policy?: string | null
           client_id?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           expires_at?: string | null
+          guest_email?: string | null
+          guest_first_name?: string | null
+          guest_last_name?: string | null
+          guest_whatsapp?: string | null
           id?: string
+          images?: string[]
+          nights?: number | null
           notes?: string | null
+          pax_count?: number | null
+          price_per_night?: number | null
           share_token?: string
           status?: Database["public"]["Enums"]["quotation_status"]
+          taxes?: number | null
           title?: string
           total_amount?: number | null
           travel_end?: string | null
