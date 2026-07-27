@@ -14,7 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          agency_name: string | null
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          currency: string
+          destination: string | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          share_token: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          title: string
+          total_amount: number | null
+          travel_end: string | null
+          travel_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          share_token?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          title: string
+          total_amount?: number | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          share_token?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          title?: string
+          total_amount?: number | null
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +147,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      quotation_status:
+        | "draft"
+        | "sent"
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +280,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      quotation_status: [
+        "draft",
+        "sent",
+        "pending",
+        "accepted",
+        "rejected",
+        "expired",
+      ],
+    },
   },
 } as const
