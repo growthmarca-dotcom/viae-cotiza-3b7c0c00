@@ -1,6 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { ArrowLeft, ImagePlus, Loader2, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({
   component: NewQuotationPage,
@@ -12,42 +25,523 @@ export const Route = createFileRoute("/_authenticated/quotations/new")({
   }),
 });
 
+type FormState = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  whatsapp: string;
+  destination: string;
+  travelStart: string;
+  travelEnd: string;
+  nights: string;
+  pax: string;
+  accommodationName: string;
+  address: string;
+  description: string;
+  services: string;
+  cancellationPolicy: string;
+  pricePerNight: string;
+  taxes: string;
+  totalAmount: string;
+  currency: string;
+  observations: string;
+};
+
+const empty: FormState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  whatsapp: "",
+  destination: "",
+  travelStart: "",
+  travelEnd: "",
+  nights: "",
+  pax: "",
+  accommodationName: "",
+  address: "",
+  description: "",
+  services: "",
+  cancellationPolicy: "",
+  pricePerNight: "",
+  taxes: "",
+  totalAmount: "",
+  currency: "USD",
+  observations: "",
+};
+
+const MAX_IMAGES = 10;
+
 function NewQuotationPage() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState<FormState>(empty);
+  const [images, setImages] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const previews = useMemo(
+    () => images.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
+    [images],
+  );
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Auto-calc nights when both dates present and nights untouched by user? Simpler: fill on blur
+  function autoNights(start: string, end: string) {
+    if (!start || !end) return;
+    const s = new Date(start);
+    const e = new Date(end);
+    const diff = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff > 0) set("nights", String(diff));
+  }
+
+  // Auto total
+  const autoTotal = useMemo(() => {
+    const pn = Number(form.pricePerNight) || 0;
+    const n = Number(form.nights) || 0;
+    const t = Number(form.taxes) || 0;
+    if (pn === 0 && n === 0 && t === 0) return "";
+    return String(pn * n + t);
+  }, [form.pricePerNight, form.nights, form.taxes]);
+
+  function onFilesSelected(fileList: FileList | null) {
+    if (!fileList) return;
+    const incoming = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    const merged = [...images, ...incoming].slice(0, MAX_IMAGES);
+    if (images.length + incoming.length > MAX_IMAGES) {
+      toast.warning(`Máximo ${MAX_IMAGES} imágenes.`);
+    }
+    setImages(merged);
+  }
+
+  function removeImage(idx: number) {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.firstName.trim() || !form.accommodationName.trim()) {
+      toast.error("Nombre del cliente y nombre del alojamiento son obligatorios.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) throw new Error("Sesión no válida.");
+      const userId = userData.user.id;
+
+      // 1) Insert quotation to get id
+      const totalAmountNum =
+        Number(form.totalAmount) || Number(autoTotal) || 0;
+
+      const title =
+        form.accommodationName ||
+        `${form.destination || "Cotización"} — ${form.firstName} ${form.lastName}`.trim();
+
+      const { data: inserted, error: insertErr } = await supabase
+        .from("quotations")
+        .insert({
+          user_id: userId,
+          title,
+          destination: form.destination || null,
+          travel_start: form.travelStart || null,
+          travel_end: form.travelEnd || null,
+          nights: form.nights ? Number(form.nights) : null,
+          pax_count: form.pax ? Number(form.pax) : null,
+          guest_first_name: form.firstName || null,
+          guest_last_name: form.lastName || null,
+          guest_email: form.email || null,
+          guest_whatsapp: form.whatsapp || null,
+          accommodation_name: form.accommodationName || null,
+          accommodation_address: form.address || null,
+          accommodation_description: form.description || null,
+          accommodation_services: form.services || null,
+          cancellation_policy: form.cancellationPolicy || null,
+          price_per_night: form.pricePerNight ? Number(form.pricePerNight) : null,
+          taxes: form.taxes ? Number(form.taxes) : null,
+          total_amount: totalAmountNum,
+          currency: form.currency || "USD",
+          notes: form.observations || null,
+          status: "draft",
+        })
+        .select("id")
+        .single();
+      if (insertErr) throw insertErr;
+
+      // 2) Upload images
+      const uploadedPaths: string[] = [];
+      for (const file of images) {
+        const ext = file.name.split(".").pop() ?? "jpg";
+        const path = `${userId}/${inserted.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("quotation-images")
+          .upload(path, file, { upsert: false, contentType: file.type });
+        if (upErr) throw upErr;
+        uploadedPaths.push(path);
+      }
+
+      // 3) Save image paths
+      if (uploadedPaths.length > 0) {
+        const { error: updErr } = await supabase
+          .from("quotations")
+          .update({ images: uploadedPaths })
+          .eq("id", inserted.id);
+        if (updErr) throw updErr;
+      }
+
+      toast.success("¡Cotización generada con éxito!");
+      navigate({ to: "/quotations" });
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "No se pudo generar la cotización");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 pb-24">
       <Link
-        to="/quotations"
+        to="/dashboard"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver a cotizaciones
+        Volver al dashboard
       </Link>
 
       <header>
-        <h1 className="font-display text-3xl font-semibold sm:text-4xl">
+        <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+          <Sparkles className="h-3.5 w-3.5 text-gold" />
           Nueva cotización
+        </span>
+        <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+          Arma tu propuesta
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Arma una propuesta de viaje para tu cliente.
+        <p className="mt-2 text-sm text-muted-foreground">
+          Completa los datos para generar una cotización profesional.
         </p>
       </header>
 
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-        <div className="grid h-14 w-14 place-items-center rounded-full bg-gold/20 text-gold-foreground">
-          ✈️
+      <form onSubmit={onSubmit} className="space-y-6">
+        {/* Cliente */}
+        <Section title="Datos del cliente">
+          <Field label="Nombre" required>
+            <Input
+              value={form.firstName}
+              onChange={(e) => set("firstName", e.target.value)}
+              required
+              maxLength={80}
+            />
+          </Field>
+          <Field label="Apellido">
+            <Input
+              value={form.lastName}
+              onChange={(e) => set("lastName", e.target.value)}
+              maxLength={80}
+            />
+          </Field>
+          <Field label="Email">
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              maxLength={255}
+            />
+          </Field>
+          <Field label="WhatsApp">
+            <Input
+              value={form.whatsapp}
+              onChange={(e) => set("whatsapp", e.target.value)}
+              placeholder="+54 9 11 ..."
+              maxLength={40}
+            />
+          </Field>
+        </Section>
+
+        {/* Viaje */}
+        <Section title="Viaje">
+          <Field label="Destino" className="sm:col-span-2">
+            <Input
+              value={form.destination}
+              onChange={(e) => set("destination", e.target.value)}
+              placeholder="Ej: Cancún, México"
+              maxLength={120}
+            />
+          </Field>
+          <Field label="Fecha de ingreso">
+            <Input
+              type="date"
+              value={form.travelStart}
+              onChange={(e) => {
+                set("travelStart", e.target.value);
+                autoNights(e.target.value, form.travelEnd);
+              }}
+            />
+          </Field>
+          <Field label="Fecha de salida">
+            <Input
+              type="date"
+              value={form.travelEnd}
+              onChange={(e) => {
+                set("travelEnd", e.target.value);
+                autoNights(form.travelStart, e.target.value);
+              }}
+            />
+          </Field>
+          <Field label="Cantidad de noches">
+            <Input
+              type="number"
+              min={0}
+              value={form.nights}
+              onChange={(e) => set("nights", e.target.value)}
+            />
+          </Field>
+          <Field label="Cantidad de pasajeros">
+            <Input
+              type="number"
+              min={1}
+              value={form.pax}
+              onChange={(e) => set("pax", e.target.value)}
+            />
+          </Field>
+        </Section>
+
+        {/* Alojamiento */}
+        <Section title="Alojamiento">
+          <Field label="Nombre del alojamiento" required className="sm:col-span-2">
+            <Input
+              value={form.accommodationName}
+              onChange={(e) => set("accommodationName", e.target.value)}
+              required
+              maxLength={140}
+            />
+          </Field>
+          <Field label="Dirección" className="sm:col-span-2">
+            <Input
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              maxLength={200}
+            />
+          </Field>
+          <Field label="Descripción" className="sm:col-span-2">
+            <Textarea
+              rows={4}
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              placeholder="Detalles del alojamiento, habitaciones, vistas..."
+              maxLength={2000}
+            />
+          </Field>
+          <Field label="Servicios" className="sm:col-span-2">
+            <Textarea
+              rows={3}
+              value={form.services}
+              onChange={(e) => set("services", e.target.value)}
+              placeholder="Wi-Fi, desayuno, piscina, traslado..."
+              maxLength={1000}
+            />
+          </Field>
+          <Field label="Política de cancelación" className="sm:col-span-2">
+            <Textarea
+              rows={3}
+              value={form.cancellationPolicy}
+              onChange={(e) => set("cancellationPolicy", e.target.value)}
+              maxLength={1000}
+            />
+          </Field>
+        </Section>
+
+        {/* Imágenes */}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold">Imágenes</h2>
+              <p className="text-sm text-muted-foreground">
+                Hasta {MAX_IMAGES} fotografías del alojamiento.
+              </p>
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+              {images.length} / {MAX_IMAGES}
+            </span>
+          </div>
+
+          <label
+            htmlFor="image-input"
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/30 py-10 text-center transition-colors hover:bg-secondary/60"
+          >
+            <ImagePlus className="h-8 w-8 text-primary" />
+            <span className="text-sm font-medium">Arrastra o haz clic para subir</span>
+            <span className="text-xs text-muted-foreground">JPG, PNG, WEBP</span>
+            <input
+              id="image-input"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                onFilesSelected(e.target.files);
+                e.target.value = "";
+              }}
+              disabled={images.length >= MAX_IMAGES}
+            />
+          </label>
+
+          {previews.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {previews.map((p, i) => (
+                <div
+                  key={p.url}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-border"
+                >
+                  <img
+                    src={p.url}
+                    alt={`Imagen ${i + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-background/90 text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100"
+                    aria-label="Eliminar imagen"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <h2 className="mt-4 font-display text-2xl font-semibold">Próximamente</h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          El formulario para crear cotizaciones se habilitará en el próximo paso.
-          Podrás ingresar destino, fechas, cliente, itinerario y compartir un enlace
-          único.
-        </p>
-        <div className="mt-6 flex gap-2">
+
+        {/* Precios */}
+        <Section title="Precios">
+          <Field label="Precio por noche">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.pricePerNight}
+              onChange={(e) => set("pricePerNight", e.target.value)}
+            />
+          </Field>
+          <Field label="Impuestos">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.taxes}
+              onChange={(e) => set("taxes", e.target.value)}
+            />
+          </Field>
+          <Field label="Precio total">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.totalAmount || autoTotal}
+              onChange={(e) => set("totalAmount", e.target.value)}
+              placeholder={autoTotal || "0.00"}
+            />
+          </Field>
+          <Field label="Moneda">
+            <Select
+              value={form.currency}
+              onValueChange={(v) => set("currency", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {["USD", "EUR", "ARS", "MXN", "BRL", "CLP", "COP", "PEN"].map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </Section>
+
+        {/* Observaciones */}
+        <Section title="Observaciones" cols={1}>
+          <Field label="Notas adicionales">
+            <Textarea
+              rows={4}
+              value={form.observations}
+              onChange={(e) => set("observations", e.target.value)}
+              placeholder="Cualquier detalle que quieras dejar registrado."
+              maxLength={2000}
+            />
+          </Field>
+        </Section>
+
+        <div className="flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center">
           <Link to="/dashboard">
-            <Button variant="outline">Ir al dashboard</Button>
+            <Button type="button" variant="outline" className="w-full sm:w-auto">
+              Cancelar
+            </Button>
           </Link>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={submitting}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              "Generar cotización"
+            )}
+          </Button>
         </div>
+      </form>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+  cols = 2,
+}: {
+  title: string;
+  children: React.ReactNode;
+  cols?: 1 | 2;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="mb-5 font-display text-xl font-semibold">{title}</h2>
+      <div
+        className={
+          cols === 1 ? "grid gap-4" : "grid gap-4 sm:grid-cols-2"
+        }
+      >
+        {children}
       </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+  required,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-2 ${className ?? ""}`}>
+      <Label className="text-sm">
+        {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
+      </Label>
+      {children}
     </div>
   );
 }

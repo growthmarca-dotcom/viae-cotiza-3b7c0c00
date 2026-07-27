@@ -47,8 +47,8 @@ function Landing() {
             un enlace único. Simple, moderno, hecho para viajar.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/auth" search={{ mode: "signup" as const }}>
-              <Button size="lg">Empezar gratis</Button>
+            <Link to="/dashboard">
+              <Button size="lg">Comenzar ahora</Button>
             </Link>
             <Link to="/auth">
               <Button size="lg" variant="outline">
