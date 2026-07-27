@@ -34,7 +34,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       const { data: signed } = await supabaseAdmin.storage
         .from("quotation-images")
         .createSignedUrls(q.images, 60 * 60 * 24 * 7);
-      imageUrls = (signed ?? []).map((s) => s.signedUrl).filter(Boolean);
+      imageUrls = (signed ?? []).map((s) => s.signedUrl).filter((u): u is string => Boolean(u));
     }
     return { quotation: q, imageUrls };
   });

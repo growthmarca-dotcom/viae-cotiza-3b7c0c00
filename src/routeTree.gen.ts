@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations/index'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
+import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
+import { Route as AuthenticatedQuotationsIdEditRouteImport } from './routes/_authenticated/quotations/$id.edit'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -30,6 +33,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CotizacionTokenRoute = CotizacionTokenRouteImport.update({
+  id: '/cotizacion/$token',
+  path: '/cotizacion/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -59,6 +67,18 @@ const AuthenticatedQuotationsNewRoute =
     path: '/quotations/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedQuotationsIdRoute =
+  AuthenticatedQuotationsIdRouteImport.update({
+    id: '/quotations/$id',
+    path: '/quotations/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedQuotationsIdEditRoute =
+  AuthenticatedQuotationsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedQuotationsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,8 +86,11 @@ export interface FileRoutesByFullPath {
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/quotations/$id': typeof AuthenticatedQuotationsIdRouteWithChildren
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,8 +98,11 @@ export interface FileRoutesByTo {
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/quotations/$id': typeof AuthenticatedQuotationsIdRouteWithChildren
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
+  '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,8 +112,11 @@ export interface FileRoutesById {
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRouteWithChildren
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/_authenticated/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,8 +126,11 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/settings'
+    | '/cotizacion/$token'
+    | '/quotations/$id'
     | '/quotations/new'
     | '/quotations/'
+    | '/quotations/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,8 +138,11 @@ export interface FileRouteTypes {
     | '/clients'
     | '/dashboard'
     | '/settings'
+    | '/cotizacion/$token'
+    | '/quotations/$id'
     | '/quotations/new'
     | '/quotations'
+    | '/quotations/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -116,14 +151,18 @@ export interface FileRouteTypes {
     | '/_authenticated/clients'
     | '/_authenticated/dashboard'
     | '/_authenticated/settings'
+    | '/cotizacion/$token'
+    | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
     | '/_authenticated/quotations/'
+    | '/_authenticated/quotations/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CotizacionTokenRoute: typeof CotizacionTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -147,6 +186,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cotizacion/$token': {
+      id: '/cotizacion/$token'
+      path: '/cotizacion/$token'
+      fullPath: '/cotizacion/$token'
+      preLoaderRoute: typeof CotizacionTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -184,13 +230,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuotationsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/quotations/$id': {
+      id: '/_authenticated/quotations/$id'
+      path: '/quotations/$id'
+      fullPath: '/quotations/$id'
+      preLoaderRoute: typeof AuthenticatedQuotationsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quotations/$id/edit': {
+      id: '/_authenticated/quotations/$id/edit'
+      path: '/edit'
+      fullPath: '/quotations/$id/edit'
+      preLoaderRoute: typeof AuthenticatedQuotationsIdEditRouteImport
+      parentRoute: typeof AuthenticatedQuotationsIdRoute
+    }
   }
 }
+
+interface AuthenticatedQuotationsIdRouteChildren {
+  AuthenticatedQuotationsIdEditRoute: typeof AuthenticatedQuotationsIdEditRoute
+}
+
+const AuthenticatedQuotationsIdRouteChildren: AuthenticatedQuotationsIdRouteChildren =
+  {
+    AuthenticatedQuotationsIdEditRoute: AuthenticatedQuotationsIdEditRoute,
+  }
+
+const AuthenticatedQuotationsIdRouteWithChildren =
+  AuthenticatedQuotationsIdRoute._addFileChildren(
+    AuthenticatedQuotationsIdRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRouteWithChildren
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
 }
@@ -199,6 +274,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRouteWithChildren,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
 }
@@ -210,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CotizacionTokenRoute: CotizacionTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
