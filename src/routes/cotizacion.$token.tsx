@@ -1,4 +1,5 @@
-import { createFileRoute, useServerFn } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Compass, Loader2, MapPin, Calendar, Users, Moon } from "lucide-react";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
