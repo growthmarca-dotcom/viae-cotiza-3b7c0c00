@@ -78,19 +78,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ViaE Cotizaciones — Cotizaciones de viajes profesionales" },
+      { title: "ViaE — Cotizaciones de viajes profesionales" },
       {
         name: "description",
         content:
           "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos.",
       },
-      { property: "og:title", content: "ViaE Cotizaciones" },
+      { property: "og:title", content: "ViaE — Cotizaciones de viajes profesionales" },
       {
         property: "og:description",
-        content: "Cotizaciones de viaje profesionales, listas para compartir.",
+        content: "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "ViaE — Cotizaciones de viajes profesionales" },
+      { name: "twitter:description", content: "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
