@@ -54,6 +54,7 @@ const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }]
 /** Central operativa: sólo administración y usuarios con rol Operaciones. */
 const operationsNav = [
   { to: "/operations", label: "Central operativa", icon: ClipboardList },
+  { to: "/organizations", label: "Organizaciones", icon: Building2 },
   { to: "/providers", label: "Proveedores", icon: Building2 },
 ] as const;
 
