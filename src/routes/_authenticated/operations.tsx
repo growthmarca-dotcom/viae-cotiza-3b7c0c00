@@ -237,7 +237,11 @@ function OperationsPage() {
     { label: "Reservas pendientes", value: stats.pending },
     { label: "Viajes próximos (7 días)", value: stats.upcoming },
     { label: "Servicios sin asignar", value: stats.unassignedServices },
-    { label: "Incidencias", value: stats.incidents },
+    { label: "Reservas con incidencias", value: opsStats.bookingsWithIncidents },
+    { label: "Incidencias abiertas", value: opsStats.openIncidents },
+    { label: "Incidencias urgentes", value: opsStats.urgentIncidents },
+    { label: "Listas para viajar", value: opsStats.readyToTravel },
+    { label: "Avance operativo promedio", value: `${opsStats.averageProgress} %` },
     { label: "Servicios finalizados", value: stats.finishedServices },
   ];
 
