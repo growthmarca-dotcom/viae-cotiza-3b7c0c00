@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           access_status: Database["public"]["Enums"]["agent_access_status"]
           auto_receive_leads: boolean
+          availability: Database["public"]["Enums"]["agent_availability"]
           available_for_assignment: boolean
           city: string | null
           commission_currency: string
@@ -59,6 +60,7 @@ export type Database = {
         Insert: {
           access_status?: Database["public"]["Enums"]["agent_access_status"]
           auto_receive_leads?: boolean
+          availability?: Database["public"]["Enums"]["agent_availability"]
           available_for_assignment?: boolean
           city?: string | null
           commission_currency?: string
@@ -102,6 +104,7 @@ export type Database = {
         Update: {
           access_status?: Database["public"]["Enums"]["agent_access_status"]
           auto_receive_leads?: boolean
+          availability?: Database["public"]["Enums"]["agent_availability"]
           available_for_assignment?: boolean
           city?: string | null
           commission_currency?: string
@@ -273,6 +276,60 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_resources: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          booking_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          resource_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          booking_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          booking_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_resources_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_resources_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
             referencedColumns: ["id"]
           },
         ]
@@ -482,6 +539,57 @@ export type Database = {
           travel_start?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      companies: {
+        Row: {
+          city: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          kind: Database["public"]["Enums"]["company_kind"]
+          name: string
+          notes: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          state: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["company_kind"]
+          name: string
+          notes?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["company_kind"]
+          name?: string
+          notes?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -853,6 +961,96 @@ export type Database = {
           },
         ]
       }
+      resources: {
+        Row: {
+          agent_id: string | null
+          availability: Database["public"]["Enums"]["resource_availability"]
+          category: Database["public"]["Enums"]["resource_category"]
+          company_id: string | null
+          contact_name: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          kind: Database["public"]["Enums"]["company_kind"]
+          main_zone: string | null
+          name: string
+          notes: string | null
+          operating_limit: number | null
+          pax_capacity: number | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          specialties: string[]
+          unit_count: number | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+          zones: string[]
+        }
+        Insert: {
+          agent_id?: string | null
+          availability?: Database["public"]["Enums"]["resource_availability"]
+          category?: Database["public"]["Enums"]["resource_category"]
+          company_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["company_kind"]
+          main_zone?: string | null
+          name: string
+          notes?: string | null
+          operating_limit?: number | null
+          pax_capacity?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          specialties?: string[]
+          unit_count?: number | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+          zones?: string[]
+        }
+        Update: {
+          agent_id?: string | null
+          availability?: Database["public"]["Enums"]["resource_availability"]
+          category?: Database["public"]["Enums"]["resource_category"]
+          company_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["company_kind"]
+          main_zone?: string | null
+          name?: string
+          notes?: string | null
+          operating_limit?: number | null
+          pax_capacity?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          specialties?: string[]
+          unit_count?: number | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+          zones?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -895,6 +1093,7 @@ export type Database = {
     Enums: {
       account_status: "pending" | "approved" | "rejected" | "suspended"
       agent_access_status: "none" | "invited" | "linked"
+      agent_availability: "available" | "busy" | "unavailable" | "off_hours"
       agent_status:
         | "pending"
         | "training"
@@ -921,6 +1120,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       commission_type: "percentage" | "fixed"
+      company_kind: "internal" | "external"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
       lead_source:
         | "website"
@@ -959,6 +1159,25 @@ export type Database = {
         | "rejected"
         | "expired"
       record_status: "active" | "archived" | "inactive" | "suspended"
+      resource_availability:
+        | "available"
+        | "busy"
+        | "unavailable"
+        | "out_of_service"
+      resource_category:
+        | "accommodation"
+        | "room"
+        | "vehicle"
+        | "driver"
+        | "taxi"
+        | "transfer"
+        | "excursion"
+        | "guide"
+        | "insurance"
+        | "rental"
+        | "tourism_service"
+        | "agent"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1088,6 +1307,7 @@ export const Constants = {
     Enums: {
       account_status: ["pending", "approved", "rejected", "suspended"],
       agent_access_status: ["none", "invited", "linked"],
+      agent_availability: ["available", "busy", "unavailable", "off_hours"],
       agent_status: [
         "pending",
         "training",
@@ -1117,6 +1337,7 @@ export const Constants = {
         "cancelled",
       ],
       commission_type: ["percentage", "fixed"],
+      company_kind: ["internal", "external"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
       lead_source: [
         "website",
@@ -1159,6 +1380,27 @@ export const Constants = {
         "expired",
       ],
       record_status: ["active", "archived", "inactive", "suspended"],
+      resource_availability: [
+        "available",
+        "busy",
+        "unavailable",
+        "out_of_service",
+      ],
+      resource_category: [
+        "accommodation",
+        "room",
+        "vehicle",
+        "driver",
+        "taxi",
+        "transfer",
+        "excursion",
+        "guide",
+        "insurance",
+        "rental",
+        "tourism_service",
+        "agent",
+        "other",
+      ],
     },
   },
 } as const
