@@ -422,19 +422,16 @@ function ClientDetailPage() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogTitle>¿Archivar cliente?</AlertDialogTitle>
             <AlertDialogDescription>
-              Las cotizaciones asociadas se mantienen, pero perderán el vínculo con esta ficha.
+              Los clientes no se eliminan del sistema. Al archivarlo dejará de aparecer en los
+              listados activos, pero se conservan sus cotizaciones, oportunidades e historial.
+              Podés reactivarlo cuando quieras desde el filtro de archivados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleArchive}>Archivar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
