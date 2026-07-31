@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { AppFooter } from "@/components/app-footer";
+import { Building2 } from "lucide-react";
 import { useDeveloperBranding } from "@/hooks/use-developer-branding";
 
 import { cn } from "@/lib/utils";
@@ -51,7 +52,10 @@ const baseNav = [
 const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
 
 /** Central operativa: sólo administración y usuarios con rol Operaciones. */
-const operationsNav = [{ to: "/operations", label: "Central operativa", icon: ClipboardList }] as const;
+const operationsNav = [
+  { to: "/operations", label: "Central operativa", icon: ClipboardList },
+  { to: "/providers", label: "Proveedores", icon: Building2 },
+] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();

@@ -13,6 +13,8 @@ export const AUDIT_ENTITIES = [
   { value: "companies", label: "Empresas" },
   { value: "resources", label: "Recursos" },
   { value: "booking_resources", label: "Recursos asignados" },
+  { value: "providers", label: "Proveedores" },
+  { value: "provider_evaluations", label: "Evaluaciones de proveedor" },
   { value: "company_settings", label: "Configuración" },
 ] as const;
 
@@ -25,6 +27,8 @@ const ENTITY_LABEL: Record<string, string> = {
   companies: "Empresa",
   resources: "Recurso",
   booking_resources: "Recurso asignado",
+  providers: "Proveedor",
+  provider_evaluations: "Evaluación de proveedor",
   company_settings: "Configuración",
 };
 
