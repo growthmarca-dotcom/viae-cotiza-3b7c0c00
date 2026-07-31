@@ -34,23 +34,24 @@ function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [recordFilter, setRecordFilter] = useState<RecordStatus | "all">("active");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      setClients(await listClients());
+      setClients(await listClients(recordFilter));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudieron cargar los clientes");
     } finally {
       setLoading(false);
     }
-  }
+  }, [recordFilter]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
