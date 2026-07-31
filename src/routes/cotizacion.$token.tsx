@@ -5,6 +5,8 @@ import { Compass, Download, Loader2, MapPin, Calendar, Users, Moon } from "lucid
 import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 
 
 export const Route = createFileRoute("/cotizacion/$token")({
@@ -50,6 +52,8 @@ function PublicQuotationPage() {
   const urls: string[] = data.imageUrls ?? [];
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
+
   const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
     Boolean,
   ) as string[];
@@ -187,7 +191,27 @@ function PublicQuotationPage() {
                 {q.currency} {Number(q.total_amount ?? 0).toLocaleString()}
               </span>
             </div>
+            <div className="mt-3 space-y-2 border-t pt-3" style={{ borderTopColor: `${company.accentColor}33` }}>
+              <Line label="Moneda utilizada" value={q.currency} />
+              <Line
+                label="Tipo de cambio utilizado"
+                value={totals.rate != null ? `1 USD = ARS ${totals.rate.toLocaleString("es-AR")}` : "—"}
+              />
+              <Line
+                label="Total en USD"
+                value={totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : "—"}
+              />
+              <Line
+                label="Total en ARS"
+                value={totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : "—"}
+              />
+              <Line
+                label="Fecha de la cotización"
+                value={new Date(q.created_at).toLocaleDateString()}
+              />
+            </div>
           </dl>
+
         </section>
 
         {q.cancellation_policy && (

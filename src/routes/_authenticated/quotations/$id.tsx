@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/quotations";
 import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
 import { QuotationPrintDocument } from "@/components/quotation-print";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 import type { Tables } from "@/integrations/supabase/types";
 import {
   AlertDialog,
@@ -108,6 +110,8 @@ function QuotationDetailPage() {
 
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/cotizacion/${q.share_token}`;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim() || "—";
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
+
 
   async function copyShare() {
     await navigator.clipboard.writeText(shareUrl);
@@ -252,7 +256,16 @@ function QuotationDetailPage() {
         <Row label="Impuestos" value={q.taxes != null ? `${q.currency} ${q.taxes}` : null} />
         <Row label="Otros cargos" value={q.other_charges != null ? `${q.currency} ${q.other_charges}` : null} />
         <Row label="Total" value={`${q.currency} ${Number(q.total_amount ?? 0).toLocaleString()}`} />
+        <Row label="Moneda utilizada" value={q.currency} />
+        <Row
+          label="Tipo de cambio utilizado"
+          value={totals.rate != null ? `1 USD = ARS ${totals.rate.toLocaleString("es-AR")}` : null}
+        />
+        <Row label="Total en USD" value={totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : null} />
+        <Row label="Total en ARS" value={totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : null} />
+        <Row label="Fecha de la cotización" value={new Date(q.created_at).toLocaleDateString()} />
       </Card>
+
 
       {q.notes && (
         <Card title="Observaciones">

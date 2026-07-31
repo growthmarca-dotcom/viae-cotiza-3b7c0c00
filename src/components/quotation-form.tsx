@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CURRENCIES, convertTotals, formatMoney, needsExchangeRate } from "@/lib/currency";
+
 
 export type QuotationFormState = {
   firstName: string;
@@ -32,8 +34,10 @@ export type QuotationFormState = {
   otherCharges: string;
   totalAmount: string;
   currency: string;
+  exchangeRate: string;
   observations: string;
 };
+
 
 export const EMPTY_QUOTATION: QuotationFormState = {
   firstName: "",
@@ -55,8 +59,10 @@ export const EMPTY_QUOTATION: QuotationFormState = {
   otherCharges: "",
   totalAmount: "",
   currency: "USD",
+  exchangeRate: "",
   observations: "",
 };
+
 
 export const MAX_IMAGES = 10;
 
@@ -126,6 +132,18 @@ export function QuotationForm({
     if (autoTotal === "") return;
     setForm((p) => (p.totalAmount === autoTotal ? p : { ...p, totalAmount: autoTotal }));
   }, [autoTotal]);
+
+  const totals = useMemo(
+    () =>
+      convertTotals(
+        Number(form.totalAmount || autoTotal) || 0,
+        form.currency,
+        form.exchangeRate ? Number(form.exchangeRate) : null,
+      ),
+    [form.totalAmount, form.currency, form.exchangeRate, autoTotal],
+  );
+
+
 
   const totalCount = kept.length + files.length;
 
@@ -273,13 +291,47 @@ export function QuotationForm({
           <Select value={form.currency} onValueChange={(v) => set("currency", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["USD", "EUR", "ARS", "MXN", "BRL", "CLP", "COP", "PEN"].map((c) => (
+              {CURRENCIES.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
+        {needsExchangeRate(form.currency) && (
+          <Field label="Tipo de cambio (ARS por 1 USD)">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.exchangeRate}
+              onChange={(e) => set("exchangeRate", e.target.value)}
+              placeholder="Ej: 1200"
+            />
+          </Field>
+        )}
+        {(totals.totalArs != null || totals.totalUsd != null) && (
+          <div className="sm:col-span-2 rounded-xl border border-border bg-secondary/40 p-4 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-muted-foreground">Total en USD</span>
+              <span className="font-medium">
+                {totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : "—"}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-muted-foreground">Total en ARS</span>
+              <span className="font-medium">
+                {totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : "—"}
+              </span>
+            </div>
+            {totals.rate == null && needsExchangeRate(form.currency) && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Ingresa el tipo de cambio para ver el equivalente en ARS.
+              </p>
+            )}
+          </div>
+        )}
       </Section>
+
 
       <Section title="Observaciones" cols={1}>
         <Field label="Notas adicionales">

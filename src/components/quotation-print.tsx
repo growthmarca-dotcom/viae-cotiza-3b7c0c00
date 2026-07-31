@@ -1,4 +1,6 @@
 import type { CompanyInfo } from "@/lib/company";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 
 export type PrintQuotation = {
   title: string;
@@ -19,7 +21,9 @@ export type PrintQuotation = {
   other_charges?: number | null;
   total_amount: number | null;
   currency: string;
+  exchange_rate?: number | null;
   notes: string | null;
+
   created_at: string;
 };
 
@@ -40,6 +44,8 @@ export function QuotationPrintDocument({
   const guest = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
   const money = (v: number | null | undefined) =>
     `${q.currency} ${Number(v ?? 0).toLocaleString()}`;
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate ?? null);
+
 
   const contact = [company.whatsapp, company.email, company.website].filter(Boolean);
   const socials = [
@@ -128,7 +134,25 @@ export function QuotationPrintDocument({
           <span>Total</span>
           <strong style={{ color: company.primaryColor }}>{money(q.total_amount)}</strong>
         </div>
+        <PrintLine label="Moneda utilizada" value={q.currency} />
+        <PrintLine
+          label="Tipo de cambio utilizado"
+          value={totals.rate != null ? `1 USD = ARS ${totals.rate.toLocaleString("es-AR")}` : "—"}
+        />
+        <PrintLine
+          label="Total en USD"
+          value={totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : "—"}
+        />
+        <PrintLine
+          label="Total en ARS"
+          value={totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : "—"}
+        />
+        <PrintLine
+          label="Fecha de la cotización"
+          value={new Date(q.created_at).toLocaleDateString()}
+        />
       </PrintBlock>
+
 
       {q.cancellation_policy ? (
         <PrintBlock title="Política de cancelación" color={company.primaryColor}>

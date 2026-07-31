@@ -37,8 +37,10 @@ export function formToRow(form: QuotationFormState, autoTotal?: string) {
     other_charges: form.otherCharges ? Number(form.otherCharges) : null,
     total_amount: totalAmountNum,
     currency: form.currency || "USD",
+    exchange_rate: form.exchangeRate ? Number(form.exchangeRate) : null,
     notes: form.observations || null,
   };
+
 }
 
 export async function uploadImages(
@@ -106,8 +108,10 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     otherCharges: s(row.other_charges),
     totalAmount: s(row.total_amount),
     currency: s(row.currency) || "USD",
+    exchangeRate: s(row.exchange_rate),
     observations: s(row.notes),
   };
+
 }
 
 /** Duplica una cotización existente (incluye las imágenes ya cargadas). */

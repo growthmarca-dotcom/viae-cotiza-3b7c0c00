@@ -16,11 +16,15 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          city: string | null
+          company: string | null
+          country: string | null
           created_at: string
           destination: string | null
           email: string | null
           full_name: string
           id: string
+          last_name: string | null
           notes: string | null
           opportunity_status: Database["public"]["Enums"]["opportunity_status"]
           pax_count: number | null
@@ -31,11 +35,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          city?: string | null
+          company?: string | null
+          country?: string | null
           created_at?: string
           destination?: string | null
           email?: string | null
           full_name: string
           id?: string
+          last_name?: string | null
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
@@ -46,11 +54,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          city?: string | null
+          company?: string | null
+          country?: string | null
           created_at?: string
           destination?: string | null
           email?: string | null
           full_name?: string
           id?: string
+          last_name?: string | null
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
@@ -235,6 +247,7 @@ export type Database = {
           created_at: string
           currency: string
           destination: string | null
+          exchange_rate: number | null
           expires_at: string | null
           guest_email: string | null
           guest_first_name: string | null
@@ -268,6 +281,7 @@ export type Database = {
           created_at?: string
           currency?: string
           destination?: string | null
+          exchange_rate?: number | null
           expires_at?: string | null
           guest_email?: string | null
           guest_first_name?: string | null
@@ -301,6 +315,7 @@ export type Database = {
           created_at?: string
           currency?: string
           destination?: string | null
+          exchange_rate?: number | null
           expires_at?: string | null
           guest_email?: string | null
           guest_first_name?: string | null
@@ -380,6 +395,9 @@ export type Database = {
         | "negotiating"
         | "won"
         | "lost"
+        | "confirmed"
+        | "cancelled"
+        | "expired"
       quotation_status:
         | "draft"
         | "sent"
@@ -523,6 +541,9 @@ export const Constants = {
         "negotiating",
         "won",
         "lost",
+        "confirmed",
+        "cancelled",
+        "expired",
       ],
       quotation_status: [
         "draft",
