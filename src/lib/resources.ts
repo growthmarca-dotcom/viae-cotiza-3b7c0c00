@@ -158,13 +158,25 @@ export function availabilityClasses(value: string) {
     case "available":
       return "bg-primary/10 text-primary border-primary/30";
     case "busy":
+    case "in_service":
       return "bg-gold/15 text-foreground border-gold/40";
+    case "assigned":
+    case "reserved":
+      return "bg-gold/10 text-foreground border-gold/30";
     case "unavailable":
     case "out_of_service":
       return "bg-destructive/10 text-destructive border-destructive/30";
     default:
       return "bg-secondary text-secondary-foreground border-border";
   }
+}
+
+/** Estados operativos según el tipo de recurso (conductor o vehículo). */
+export function availabilityOptionsFor(category: string) {
+  if (category === "vehicle") return VEHICLE_AVAILABILITIES;
+  if (category === "driver" || category === "taxi" || category === "transfer")
+    return DRIVER_AVAILABILITIES;
+  return RESOURCE_AVAILABILITIES;
 }
 
 // ------------------------------------------------------------------ empresas
