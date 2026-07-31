@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Opportunity } from "@/lib/opportunities";
+import type { AgentAvailability } from "@/lib/resources";
+
+export type { AgentAvailability };
 
 export type Agent = Tables<"agents">;
 
@@ -110,6 +113,7 @@ export type AgentInput = {
   max_open_opportunities: string;
   auto_receive_leads: boolean;
   available_for_assignment: boolean;
+  availability: AgentAvailability;
 };
 
 export const EMPTY_AGENT: AgentInput = {
@@ -139,6 +143,7 @@ export const EMPTY_AGENT: AgentInput = {
   max_open_opportunities: "",
   auto_receive_leads: false,
   available_for_assignment: true,
+  availability: "available",
 };
 
 export function agentToInput(a: Agent): AgentInput {
@@ -170,6 +175,7 @@ export function agentToInput(a: Agent): AgentInput {
       a.max_open_opportunities != null ? String(a.max_open_opportunities) : "",
     auto_receive_leads: a.auto_receive_leads ?? false,
     available_for_assignment: a.available_for_assignment ?? true,
+    availability: (a.availability as AgentAvailability) ?? "available",
   };
 }
 
@@ -204,6 +210,7 @@ function toPayload(input: AgentInput) {
     max_open_opportunities: num(input.max_open_opportunities),
     auto_receive_leads: input.auto_receive_leads,
     available_for_assignment: input.available_for_assignment,
+    availability: input.availability,
   };
 }
 
