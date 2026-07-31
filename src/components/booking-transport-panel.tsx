@@ -430,3 +430,71 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
     </div>
   );
 }
+
+/**
+ * Ficha de control previa a la asignación (v1.3).
+ * Muestra disponibilidad, ciudad base, cobertura, capacidad y los servicios
+ * futuros del recurso, junto con las advertencias detectadas. Nunca bloquea.
+ */
+function AssignmentCheck({
+  resource,
+  warnings,
+  services,
+}: {
+  resource: Resource;
+  warnings: AssignmentWarning[];
+  services: TransportService[];
+}) {
+  const future = futureServicesOf(services, resource.id).slice(0, 4);
+  const coverage = coverageOf(resource);
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 text-sm">
+      <p className="font-medium">{resourceHeadline(resource)}</p>
+      <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+        <div>Disponibilidad: {availabilityLabel(resource.availability)}</div>
+        <div>Ciudad base: {resource.base_city || "—"}</div>
+        <div>Cobertura: {coverage.length > 0 ? coverage.join(", ") : "—"}</div>
+        <div>
+          Capacidad: {resource.pax_capacity != null ? `${resource.pax_capacity} pax` : "—"}
+          {resource.luggage_capacity != null ? ` · ${resource.luggage_capacity} equipajes` : ""}
+        </div>
+      </dl>
+
+      <p className="mt-3 text-xs font-medium">Servicios futuros asignados</p>
+      {future.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Sin servicios futuros.</p>
+      ) : (
+        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+          {future.map((f) => (
+            <li key={f.id}>
+              {f.service_date ?? "s/f"} · {timeLabel(f.service_time)} · {f.origin ?? "—"} →{" "}
+              {f.destination ?? "—"}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {warnings.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {warnings.map((w, i) => (
+            <li
+              key={i}
+              className={`flex items-start gap-2 rounded-lg border px-2 py-1.5 text-xs ${
+                w.level === "warning"
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-gold/40 bg-gold/5 text-foreground"
+              }`}
+            >
+              {w.level === "warning" ? (
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              )}
+              <span>{w.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
