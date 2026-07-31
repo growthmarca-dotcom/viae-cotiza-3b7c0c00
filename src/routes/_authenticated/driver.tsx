@@ -149,7 +149,7 @@ function DriverPage() {
   );
   const unread = useMemo(() => notifications.filter((n) => n.read_at == null), [notifications]);
 
-  const groups = useMemo(() => groupServices(services), [services]);
+  
 
   async function run(action: () => Promise<void>, message: string) {
     setBusy(true);
