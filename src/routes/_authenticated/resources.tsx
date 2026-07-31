@@ -394,7 +394,24 @@ function ResourcesPage() {
               </div>
             </section>
           )}
+
+          {stats.byState.length > 0 && (
+            <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="font-display text-xl font-semibold">Distribución geográfica</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {stats.byState.map((s) => (
+                  <span
+                    key={s.state}
+                    className="rounded-full border border-border px-3 py-1 text-xs"
+                  >
+                    {s.state}: <strong>{s.count}</strong>
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
         </TabsContent>
+
 
         <TabsContent value="companies" className="space-y-6">
           {companiesQuery.isLoading ? (
