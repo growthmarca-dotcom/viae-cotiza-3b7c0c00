@@ -17,6 +17,7 @@ import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedTransportRouteImport } from './routes/_authenticated/transport'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
+import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
@@ -73,6 +74,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProvidersRoute = AuthenticatedProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transport': typeof AuthenticatedTransportRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transport': typeof AuthenticatedTransportRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
+  '/_authenticated/providers': typeof AuthenticatedProvidersRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/transport': typeof AuthenticatedTransportRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/leads'
     | '/operations'
+    | '/providers'
     | '/resources'
     | '/settings'
     | '/transport'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/leads'
     | '/operations'
+    | '/providers'
     | '/resources'
     | '/settings'
     | '/transport'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/leads'
     | '/_authenticated/operations'
+    | '/_authenticated/providers'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
     | '/_authenticated/transport'
@@ -403,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/resources'
       fullPath: '/resources'
       preLoaderRoute: typeof AuthenticatedResourcesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/providers': {
+      id: '/_authenticated/providers'
+      path: '/providers'
+      fullPath: '/providers'
+      preLoaderRoute: typeof AuthenticatedProvidersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/operations': {
@@ -544,6 +563,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
+  AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTransportRoute: typeof AuthenticatedTransportRoute
@@ -568,6 +588,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
+  AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTransportRoute: AuthenticatedTransportRoute,

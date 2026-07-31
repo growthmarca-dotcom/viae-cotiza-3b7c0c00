@@ -412,3 +412,23 @@ export async function providerServiceTotals(): Promise<{ done: number; pending: 
     pending: rows.filter((r) => !CLOSED.has(String(r.status))).length,
   };
 }
+
+// -------------------------------------------------- vinculación de recursos
+
+/** Asocia un recurso existente al proveedor. */
+export async function assignResourceToProvider(resourceId: string, providerId: string) {
+  const { error } = await supabase
+    .from("resources")
+    .update({ provider_id: providerId })
+    .eq("id", resourceId);
+  if (error) throw error;
+}
+
+/** Quita la asociación del recurso con su proveedor. */
+export async function unassignResourceFromProvider(resourceId: string) {
+  const { error } = await supabase
+    .from("resources")
+    .update({ provider_id: null })
+    .eq("id", resourceId);
+  if (error) throw error;
+}
