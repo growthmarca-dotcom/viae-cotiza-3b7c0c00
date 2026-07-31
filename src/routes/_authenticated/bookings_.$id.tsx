@@ -686,3 +686,156 @@ function ResourcesTab({ bookingId }: { bookingId: string }) {
     </div>
   );
 }
+
+/**
+ * Bloque operativo (v1.8): estado interno de operación, responsable de la
+ * central y notas. El agente vendedor lo ve en modo lectura.
+ */
+function OperationCard({ booking, onChanged }: { booking: Booking; onChanged: () => void }) {
+  const { isOperations } = useAccount();
+  const [users, setUsers] = useState<InternalUser[]>([]);
+  const [notes, setNotes] = useState(booking.operations_notes ?? "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isOperations) return;
+    listInternalUsers()
+      .then(setUsers)
+      .catch(() => setUsers([]));
+  }, [isOperations]);
+
+  useEffect(() => {
+    setNotes(booking.operations_notes ?? "");
+  }, [booking.operations_notes]);
+
+  const ownerName = booking.operations_owner_id
+    ? (users.find((u) => u.id === booking.operations_owner_id)?.name ?? "Responsable interno")
+    : "Sin responsable operativo";
+
+  async function run(fn: () => Promise<void>, message: string) {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(message);
+      onChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar la operación");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-semibold">Operación</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Estado interno de ejecución, independiente del estado comercial de la venta.
+          </p>
+        </div>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-medium ${operationStatusClasses(booking.operation_status)}`}
+        >
+          {operationStatusLabel(booking.operation_status)}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
+        <Info label="Responsable operativo">{ownerName}</Info>
+        <Info label="Tomada el">
+          {booking.operations_taken_at
+            ? new Date(booking.operations_taken_at).toLocaleString("es-AR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })
+            : "—"}
+        </Info>
+        <Info label="Última actualización operativa">
+          {booking.operations_updated_at
+            ? new Date(booking.operations_updated_at).toLocaleString("es-AR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })
+            : "—"}
+        </Info>
+      </div>
+
+      {isOperations ? (
+        <div className="mt-4 space-y-3 border-t border-border pt-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Estado operativo</Label>
+              <Select
+                value={booking.operation_status}
+                onValueChange={(v) =>
+                  run(
+                    () => setOperationStatus(booking.id, v as OperationStatus),
+                    "Estado operativo actualizado",
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {OPERATION_STATUSES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Responsable operativo</Label>
+              <Select
+                value={booking.operations_owner_id ?? "__none__"}
+                onValueChange={(v) =>
+                  run(
+                    () => setOperationsOwner(booking.id, v === "__none__" ? null : v),
+                    "Responsable operativo actualizado",
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Sin responsable</SelectItem>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Notas internas de operación</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <Button
+            size="sm"
+            disabled={busy}
+            onClick={() =>
+              run(
+                () => setOperationsNotes(booking.id, notes.trim() || null),
+                "Notas operativas guardadas",
+              )
+            }
+          >
+            <Save className="mr-2 h-4 w-4" /> Guardar notas
+          </Button>
+        </div>
+      ) : (
+        booking.operations_notes && (
+          <p className="mt-4 whitespace-pre-line border-t border-border pt-4 text-sm">
+            {booking.operations_notes}
+          </p>
+        )
+      )}
+    </div>
+  );
+}
