@@ -534,6 +534,9 @@ export type ResourceFilters = {
   brand?: string;
   minCapacity?: string;
   companyId?: string;
+  /** Modo rent a car: solo vehículos sin conductor. */
+  selfDrive?: boolean;
+
 };
 
 export async function listResources(filters: ResourceFilters = {}): Promise<Resource[]> {
