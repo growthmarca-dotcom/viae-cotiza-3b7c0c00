@@ -57,8 +57,10 @@ export const EMPTY_QUOTATION: QuotationFormState = {
   otherCharges: "",
   totalAmount: "",
   currency: "USD",
+  exchangeRate: "",
   observations: "",
 };
+
 
 export const MAX_IMAGES = 10;
 
