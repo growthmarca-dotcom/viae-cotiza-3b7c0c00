@@ -29,6 +29,7 @@ import { stageClasses, stageLabel, type Opportunity } from "@/lib/opportunities"
 import {
   computeLeadStats,
   leadFullName,
+  leadNeedSummary,
   leadStatusClasses,
   leadStatusLabel,
   listLeadsByAgent,
