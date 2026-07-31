@@ -72,6 +72,8 @@ function AgendaPage() {
   const [info, setInfo] = useState<Map<string, ServiceBookingInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [day, setDay] = useState(todayISO());
+  const [filters, setFilters] = useState<AgendaFilters>({});
+
 
   const load = useCallback(async () => {
     setLoading(true);
