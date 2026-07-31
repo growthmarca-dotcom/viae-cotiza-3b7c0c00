@@ -114,6 +114,24 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
 
   const companyById = new Map(companies.map((c) => [c.id, c]));
 
+  // Control de asignación (v1.3): informa, nunca bloquea.
+  const assignCtx = {
+    date: form.service_date || null,
+    time: form.service_time || null,
+    paxCount: form.pax_count ? Number(form.pax_count) : null,
+    luggageCount: form.luggage_count ? Number(form.luggage_count) : null,
+    origin: form.origin || null,
+  };
+  const selectedDriver = form.driver_resource_id ? byId.get(form.driver_resource_id) : undefined;
+  const selectedVehicle = form.vehicle_resource_id ? byId.get(form.vehicle_resource_id) : undefined;
+  const driverWarnings = selectedDriver
+    ? assignmentWarnings(selectedDriver, allServices, assignCtx)
+    : [];
+  const vehicleWarnings = selectedVehicle
+    ? assignmentWarnings(selectedVehicle, allServices, assignCtx)
+    : [];
+
+
   async function create() {
     setSaving(true);
     try {
