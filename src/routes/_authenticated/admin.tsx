@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAccount, type AppRole } from "@/hooks/use-account";
+import { AdminRecovery } from "@/components/admin-recovery";
 import {
   AlertDialog,
   AlertDialogAction,
