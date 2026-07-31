@@ -92,7 +92,11 @@ export function groupServices(services: TransportService[]) {
 
 // ------------------------------------------------------ flujo operativo
 
-async function patchService(id: string, patch: Record<string, unknown>) {
+type ServiceUpdate = Parameters<
+  ReturnType<typeof supabase.from<"transport_services">>["update"]
+>[0];
+
+async function patchService(id: string, patch: ServiceUpdate) {
   const { error } = await supabase.from("transport_services").update(patch).eq("id", id);
   if (error) throw error;
 }
