@@ -319,6 +319,10 @@ function AgentDetailPage() {
         <Stat label="Ticket promedio" value={formatMoney(currency, stats.averageTicket)} />
       </div>
 
+      <AgentLeadsSection agentId={id} />
+
+
+
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="mb-3 font-display text-xl font-semibold">Oportunidades asignadas</h2>
