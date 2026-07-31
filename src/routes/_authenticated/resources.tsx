@@ -124,6 +124,11 @@ function ResourcesPage() {
   const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
   const companyName = new Map(companies.map((c) => [c.id, c.name]));
   const stats = computeResourceStats(resources);
+  const subtypeOptions =
+    resourceClass === "all"
+      ? Object.values(RESOURCE_SUBTYPES).flat()
+      : (RESOURCE_SUBTYPES[resourceClass] ?? []);
+
 
   async function submitResource(input: ResourceInput) {
     setSaving(true);
