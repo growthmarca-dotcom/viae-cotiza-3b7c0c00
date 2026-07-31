@@ -17,6 +17,8 @@ export type CompanyInfo = {
   primaryColor: string;
   accentColor: string;
   footerText: string | null;
+  /** Moneda en la que se expresan todas las estadísticas del sistema. */
+  analysisCurrency: "ARS" | "USD";
 };
 
 export const DEFAULT_COMPANY: CompanyInfo = {
@@ -33,6 +35,7 @@ export const DEFAULT_COMPANY: CompanyInfo = {
   primaryColor: "#1F4636",
   accentColor: "#C4A264",
   footerText: null,
+  analysisCurrency: "USD",
 };
 
 export function rowToCompanyInfo(row: CompanyRow | null, logoUrl: string | null): CompanyInfo {
@@ -51,6 +54,7 @@ export function rowToCompanyInfo(row: CompanyRow | null, logoUrl: string | null)
     primaryColor: row.primary_color || DEFAULT_COMPANY.primaryColor,
     accentColor: row.accent_color || DEFAULT_COMPANY.accentColor,
     footerText: row.footer_text,
+    analysisCurrency: (row.analysis_currency === "ARS" ? "ARS" : "USD"),
   };
 }
 
