@@ -33,7 +33,6 @@ import {
   setBookingProvider,
   setBookingStatus,
   archiveBooking,
-  updateBooking,
   type Booking,
   type BookingDocument,
   type BookingPayment,
