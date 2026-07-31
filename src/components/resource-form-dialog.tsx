@@ -343,6 +343,25 @@ export function ResourceFormDialog({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label>Proveedor (módulo Proveedores)</Label>
+            <Select
+              value={form.provider_id || NONE}
+              onValueChange={(v) => set("provider_id", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin proveedor</SelectItem>
+                {providers.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.trade_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Titular (si es particular u otro)</Label>
             <Input
