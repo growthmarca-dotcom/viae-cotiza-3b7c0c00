@@ -61,12 +61,23 @@ function NewQuotationPage() {
 
             const clientId = await upsertClientFromQuotation(userId, form);
 
+            const row = formToRow(form);
             const { data: inserted, error: insertErr } = await supabase
               .from("quotations")
-              .insert({ ...formToRow(form), user_id: userId, client_id: clientId, status: "draft" })
+              .insert({ ...row, user_id: userId, client_id: clientId, status: "draft" })
               .select("id")
               .single();
             if (insertErr) throw insertErr;
+
+            // Cada cotización genera automáticamente una oportunidad comercial.
+            await ensureOpportunityForQuotation({
+              userId,
+              clientId,
+              quotationId: inserted.id,
+              title: row.title,
+              amount: Number(row.total_amount) || 0,
+              currency: row.currency,
+            });
 
             const finalImages = await saveQuotationImages({
               quotationId: inserted.id,
