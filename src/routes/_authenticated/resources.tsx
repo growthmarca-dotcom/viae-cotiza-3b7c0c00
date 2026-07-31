@@ -355,7 +355,15 @@ function ResourcesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">{categoryLabel(r.category)}</td>
+                      <td className="px-4 py-3">
+                        {resourceClassLabel(r.resource_class)}
+                        <span className="block text-xs text-muted-foreground">
+                          {r.subtype
+                            ? subtypeLabel(r.resource_class, r.subtype)
+                            : categoryLabel(r.category)}
+                        </span>
+                      </td>
+
                       <td className="px-4 py-3">{companyKindLabel(r.kind)}</td>
                       <td className="px-4 py-3">
                         {r.company_id ? (companyName.get(r.company_id) ?? "—") : "—"}
