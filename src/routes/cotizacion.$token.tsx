@@ -5,6 +5,8 @@ import { Compass, Download, Loader2, MapPin, Calendar, Users, Moon } from "lucid
 import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 
 
 export const Route = createFileRoute("/cotizacion/$token")({
