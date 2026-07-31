@@ -187,6 +187,10 @@ function OperationsPage() {
   ]);
 
   const stats = useMemo(() => computeOperationsStats(bookings, services), [bookings, services]);
+  const opsStats = useMemo(
+    () => computeChecklistIncidentStats(checklistByBooking, incidents),
+    [checklistByBooking, incidents],
+  );
 
   async function changeStatus(b: Booking, status: OperationStatus) {
     try {
