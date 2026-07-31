@@ -29,6 +29,17 @@ export const Route = createFileRoute("/_authenticated/quotations/$id")({
 
 type Q = Tables<"quotations">;
 
+type HistoryEntry = { id: string; action: string; created_at: string };
+
+function describeHistory(action: string) {
+  if (action === "created") return "Cotización creada";
+  if (action === "updated") return "Cotización actualizada";
+  if (action === "archived") return "Cotización archivada";
+  if (action === "unarchived") return "Cotización desarchivada";
+  if (action === "duplicated") return "Cotización duplicada";
+  return action;
+}
+
 function QuotationDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -37,6 +48,18 @@ function QuotationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  async function loadHistory() {
+    const { data } = await supabase
+      .from("quotation_history")
+      .select("id, action, created_at")
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setHistory((data ?? []) as HistoryEntry[]);
+  }
 
   useEffect(() => {
     (async () => {
@@ -50,9 +73,14 @@ function QuotationDetailPage() {
       setQ(data as Q);
       const signed = await signImageUrls(data.images ?? []);
       setUrls(signed);
+      const { info } = await fetchCompany();
+      setCompany(info);
+      await loadHistory();
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
 
   if (loading) {
     return (
