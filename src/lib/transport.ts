@@ -32,9 +32,18 @@ export type TransportServiceStatus =
   | "requested"
   | "assigned"
   | "accepted"
+  | "rejected"
+  | "en_route"
+  | "at_origin"
   | "in_transit"
   | "completed"
   | "cancelled";
+
+/** Modalidad de pago del pasajero (v1.2). */
+export type TransportPaymentMode = "prepaid_viae" | "direct_to_driver" | "partial" | "pending";
+
+/** Estado del cobro al pasajero (v1.2). */
+export type TransportCollectionStatus = "not_applicable" | "pending" | "collected" | "reported";
 
 export type VehicleType =
   | "sedan"
@@ -64,10 +73,52 @@ export const TRANSPORT_SERVICE_STATUSES: { value: TransportServiceStatus; label:
   { value: "requested", label: "Solicitado" },
   { value: "assigned", label: "Asignado" },
   { value: "accepted", label: "Aceptado" },
-  { value: "in_transit", label: "En viaje" },
+  { value: "rejected", label: "Rechazado" },
+  { value: "en_route", label: "En camino al pasajero" },
+  { value: "at_origin", label: "En origen" },
+  { value: "in_transit", label: "En traslado" },
   { value: "completed", label: "Finalizado" },
   { value: "cancelled", label: "Cancelado" },
 ];
+
+export const TRANSPORT_PAYMENT_MODES: { value: TransportPaymentMode; label: string }[] = [
+  { value: "prepaid_viae", label: "Prepagado por ViaE" },
+  { value: "direct_to_driver", label: "Pago directo al conductor" },
+  { value: "partial", label: "Pago parcial" },
+  { value: "pending", label: "Pago pendiente" },
+];
+
+export const TRANSPORT_COLLECTION_STATUSES: {
+  value: TransportCollectionStatus;
+  label: string;
+}[] = [
+  { value: "not_applicable", label: "No corresponde cobrar" },
+  { value: "pending", label: "Pendiente de cobro" },
+  { value: "collected", label: "Cobrado" },
+  { value: "reported", label: "Informado" },
+];
+
+export function paymentModeLabel(value: string | null) {
+  if (!value) return "—";
+  return TRANSPORT_PAYMENT_MODES.find((m) => m.value === value)?.label ?? value;
+}
+
+export function collectionStatusLabel(value: string | null) {
+  if (!value) return "—";
+  return TRANSPORT_COLLECTION_STATUSES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function collectionStatusClasses(value: string | null) {
+  switch (value) {
+    case "collected":
+    case "reported":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "pending":
+      return "bg-gold/15 text-foreground border-gold/40";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
 
 export const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
   { value: "sedan", label: "Auto sedán" },
@@ -100,8 +151,11 @@ export function serviceStatusClasses(value: string) {
     case "completed":
       return "bg-primary/10 text-primary border-primary/30";
     case "cancelled":
+    case "rejected":
       return "bg-destructive/10 text-destructive border-destructive/30";
     case "assigned":
+    case "en_route":
+    case "at_origin":
     case "in_transit":
       return "bg-gold/15 text-foreground border-gold/40";
     default:
@@ -237,6 +291,11 @@ export type TransportServiceInput = {
   vehicle_resource_id: string;
   company_id: string;
   notes: string;
+  // --- información de cobro al pasajero (v1.2)
+  payment_mode: TransportPaymentMode;
+  collection_status: TransportCollectionStatus;
+  collection_amount: string;
+  collection_currency: string;
 };
 
 export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
@@ -252,6 +311,10 @@ export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   vehicle_resource_id: "",
   company_id: "",
   notes: "",
+  payment_mode: "prepaid_viae",
+  collection_status: "not_applicable",
+  collection_amount: "",
+  collection_currency: "ARS",
 };
 
 export function serviceToInput(s: TransportService): TransportServiceInput {
@@ -268,6 +331,10 @@ export function serviceToInput(s: TransportService): TransportServiceInput {
     vehicle_resource_id: s.vehicle_resource_id ?? "",
     company_id: s.company_id ?? "",
     notes: s.notes ?? "",
+    payment_mode: (s.payment_mode ?? "prepaid_viae") as TransportPaymentMode,
+    collection_status: (s.collection_status ?? "not_applicable") as TransportCollectionStatus,
+    collection_amount: s.collection_amount != null ? String(s.collection_amount) : "",
+    collection_currency: s.collection_currency ?? "ARS",
   };
 }
 
@@ -287,6 +354,10 @@ function servicePayload(input: TransportServiceInput) {
     vehicle_resource_id: input.vehicle_resource_id || null,
     company_id: input.company_id || null,
     notes: text(input.notes),
+    payment_mode: input.payment_mode,
+    collection_status: input.collection_status,
+    collection_amount: num(input.collection_amount),
+    collection_currency: input.collection_currency || "ARS",
   };
 }
 
