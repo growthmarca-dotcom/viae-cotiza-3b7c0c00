@@ -158,10 +158,14 @@ export function ResourceFormDialog({
     }));
   }
 
+  const isDriver = form.category === "driver" || form.subtype === "driver";
+  const isVehicle = form.category === "vehicle" || form.resource_class === "vehicle";
+  const isTransport =
+    ["driver", "vehicle", "taxi", "transfer"].includes(form.category) ||
+    form.resource_class === "vehicle" ||
+    isDriver;
+  const subtypes = RESOURCE_SUBTYPES[form.resource_class] ?? [];
 
-  const isDriver = form.category === "driver";
-  const isVehicle = form.category === "vehicle";
-  const isTransport = ["driver", "vehicle", "taxi", "transfer"].includes(form.category);
 
   return (
 
