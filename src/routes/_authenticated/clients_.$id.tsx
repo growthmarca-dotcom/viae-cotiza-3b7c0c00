@@ -311,6 +311,16 @@ function ClientDetailPage() {
         </dl>
       </div>
 
+      <OpportunityPanel
+        opportunities={opportunities}
+        responsables={responsables}
+        creating={creatingOpp}
+        onCreate={handleCreateOpportunity}
+        onChanged={loadOpportunities}
+      />
+
+
+
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-4 font-display text-xl font-semibold">Cotizaciones</h2>
         {quotations.length === 0 ? (
