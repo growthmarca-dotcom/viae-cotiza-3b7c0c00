@@ -366,7 +366,13 @@ function ServiceRow({
   const vehicle = s.vehicle_resource_id ? byId.get(s.vehicle_resource_id) : null;
   return (
     <div className="grid gap-2 rounded-xl border border-border/70 bg-secondary/20 p-3 text-sm sm:grid-cols-[64px_1fr_auto]">
-      <span className="font-medium">{timeLabel(s.service_time)}</span>
+      <div className="text-xs">
+        <p className="text-sm font-medium">{timeLabel(s.service_time)}</p>
+        <p className="text-muted-foreground">
+          {endTimeLabel(s.service_time ? String(s.service_time) : null, s.duration_minutes) ?? "—"}
+        </p>
+      </div>
+
       <div className="min-w-0">
         <p className="truncate font-medium">
           {(s.origin ?? "—") + " → " + (s.destination ?? "—")}
