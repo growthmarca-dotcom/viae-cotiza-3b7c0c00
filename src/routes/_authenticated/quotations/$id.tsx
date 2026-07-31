@@ -85,7 +85,9 @@ function QuotationDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-24">
+    <>
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
+    <div className="mx-auto max-w-4xl space-y-6 pb-24 print-screen-hide">
       <Link to="/quotations" data-print-hide className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver a cotizaciones
       </Link>
@@ -95,6 +97,7 @@ function QuotationDetailPage() {
           <h1 className="font-display text-3xl font-semibold sm:text-4xl">{q.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {q.destination ?? "Sin destino"} · Creada {new Date(q.created_at).toLocaleDateString()}
+            {q.archived ? " · Archivada" : ""}
           </p>
         </div>
         <div data-print-hide className="flex flex-wrap gap-2">
@@ -104,11 +107,26 @@ function QuotationDetailPage() {
           <Button variant="outline" onClick={() => navigate({ to: "/quotations/$id/edit", params: { id } })}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
+          <Button variant="outline" onClick={handleDuplicate}>
+            <Copy className="mr-2 h-4 w-4" /> Duplicar
+          </Button>
+          <Button variant="outline" onClick={handleArchive}>
+            {q.archived ? (
+              <>
+                <ArchiveRestore className="mr-2 h-4 w-4" /> Desarchivar
+              </>
+            ) : (
+              <>
+                <Archive className="mr-2 h-4 w-4" /> Archivar
+              </>
+            )}
+          </Button>
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
         </div>
       </header>
+
 
       {/* Share card */}
       <div data-print-hide className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
