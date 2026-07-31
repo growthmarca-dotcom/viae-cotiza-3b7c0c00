@@ -1,0 +1,474 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Archive,
+  Building2,
+  CreditCard,
+  FileText,
+  History,
+  Loader2,
+  Save,
+  TicketCheck,
+} from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatMoney } from "@/lib/currency";
+import { stageLabel } from "@/lib/opportunities";
+import {
+  BOOKING_DOCUMENT_KINDS,
+  BOOKING_PAYMENT_KINDS,
+  BOOKING_STATUSES,
+  bookingStatusClasses,
+  bookingStatusLabel,
+  getBooking,
+  listBookingDocuments,
+  listBookingPayments,
+  listStatusHistory,
+  setBookingProvider,
+  setBookingStatus,
+  archiveBooking,
+  updateBooking,
+  type Booking,
+  type BookingDocument,
+  type BookingPayment,
+  type BookingStatus,
+  type BookingStatusEvent,
+} from "@/lib/bookings";
+
+export const Route = createFileRoute("/_authenticated/bookings_/$id")({
+  component: BookingDetailPage,
+  head: () => ({
+    meta: [
+      { title: "Detalle de reserva — ViaE Sales Hub" },
+      {
+        name: "description",
+        content:
+          "Línea de tiempo de estados, documentación, pagos y proveedor de una reserva de viaje.",
+      },
+      { property: "og:title", content: "Detalle de reserva — ViaE Sales Hub" },
+      {
+        property: "og:description",
+        content: "Seguimiento completo de la operación: estados, pagos, documentos y proveedor.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
+
+type ClientRow = { id: string; full_name: string; last_name: string | null; email: string | null };
+type OpportunityRow = { id: string; title: string; stage: string };
+type QuotationRow = { id: string; title: string; status: string };
+
+function BookingDetailPage() {
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [client, setClient] = useState<ClientRow | null>(null);
+  const [opportunity, setOpportunity] = useState<OpportunityRow | null>(null);
+  const [quotation, setQuotation] = useState<QuotationRow | null>(null);
+  const [agentName, setAgentName] = useState<string | null>(null);
+  const [history, setHistory] = useState<BookingStatusEvent[]>([]);
+  const [documents, setDocuments] = useState<BookingDocument[]>([]);
+  const [payments, setPayments] = useState<BookingPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const b = await getBooking(id);
+      setBooking(b);
+      if (!b) return;
+
+      const [{ data: c }, hist, docs, pays] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("id, full_name, last_name, email")
+          .eq("id", b.client_id)
+          .maybeSingle(),
+        listStatusHistory(id),
+        listBookingDocuments(id),
+        listBookingPayments(id),
+      ]);
+      setClient((c as ClientRow) ?? null);
+      setHistory(hist);
+      setDocuments(docs);
+      setPayments(pays);
+
+      if (b.opportunity_id) {
+        const { data } = await supabase
+          .from("opportunities")
+          .select("id, title, stage")
+          .eq("id", b.opportunity_id)
+          .maybeSingle();
+        setOpportunity((data as OpportunityRow) ?? null);
+      } else setOpportunity(null);
+
+      if (b.quotation_id) {
+        const { data } = await supabase
+          .from("quotations")
+          .select("id, title, status")
+          .eq("id", b.quotation_id)
+          .maybeSingle();
+        setQuotation((data as QuotationRow) ?? null);
+      } else setQuotation(null);
+
+      if (b.assigned_agent_id) {
+        const { data } = await supabase
+          .from("agents")
+          .select("first_name, last_name")
+          .eq("id", b.assigned_agent_id)
+          .maybeSingle();
+        setAgentName(
+          data ? [data.first_name, data.last_name].filter(Boolean).join(" ") : null,
+        );
+      } else setAgentName(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo cargar la reserva");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function changeStatus(status: BookingStatus) {
+    if (!booking) return;
+    setSaving(true);
+    try {
+      await setBookingStatus(booking.id, status);
+      toast.success(`Estado actualizado a "${bookingStatusLabel(status)}"`);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo cambiar el estado");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Cargando reserva...
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-muted-foreground">No encontramos esta reserva.</p>
+        <Link to="/bookings" className="mt-4 inline-block text-sm font-medium text-primary">
+          Volver a Reservas
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 pb-20">
+      <button
+        onClick={() => navigate({ to: "/bookings" })}
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Reservas
+      </button>
+
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium">
+              <TicketCheck className="h-3.5 w-3.5 text-gold" /> {booking.booking_number}
+            </span>
+            <h1 className="mt-3 font-display text-3xl font-semibold">
+              {client ? [client.full_name, client.last_name].filter(Boolean).join(" ") : "Cliente"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {booking.destination ?? "Sin destino"} ·{" "}
+              {booking.travel_start ?? "sin fecha"}
+              {booking.travel_end ? ` → ${booking.travel_end}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${bookingStatusClasses(booking.status)}`}
+            >
+              {bookingStatusLabel(booking.status)}
+            </span>
+            <p className="font-display text-2xl font-semibold">
+              {formatMoney(booking.currency, Number(booking.amount ?? 0))}
+            </p>
+            {booking.exchange_rate != null && (
+              <p className="text-xs text-muted-foreground">TC {booking.exchange_rate}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
+          <Info label="Cliente">
+            {client ? (
+              <Link
+                to="/clients/$id"
+                params={{ id: client.id }}
+                className="text-primary hover:underline"
+              >
+                {[client.full_name, client.last_name].filter(Boolean).join(" ")}
+              </Link>
+            ) : (
+              "—"
+            )}
+          </Info>
+          <Info label="Oportunidad">
+            {opportunity ? `${opportunity.title} · ${stageLabel(opportunity.stage)}` : "—"}
+          </Info>
+          <Info label="Cotización origen">
+            {quotation ? (
+              <Link
+                to="/quotations/$id"
+                params={{ id: quotation.id }}
+                className="text-primary hover:underline"
+              >
+                {quotation.title}
+              </Link>
+            ) : (
+              "—"
+            )}
+          </Info>
+          <Info label="Agente responsable">{agentName ?? "Sin asignar"}</Info>
+          <Info label="Fecha de creación">
+            {new Date(booking.created_at).toLocaleDateString()}
+          </Info>
+          <Info label="Registro">
+            {booking.record_status === "archived" ? "Archivada" : "Activa"}
+          </Info>
+          {booking.notes && (
+            <div className="sm:col-span-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Observaciones</p>
+              <p className="whitespace-pre-line">{booking.notes}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+          <span className="text-sm text-muted-foreground">Cambiar estado:</span>
+          {BOOKING_STATUSES.map((s) => (
+            <Button
+              key={s.value}
+              size="sm"
+              variant={s.value === booking.status ? "default" : "outline"}
+              disabled={saving || s.value === booking.status}
+              onClick={() => changeStatus(s.value)}
+            >
+              {s.label}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={saving}
+            onClick={async () => {
+              await archiveBooking(booking.id, booking.record_status !== "archived");
+              toast.success(
+                booking.record_status === "archived" ? "Reserva restaurada" : "Reserva archivada",
+              );
+              load();
+            }}
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            {booking.record_status === "archived" ? "Restaurar" : "Archivar"}
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="timeline">
+        <TabsList>
+          <TabsTrigger value="timeline">
+            <History className="mr-2 h-4 w-4" /> Línea de tiempo
+          </TabsTrigger>
+          <TabsTrigger value="documents">
+            <FileText className="mr-2 h-4 w-4" /> Documentación
+          </TabsTrigger>
+          <TabsTrigger value="payments">
+            <CreditCard className="mr-2 h-4 w-4" /> Pagos
+          </TabsTrigger>
+          <TabsTrigger value="provider">
+            <Building2 className="mr-2 h-4 w-4" /> Proveedor
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="timeline">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold">Historial de estados</h2>
+            <ol className="mt-6 space-y-4">
+              {history.length === 0 && (
+                <li className="text-sm text-muted-foreground">Sin movimientos registrados.</li>
+              )}
+              {history.map((h) => (
+                <li key={h.id} className="relative border-l border-border pl-6">
+                  <span className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-gold" />
+                  <p className="text-sm font-medium">
+                    {h.from_status
+                      ? `${bookingStatusLabel(h.from_status)} → ${bookingStatusLabel(h.to_status)}`
+                      : bookingStatusLabel(h.to_status)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(h.created_at).toLocaleString()}
+                    {h.comment ? ` · ${h.comment}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold">Documentación</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Estructura preparada para voucher, recibos, facturas y otros archivos. La carga de
+              archivos se habilitará en una próxima versión.
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {BOOKING_DOCUMENT_KINDS.map((k) => {
+                const items = documents.filter((d) => d.kind === k.value);
+                return (
+                  <div
+                    key={k.value}
+                    className="rounded-xl border border-dashed border-border p-4 text-sm"
+                  >
+                    <p className="font-medium">{k.label}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {items.length === 0 ? "Sin archivos" : `${items.length} archivo(s)`}
+                    </p>
+                    <ul className="mt-2 space-y-1 text-xs">
+                      {items.map((d) => (
+                        <li key={d.id}>{d.title}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold">Pagos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Estructura preparada para seña y saldo con estado, método y fecha. La lógica de cobro
+              se implementará más adelante.
+            </p>
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="py-2 pr-4">Concepto</th>
+                    <th className="py-2 pr-4">Importe</th>
+                    <th className="py-2 pr-4">Estado</th>
+                    <th className="py-2 pr-4">Método</th>
+                    <th className="py-2">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {BOOKING_PAYMENT_KINDS.filter((k) => k.value !== "other").map((k) => {
+                    const p = payments.find((x) => x.kind === k.value);
+                    return (
+                      <tr key={k.value} className="border-t border-border/60">
+                        <td className="py-2 pr-4 font-medium">{k.label}</td>
+                        <td className="py-2 pr-4">
+                          {p ? formatMoney(p.currency, Number(p.amount ?? 0)) : "—"}
+                        </td>
+                        <td className="py-2 pr-4">{p ? p.status : "Pendiente"}</td>
+                        <td className="py-2 pr-4">{p?.method ?? "—"}</td>
+                        <td className="py-2">{p?.due_date ?? p?.paid_at?.slice(0, 10) ?? "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="provider">
+          <ProviderTab booking={booking} onSaved={load} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+/** Relación con el futuro módulo de proveedores: por ahora, datos de referencia. */
+function ProviderTab({ booking, onSaved }: { booking: Booking; onSaved: () => void }) {
+  const [name, setName] = useState(booking.provider_name ?? "");
+  const [reference, setReference] = useState(booking.provider_reference ?? "");
+  const [notes, setNotes] = useState(booking.provider_notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await setBookingProvider(booking.id, {
+        provider_name: name.trim() || null,
+        provider_reference: reference.trim() || null,
+        provider_notes: notes.trim() || null,
+      });
+      toast.success("Datos del proveedor guardados");
+      onSaved();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="font-display text-xl font-semibold">Proveedor</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Relación preparada para el futuro módulo de proveedores. Por ahora se registran los datos de
+        referencia de la operación.
+      </p>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Proveedor</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Operador, hotel, mayorista..." />
+        </div>
+        <div className="space-y-2">
+          <Label>Referencia / localizador</Label>
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Observaciones del proveedor</Label>
+          <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <Button onClick={save} disabled={saving}>
+          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+          Guardar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm">{children}</p>
+    </div>
+  );
+}
