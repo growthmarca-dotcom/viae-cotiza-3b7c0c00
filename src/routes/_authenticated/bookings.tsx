@@ -50,6 +50,13 @@ function BookingsPage() {
 
   const rows = useMemo(() => bookings ?? [], [bookings]);
 
+  const bookingIds = rows.map((b) => b.id);
+  const { data: checklistByBooking } = useQuery({
+    queryKey: ["bookings-checklist", bookingIds.join(",")],
+    enabled: bookingIds.length > 0,
+    queryFn: () => listChecklistByBooking(bookingIds),
+  });
+
   const clientIds = [...new Set(rows.map((b) => b.client_id))];
   const { data: clients } = useQuery({
     queryKey: ["bookings-clients", clientIds.join(",")],
