@@ -49,6 +49,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const ROLES: { value: AppRole; label: string }[] = [
   { value: "admin", label: "Administrador" },
   { value: "agent", label: "Agente" },
+  { value: "operations", label: "Operaciones" },
   { value: "provider", label: "Proveedor" },
 ];
 
