@@ -30,10 +30,17 @@ export type Database = {
           email: string | null
           first_name: string
           id: string
+          invitation_expires_at: string | null
+          invitation_status:
+            | Database["public"]["Enums"]["invitation_status"]
+            | null
           invited_at: string | null
+          invited_by: string | null
           invited_email: string | null
           languages: string[]
           last_name: string | null
+          linked_at: string | null
+          linked_by: string | null
           main_zone: string | null
           max_active_clients: number | null
           max_open_opportunities: number | null
@@ -66,10 +73,17 @@ export type Database = {
           email?: string | null
           first_name: string
           id?: string
+          invitation_expires_at?: string | null
+          invitation_status?:
+            | Database["public"]["Enums"]["invitation_status"]
+            | null
           invited_at?: string | null
+          invited_by?: string | null
           invited_email?: string | null
           languages?: string[]
           last_name?: string | null
+          linked_at?: string | null
+          linked_by?: string | null
           main_zone?: string | null
           max_active_clients?: number | null
           max_open_opportunities?: number | null
@@ -102,10 +116,17 @@ export type Database = {
           email?: string | null
           first_name?: string
           id?: string
+          invitation_expires_at?: string | null
+          invitation_status?:
+            | Database["public"]["Enums"]["invitation_status"]
+            | null
           invited_at?: string | null
+          invited_by?: string | null
           invited_email?: string | null
           languages?: string[]
           last_name?: string | null
+          linked_at?: string | null
+          linked_by?: string | null
           main_zone?: string | null
           max_active_clients?: number | null
           max_open_opportunities?: number | null
@@ -120,6 +141,36 @@ export type Database = {
           wa_number?: string | null
           wa_status?: Database["public"]["Enums"]["agent_wa_status"]
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity: string
+          entity_id: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity: string
+          entity_id?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity?: string
+          entity_id?: string | null
+          id?: string
         }
         Relationships: []
       }
@@ -138,6 +189,7 @@ export type Database = {
           opportunity_status: Database["public"]["Enums"]["opportunity_status"]
           pax_count: number | null
           phone: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
           travel_end: string | null
           travel_start: string | null
           updated_at: string
@@ -157,6 +209,7 @@ export type Database = {
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
           phone?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
           travel_end?: string | null
           travel_start?: string | null
           updated_at?: string
@@ -176,6 +229,7 @@ export type Database = {
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
           phone?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
           travel_end?: string | null
           travel_start?: string | null
           updated_at?: string
@@ -187,6 +241,7 @@ export type Database = {
         Row: {
           accent_color: string
           address: string | null
+          analysis_currency: string
           company_name: string | null
           created_at: string
           email: string | null
@@ -206,6 +261,7 @@ export type Database = {
         Insert: {
           accent_color?: string
           address?: string | null
+          analysis_currency?: string
           company_name?: string | null
           created_at?: string
           email?: string | null
@@ -225,6 +281,7 @@ export type Database = {
         Update: {
           accent_color?: string
           address?: string | null
+          analysis_currency?: string
           company_name?: string | null
           created_at?: string
           email?: string | null
@@ -260,6 +317,7 @@ export type Database = {
           owner_user_id: string
           probability: number
           quotation_id: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
           stage: Database["public"]["Enums"]["opportunity_stage"]
           title: string
           updated_at: string
@@ -281,6 +339,7 @@ export type Database = {
           owner_user_id: string
           probability?: number
           quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
           stage?: Database["public"]["Enums"]["opportunity_stage"]
           title?: string
           updated_at?: string
@@ -302,6 +361,7 @@ export type Database = {
           owner_user_id?: string
           probability?: number
           quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
           stage?: Database["public"]["Enums"]["opportunity_stage"]
           title?: string
           updated_at?: string
@@ -574,6 +634,7 @@ export type Database = {
       admins_exist: { Args: never; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       current_agent_id: { Args: never; Returns: string }
+      expire_stale_invitations: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -596,6 +657,7 @@ export type Database = {
       agent_wa_status: "available" | "busy" | "offline"
       app_role: "admin" | "agent" | "provider"
       commission_type: "percentage" | "fixed"
+      invitation_status: "pending" | "accepted" | "rejected" | "expired"
       lead_source:
         | "website"
         | "whatsapp"
@@ -632,6 +694,7 @@ export type Database = {
         | "accepted"
         | "rejected"
         | "expired"
+      record_status: "active" | "archived" | "inactive" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -772,6 +835,7 @@ export const Constants = {
       agent_wa_status: ["available", "busy", "offline"],
       app_role: ["admin", "agent", "provider"],
       commission_type: ["percentage", "fixed"],
+      invitation_status: ["pending", "accepted", "rejected", "expired"],
       lead_source: [
         "website",
         "whatsapp",
@@ -812,6 +876,7 @@ export const Constants = {
         "rejected",
         "expired",
       ],
+      record_status: ["active", "archived", "inactive", "suspended"],
     },
   },
 } as const
