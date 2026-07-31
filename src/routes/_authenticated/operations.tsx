@@ -422,6 +422,24 @@ function OperationsPage() {
                     </Select>
                   </div>
                 </div>
+
+                <div className="mt-4 max-w-md">
+                  <ChecklistProgressBar
+                    compact
+                    done={progress.done}
+                    total={progress.total}
+                    percent={progress.percent}
+                  />
+                </div>
+
+                {(progress.warnings.length > 0 || openIncidents.length > 0) && (
+                  <p className="mt-2 text-xs text-destructive">
+                    {progress.warnings.join(" ")}
+                    {openIncidents.length > 0 &&
+                      ` ${openIncidents.length} incidencia(s) abierta(s).`}
+                  </p>
+                )}
+
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   Tomada:{" "}
                   {b.operations_taken_at
