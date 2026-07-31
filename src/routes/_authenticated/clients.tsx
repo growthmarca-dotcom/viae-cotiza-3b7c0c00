@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ClientFormDialog } from "@/components/client-form-dialog";
 import {
   CLIENT_STATUSES,
+  RECORD_STATUSES,
   createClient,
   listClients,
   splitName,
@@ -15,6 +16,7 @@ import {
   statusLabel,
   type Client,
   type ClientInput,
+  type RecordStatus,
 } from "@/lib/clients";
 
 export const Route = createFileRoute("/_authenticated/clients")({
