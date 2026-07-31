@@ -252,7 +252,16 @@ function QuotationDetailPage() {
         <Row label="Impuestos" value={q.taxes != null ? `${q.currency} ${q.taxes}` : null} />
         <Row label="Otros cargos" value={q.other_charges != null ? `${q.currency} ${q.other_charges}` : null} />
         <Row label="Total" value={`${q.currency} ${Number(q.total_amount ?? 0).toLocaleString()}`} />
+        <Row label="Moneda utilizada" value={q.currency} />
+        <Row
+          label="Tipo de cambio utilizado"
+          value={totals.rate != null ? `1 USD = ARS ${totals.rate.toLocaleString("es-AR")}` : null}
+        />
+        <Row label="Total en USD" value={totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : null} />
+        <Row label="Total en ARS" value={totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : null} />
+        <Row label="Fecha de la cotización" value={new Date(q.created_at).toLocaleDateString()} />
       </Card>
+
 
       {q.notes && (
         <Card title="Observaciones">
