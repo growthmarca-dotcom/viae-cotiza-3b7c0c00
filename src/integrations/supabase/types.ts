@@ -1802,6 +1802,7 @@ export type Database = {
       }
       resources: {
         Row: {
+          address: string | null
           advance_notice_hours: number | null
           agent_id: string | null
           availability: Database["public"]["Enums"]["resource_availability"]
@@ -1812,30 +1813,48 @@ export type Database = {
           company_id: string | null
           contact_name: string | null
           country: string | null
+          coverage_scope: string | null
           created_at: string
           description: string | null
           destinations: string[]
           driver_first_name: string | null
           driver_last_name: string | null
           driver_user_id: string | null
+          dropoff_location: string | null
           email: string | null
+          geo_radius_km: number | null
           has_air_conditioning: boolean
           id: string
           is_accessible: boolean
           kind: Database["public"]["Enums"]["company_kind"]
           large_luggage_capacity: number | null
+          latitude: number | null
+          longitude: number | null
           luggage_capacity: number | null
           main_zone: string | null
           max_distance_km: number | null
+          meeting_point: string | null
           name: string
           notes: string | null
           operating_limit: number | null
+          operating_zone: string | null
           owner_company_id: string | null
           owner_name: string | null
           owner_type: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity: number | null
+          pickup_location: string | null
+          postal_code: string | null
           provider_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
+          rental_deposit_amount: number | null
+          rental_deposit_currency: string
+          rental_extra_km_cost: number | null
+          rental_fuel_policy: string | null
+          rental_included_km: number | null
+          rental_license_required: string | null
+          rental_min_age: number | null
+          rental_requires_driver: boolean
+          rental_vehicle_condition: string | null
           requires_advance_booking: boolean
           resource_class: Database["public"]["Enums"]["resource_class"]
           self_drive: boolean
@@ -1861,6 +1880,7 @@ export type Database = {
           zones: string[]
         }
         Insert: {
+          address?: string | null
           advance_notice_hours?: number | null
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
@@ -1871,30 +1891,48 @@ export type Database = {
           company_id?: string | null
           contact_name?: string | null
           country?: string | null
+          coverage_scope?: string | null
           created_at?: string
           description?: string | null
           destinations?: string[]
           driver_first_name?: string | null
           driver_last_name?: string | null
           driver_user_id?: string | null
+          dropoff_location?: string | null
           email?: string | null
+          geo_radius_km?: number | null
           has_air_conditioning?: boolean
           id?: string
           is_accessible?: boolean
           kind?: Database["public"]["Enums"]["company_kind"]
           large_luggage_capacity?: number | null
+          latitude?: number | null
+          longitude?: number | null
           luggage_capacity?: number | null
           main_zone?: string | null
           max_distance_km?: number | null
+          meeting_point?: string | null
           name: string
           notes?: string | null
           operating_limit?: number | null
+          operating_zone?: string | null
           owner_company_id?: string | null
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
+          pickup_location?: string | null
+          postal_code?: string | null
           provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          rental_deposit_amount?: number | null
+          rental_deposit_currency?: string
+          rental_extra_km_cost?: number | null
+          rental_fuel_policy?: string | null
+          rental_included_km?: number | null
+          rental_license_required?: string | null
+          rental_min_age?: number | null
+          rental_requires_driver?: boolean
+          rental_vehicle_condition?: string | null
           requires_advance_booking?: boolean
           resource_class?: Database["public"]["Enums"]["resource_class"]
           self_drive?: boolean
@@ -1920,6 +1958,7 @@ export type Database = {
           zones?: string[]
         }
         Update: {
+          address?: string | null
           advance_notice_hours?: number | null
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
@@ -1930,30 +1969,48 @@ export type Database = {
           company_id?: string | null
           contact_name?: string | null
           country?: string | null
+          coverage_scope?: string | null
           created_at?: string
           description?: string | null
           destinations?: string[]
           driver_first_name?: string | null
           driver_last_name?: string | null
           driver_user_id?: string | null
+          dropoff_location?: string | null
           email?: string | null
+          geo_radius_km?: number | null
           has_air_conditioning?: boolean
           id?: string
           is_accessible?: boolean
           kind?: Database["public"]["Enums"]["company_kind"]
           large_luggage_capacity?: number | null
+          latitude?: number | null
+          longitude?: number | null
           luggage_capacity?: number | null
           main_zone?: string | null
           max_distance_km?: number | null
+          meeting_point?: string | null
           name?: string
           notes?: string | null
           operating_limit?: number | null
+          operating_zone?: string | null
           owner_company_id?: string | null
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
+          pickup_location?: string | null
+          postal_code?: string | null
           provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          rental_deposit_amount?: number | null
+          rental_deposit_currency?: string
+          rental_extra_km_cost?: number | null
+          rental_fuel_policy?: string | null
+          rental_included_km?: number | null
+          rental_license_required?: string | null
+          rental_min_age?: number | null
+          rental_requires_driver?: boolean
+          rental_vehicle_condition?: string | null
           requires_advance_booking?: boolean
           resource_class?: Database["public"]["Enums"]["resource_class"]
           self_drive?: boolean
