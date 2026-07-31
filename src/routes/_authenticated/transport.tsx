@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bus, CarFront, Loader2, MapPin, Search, UserRound } from "lucide-react";
+import { BadgeDollarSign, Bus, CarFront, Loader2, MapPin, Search, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -232,7 +232,11 @@ function TransportPage() {
             <TabsTrigger value="assigned">
               <Bus className="mr-2 h-4 w-4" /> Asignados ({assigned.length})
             </TabsTrigger>
+            <TabsTrigger value="economics">
+              <BadgeDollarSign className="mr-2 h-4 w-4" /> Economía
+            </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="drivers">
             <div className="grid gap-4 md:grid-cols-2">
