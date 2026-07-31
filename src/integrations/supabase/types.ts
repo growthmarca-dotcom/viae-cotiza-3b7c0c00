@@ -62,6 +62,96 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          accent_color: string
+          address: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          facebook: string | null
+          footer_text: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          logo_path: string | null
+          primary_color: string
+          tiktok: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          accent_color?: string
+          address?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          facebook?: string | null
+          footer_text?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_path?: string | null
+          primary_color?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          accent_color?: string
+          address?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          facebook?: string | null
+          footer_text?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_path?: string | null
+          primary_color?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      permission_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           agency_name: string | null
@@ -95,12 +185,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quotation_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          created_at: string
+          id: string
+          owner_id: string
+          quotation_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          owner_id: string
+          quotation_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          id?: string
+          owner_id?: string
+          quotation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_history_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotations: {
         Row: {
           accommodation_address: string | null
           accommodation_description: string | null
           accommodation_name: string | null
           accommodation_services: string | null
+          archived: boolean
           cancellation_policy: string | null
           client_id: string | null
           created_at: string
@@ -132,6 +261,7 @@ export type Database = {
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
+          archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
           created_at?: string
@@ -163,6 +293,7 @@ export type Database = {
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
+          archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
           created_at?: string
@@ -235,7 +366,7 @@ export type Database = {
       is_approved: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      account_status: "pending" | "approved" | "rejected"
+      account_status: "pending" | "approved" | "rejected" | "suspended"
       app_role: "admin" | "agent" | "provider"
       opportunity_status:
         | "new"
@@ -378,7 +509,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_status: ["pending", "approved", "rejected"],
+      account_status: ["pending", "approved", "rejected", "suspended"],
       app_role: ["admin", "agent", "provider"],
       opportunity_status: [
         "new",
