@@ -94,12 +94,14 @@ function PublicQuotationPage() {
               </div>
             )}
             <div className="min-w-0">
-              <span
-                className="block truncate font-display text-lg font-semibold tracking-tight"
-                style={{ color: company.primaryColor }}
-              >
-                {company.companyName}
-              </span>
+              {company.companyName ? (
+                <span
+                  className="block truncate font-display text-lg font-semibold tracking-tight"
+                  style={{ color: company.primaryColor }}
+                >
+                  {company.companyName}
+                </span>
+              ) : null}
               {company.address ? (
                 <span className="block truncate text-xs text-muted-foreground">{company.address}</span>
               ) : null}
