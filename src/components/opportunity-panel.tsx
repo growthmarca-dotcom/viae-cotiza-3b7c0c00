@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { CalendarClock, Loader2, Plus, Target } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarClock, Loader2, Plus, Target, TicketCheck } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { getBookingByOpportunity, type Booking } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,13 +100,28 @@ function OpportunityCard({
   agents?: AgentOption[];
   onChanged: () => void;
 }) {
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [probability, setProbability] = useState(String(opportunity.probability ?? 0));
   const [customAction, setCustomAction] = useState(
     opportunity.next_action && !NEXT_ACTIONS.includes(opportunity.next_action as never)
       ? opportunity.next_action
       : "",
   );
+
+  useEffect(() => {
+    let active = true;
+    getBookingByOpportunity(opportunity.id)
+      .then((b) => {
+        if (active) setBooking(b);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [opportunity.id]);
 
   async function patch(values: Parameters<typeof updateOpportunity>[1]) {
     setSaving(true);
@@ -136,12 +154,44 @@ function OpportunityCard({
             {formatMoney(opportunity.currency, opportunity.estimated_value)}
           </p>
         </div>
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${stageClasses(opportunity.stage)}`}
-        >
-          {stageLabel(opportunity.stage)}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${stageClasses(opportunity.stage)}`}
+          >
+            {stageLabel(opportunity.stage)}
+          </span>
+          {booking ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate({ to: "/bookings/$id", params: { id: booking.id } })}
+            >
+              <TicketCheck className="mr-2 h-4 w-4" /> {booking.booking_number}
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => setBookingOpen(true)}>
+              <TicketCheck className="mr-2 h-4 w-4" /> Generar reserva
+            </Button>
+          )}
+        </div>
       </div>
+
+      <BookingCreateDialog
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+        origin={{
+          opportunityId: opportunity.id,
+          quotationId: opportunity.quotation_id ?? null,
+        }}
+        defaults={{
+          clientId: opportunity.client_id,
+          agentId: opportunity.assigned_agent_id,
+          amount: Number(opportunity.estimated_value ?? 0),
+          currency: opportunity.currency,
+        }}
+        onCreated={(bookingId) => navigate({ to: "/bookings/$id", params: { id: bookingId } })}
+      />
+
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div>

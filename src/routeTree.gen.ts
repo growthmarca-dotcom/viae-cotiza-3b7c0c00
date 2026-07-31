@@ -16,12 +16,14 @@ import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations/index'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
+import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
 import { Route as AuthenticatedAgentsIdRouteImport } from './routes/_authenticated/agents_.$id'
 import { Route as AuthenticatedQuotationsIdEditRouteImport } from './routes/_authenticated/quotations/$id_.edit'
 
@@ -59,6 +61,11 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAgentsRoute = AuthenticatedAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
@@ -92,6 +99,11 @@ const AuthenticatedClientsIdRoute = AuthenticatedClientsIdRouteImport.update({
   path: '/clients/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsIdRoute = AuthenticatedBookingsIdRouteImport.update({
+  id: '/bookings_/$id',
+  path: '/bookings/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdRouteImport.update({
   id: '/agents_/$id',
   path: '/agents/$id',
@@ -109,11 +121,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/agents': typeof AuthenticatedAgentsRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -125,11 +139,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/agents': typeof AuthenticatedAgentsRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -143,11 +159,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/agents': typeof AuthenticatedAgentsRoute
+  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/_authenticated/agents_/$id': typeof AuthenticatedAgentsIdRoute
+  '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
   '/_authenticated/clients_/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -161,11 +179,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/agents'
+    | '/bookings'
     | '/clients'
     | '/dashboard'
     | '/settings'
     | '/cotizacion/$token'
     | '/agents/$id'
+    | '/bookings/$id'
     | '/clients/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -177,11 +197,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin'
     | '/agents'
+    | '/bookings'
     | '/clients'
     | '/dashboard'
     | '/settings'
     | '/cotizacion/$token'
     | '/agents/$id'
+    | '/bookings/$id'
     | '/clients/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -194,11 +216,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/admin'
     | '/_authenticated/agents'
+    | '/_authenticated/bookings'
     | '/_authenticated/clients'
     | '/_authenticated/dashboard'
     | '/_authenticated/settings'
     | '/cotizacion/$token'
     | '/_authenticated/agents_/$id'
+    | '/_authenticated/bookings_/$id'
     | '/_authenticated/clients_/$id'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
@@ -264,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings': {
+      id: '/_authenticated/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agents': {
       id: '/_authenticated/agents'
       path: '/agents'
@@ -306,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings_/$id': {
+      id: '/_authenticated/bookings_/$id'
+      path: '/bookings/$id'
+      fullPath: '/bookings/$id'
+      preLoaderRoute: typeof AuthenticatedBookingsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agents_/$id': {
       id: '/_authenticated/agents_/$id'
       path: '/agents/$id'
@@ -326,10 +364,12 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
+  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
+  AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
@@ -340,10 +380,12 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
+  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
+  AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,

@@ -42,6 +42,7 @@ export const EXPORTABLE = [
   { table: "agents", label: "Agentes" },
   { table: "quotations", label: "Cotizaciones" },
   { table: "opportunities", label: "Oportunidades" },
+  { table: "bookings", label: "Reservas" },
 ] as const;
 
 export type ExportableTable = (typeof EXPORTABLE)[number]["table"];

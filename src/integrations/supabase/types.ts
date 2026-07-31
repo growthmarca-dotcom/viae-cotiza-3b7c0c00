@@ -174,6 +174,254 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_documents: {
+        Row: {
+          booking_id: string
+          created_at: string
+          file_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["booking_document_kind"]
+          notes: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_document_kind"]
+          notes?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_document_kind"]
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          currency: string
+          due_date: string | null
+          exchange_rate: number | null
+          id: string
+          kind: Database["public"]["Enums"]["booking_payment_kind"]
+          method: string | null
+          notes: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["booking_payment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          booking_id: string
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          exchange_rate?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_payment_kind"]
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["booking_payment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          exchange_rate?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_payment_kind"]
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["booking_payment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_status_history: {
+        Row: {
+          actor_id: string | null
+          booking_id: string
+          comment: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["booking_status"] | null
+          id: string
+          owner_id: string
+          to_status: Database["public"]["Enums"]["booking_status"]
+        }
+        Insert: {
+          actor_id?: string | null
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["booking_status"] | null
+          id?: string
+          owner_id: string
+          to_status: Database["public"]["Enums"]["booking_status"]
+        }
+        Update: {
+          actor_id?: string | null
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["booking_status"] | null
+          id?: string
+          owner_id?: string
+          to_status?: Database["public"]["Enums"]["booking_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_status_history_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          amount: number
+          assigned_agent_id: string | null
+          booking_number: string | null
+          client_id: string
+          created_at: string
+          currency: string
+          destination: string | null
+          exchange_rate: number | null
+          id: string
+          notes: string | null
+          opportunity_id: string | null
+          provider_id: string | null
+          provider_name: string | null
+          provider_notes: string | null
+          provider_reference: string | null
+          quotation_id: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          status: Database["public"]["Enums"]["booking_status"]
+          travel_end: string | null
+          travel_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          assigned_agent_id?: string | null
+          booking_number?: string | null
+          client_id: string
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          exchange_rate?: number | null
+          id?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          provider_id?: string | null
+          provider_name?: string | null
+          provider_notes?: string | null
+          provider_reference?: string | null
+          quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          status?: Database["public"]["Enums"]["booking_status"]
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          assigned_agent_id?: string | null
+          booking_number?: string | null
+          client_id?: string
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          exchange_rate?: number | null
+          id?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          provider_id?: string | null
+          provider_name?: string | null
+          provider_notes?: string | null
+          provider_reference?: string | null
+          quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          status?: Database["public"]["Enums"]["booking_status"]
+          travel_end?: string | null
+          travel_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_assigned_agent_id_fkey"
+            columns: ["assigned_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           city: string | null
@@ -656,6 +904,22 @@ export type Database = {
         | "archived"
       agent_wa_status: "available" | "busy" | "offline"
       app_role: "admin" | "agent" | "provider"
+      booking_document_kind: "voucher" | "receipt" | "invoice" | "other"
+      booking_payment_kind: "deposit" | "balance" | "other"
+      booking_payment_status:
+        | "pending"
+        | "partial"
+        | "paid"
+        | "refunded"
+        | "cancelled"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "reserved"
+        | "voucher_issued"
+        | "completed"
+        | "cancelled"
       commission_type: "percentage" | "fixed"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
       lead_source:
@@ -834,6 +1098,24 @@ export const Constants = {
       ],
       agent_wa_status: ["available", "busy", "offline"],
       app_role: ["admin", "agent", "provider"],
+      booking_document_kind: ["voucher", "receipt", "invoice", "other"],
+      booking_payment_kind: ["deposit", "balance", "other"],
+      booking_payment_status: [
+        "pending",
+        "partial",
+        "paid",
+        "refunded",
+        "cancelled",
+      ],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "reserved",
+        "voucher_issued",
+        "completed",
+        "cancelled",
+      ],
       commission_type: ["percentage", "fixed"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
       lead_source: [

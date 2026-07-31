@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  TicketCheck,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ const baseNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
+  { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/settings", label: "Configuración", icon: Settings },

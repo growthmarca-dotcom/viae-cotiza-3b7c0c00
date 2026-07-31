@@ -12,6 +12,7 @@ import {
   Pencil,
   Share2,
   Trash2,
+  TicketCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,8 @@ import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/q
 import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { getBookingByQuotation, type Booking } from "@/lib/bookings";
 
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -66,6 +69,16 @@ function QuotationDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  async function loadBooking() {
+    try {
+      setBooking(await getBookingByQuotation(id));
+    } catch {
+      setBooking(null);
+    }
+  }
 
   async function loadHistory() {
     const { data } = await supabase
@@ -92,6 +105,7 @@ function QuotationDetailPage() {
       const { info } = await fetchCompany();
       setCompany(info);
       await loadHistory();
+      await loadBooking();
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,11 +204,47 @@ function QuotationDetailPage() {
               </>
             )}
           </Button>
+          {booking ? (
+            <Button variant="outline" onClick={() => navigate({ to: "/bookings/$id", params: { id: booking.id } })}>
+              <TicketCheck className="mr-2 h-4 w-4" /> Ver reserva {booking.booking_number}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                if (!q.client_id) {
+                  toast.error("Asociá un cliente a la cotización antes de generar la reserva.");
+                  return;
+                }
+                setBookingOpen(true);
+              }}
+            >
+              <TicketCheck className="mr-2 h-4 w-4" /> Generar reserva
+            </Button>
+          )}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
         </div>
       </header>
+
+      {q.client_id && (
+        <BookingCreateDialog
+          open={bookingOpen}
+          onOpenChange={setBookingOpen}
+          origin={{ quotationId: q.id }}
+          defaults={{
+            clientId: q.client_id,
+            destination: q.destination,
+            travelStart: q.travel_start,
+            travelEnd: q.travel_end,
+            amount: Number(q.total_amount ?? 0),
+            currency: q.currency,
+            exchangeRate: q.exchange_rate,
+          }}
+          onCreated={(bookingId) => navigate({ to: "/bookings/$id", params: { id: bookingId } })}
+        />
+      )}
+
 
 
       {/* Share card */}
