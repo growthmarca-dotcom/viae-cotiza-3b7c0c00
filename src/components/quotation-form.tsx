@@ -133,6 +133,18 @@ export function QuotationForm({
     setForm((p) => (p.totalAmount === autoTotal ? p : { ...p, totalAmount: autoTotal }));
   }, [autoTotal]);
 
+  const totals = useMemo(
+    () =>
+      convertTotals(
+        Number(form.totalAmount || autoTotal) || 0,
+        form.currency,
+        form.exchangeRate ? Number(form.exchangeRate) : null,
+      ),
+    [form.totalAmount, form.currency, form.exchangeRate, autoTotal],
+  );
+
+
+
   const totalCount = kept.length + files.length;
 
   function onFilesSelected(list: FileList | null) {
