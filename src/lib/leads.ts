@@ -445,6 +445,9 @@ export type LeadAssignmentRules = {
   by_availability: boolean;
   by_active_leads: boolean;
   by_workload: boolean;
+  /** Preparadas para el motor automático (todavía sin lógica de puntuación). */
+  by_trip_type: boolean;
+  by_service: boolean;
 };
 
 export const DEFAULT_ASSIGNMENT_RULES: LeadAssignmentRules = {
@@ -455,11 +458,15 @@ export const DEFAULT_ASSIGNMENT_RULES: LeadAssignmentRules = {
   by_availability: false,
   by_active_leads: false,
   by_workload: false,
+  by_trip_type: false,
+  by_service: false,
 };
 
 export const ASSIGNMENT_RULE_LABELS: { key: keyof LeadAssignmentRules; label: string }[] = [
   { key: "by_destination", label: "Destino de interés" },
   { key: "by_language", label: "Idioma del lead" },
+  { key: "by_trip_type", label: "Tipo de viaje (próximamente)" },
+  { key: "by_service", label: "Servicio requerido (próximamente)" },
   { key: "by_specialty", label: "Especialidad del agente" },
   { key: "by_zone", label: "Zona operativa" },
   { key: "by_availability", label: "Disponibilidad del agente" },
