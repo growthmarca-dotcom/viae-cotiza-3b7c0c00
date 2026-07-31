@@ -23,6 +23,7 @@ import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
+import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
 import { Route as AuthenticatedAgentsIdRouteImport } from './routes/_authenticated/agents_.$id'
 import { Route as AuthenticatedQuotationsIdEditRouteImport } from './routes/_authenticated/quotations/$id_.edit'
 
@@ -98,6 +99,11 @@ const AuthenticatedClientsIdRoute = AuthenticatedClientsIdRouteImport.update({
   path: '/clients/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsIdRoute = AuthenticatedBookingsIdRouteImport.update({
+  id: '/bookings_/$id',
+  path: '/bookings/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdRouteImport.update({
   id: '/agents_/$id',
   path: '/agents/$id',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
+  '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/_authenticated/agents_/$id': typeof AuthenticatedAgentsIdRoute
+  '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
   '/_authenticated/clients_/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/cotizacion/$token'
     | '/agents/$id'
+    | '/bookings/$id'
     | '/clients/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/cotizacion/$token'
     | '/agents/$id'
+    | '/bookings/$id'
     | '/clients/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/cotizacion/$token'
     | '/_authenticated/agents_/$id'
+    | '/_authenticated/bookings_/$id'
     | '/_authenticated/clients_/$id'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
@@ -325,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings_/$id': {
+      id: '/_authenticated/bookings_/$id'
+      path: '/bookings/$id'
+      fullPath: '/bookings/$id'
+      preLoaderRoute: typeof AuthenticatedBookingsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agents_/$id': {
       id: '/_authenticated/agents_/$id'
       path: '/agents/$id'
@@ -350,6 +369,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
+  AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
@@ -365,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
+  AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
