@@ -305,6 +305,10 @@ function AdminPage() {
         </ul>
       </section>
 
+      <SystemAuditSection nameById={nameById} />
+
+      <BackupSection />
+
       <AlertDialog open={!!pending} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
