@@ -106,6 +106,8 @@ function DriverPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [services, setServices] = useState<TransportService[]>([]);
   const [context, setContext] = useState<Map<string, DriverServiceContext>>(new Map());
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filter, setFilter] = useState<DriverFilter>("today");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -114,12 +116,14 @@ function DriverPage() {
     try {
       const mine = await listMyDriverResources();
       setResources(mine);
-      const [svcs, ctx] = await Promise.all([
+      const [svcs, ctx, notis] = await Promise.all([
         listMyDriverServices(mine.map((r) => r.id)),
         listMyServiceContext(),
+        listMyNotifications(),
       ]);
       setServices(svcs);
       setContext(ctx);
+      setNotifications(notis);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar tu panel");
     } finally {
@@ -133,6 +137,18 @@ function DriverPage() {
 
   const driver = resources.find((r) => r.category === "driver") ?? resources[0] ?? null;
   const vehicleById = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
+  const summary = useMemo(() => driverDaySummary(services), [services]);
+  const visible = useMemo(() => filterDriverServices(services, filter), [services, filter]);
+  const counts = useMemo(
+    () => ({
+      today: filterDriverServices(services, "today").length,
+      upcoming: filterDriverServices(services, "upcoming").length,
+      history: filterDriverServices(services, "history").length,
+    }),
+    [services],
+  );
+  const unread = useMemo(() => notifications.filter((n) => n.read_at == null), [notifications]);
+
   const groups = useMemo(() => groupServices(services), [services]);
 
   async function run(action: () => Promise<void>, message: string) {
