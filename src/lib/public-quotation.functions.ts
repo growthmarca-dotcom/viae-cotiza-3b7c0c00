@@ -1,40 +1,64 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+
+const PUBLIC_FIELDS = [
+  "id",
+  "title",
+  "destination",
+  "travel_start",
+  "travel_end",
+  "nights",
+  "pax_count",
+  "guest_first_name",
+  "guest_last_name",
+  "accommodation_name",
+  "accommodation_address",
+  "accommodation_description",
+  "accommodation_services",
+  "cancellation_policy",
+  "price_per_night",
+  "taxes",
+  "total_amount",
+  "currency",
+  "notes",
+  "images",
+  "created_at",
+  "expires_at",
+].join(", ");
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ token: z.string().min(10).max(100) }).parse(data))
+  .inputValidator((data) =>
+    z.object({ token: z.string().regex(/^[a-f0-9]{20,64}$/i) }).parse(data),
+  )
   .handler(async ({ data }) => {
-    const url = process.env.SUPABASE_URL!;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const supabase = createClient<Database>(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: {
-        fetch: (input, init) => {
-          const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-          h.set("apikey", key);
-          return fetch(input, { ...init, headers: h });
-        },
-      },
-    });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: q, error } = await supabase
+    const { data: q, error } = await supabaseAdmin
       .from("quotations")
-      .select("*")
+      .select(PUBLIC_FIELDS)
       .eq("share_token", data.token)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+
+    if (error) {
+      console.error("public quotation lookup failed", error);
+      throw new Error("Cotización no encontrada");
+    }
     if (!q) throw new Error("Cotización no encontrada");
 
+    const row = q as Record<string, unknown>;
+    if (row.expires_at && new Date(row.expires_at as string) < new Date()) {
+      throw new Error("Cotización no encontrada");
+    }
+
+    const images = (row.images as string[] | null) ?? [];
     let imageUrls: string[] = [];
-    if (q.images && q.images.length > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (images.length > 0) {
       const { data: signed } = await supabaseAdmin.storage
         .from("quotation-images")
-        .createSignedUrls(q.images, 60 * 60 * 24 * 7);
+        .createSignedUrls(images, 60 * 60 * 24 * 7);
       imageUrls = (signed ?? []).map((s) => s.signedUrl).filter((u): u is string => Boolean(u));
     }
-    return { quotation: q, imageUrls };
+
+    const { images: _images, expires_at: _expires, ...quotation } = row;
+    return { quotation: quotation as Record<string, unknown>, imageUrls };
   });
