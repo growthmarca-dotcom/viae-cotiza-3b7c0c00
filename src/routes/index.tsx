@@ -16,7 +16,7 @@ function Landing() {
               <Compass className="h-5 w-5" />
             </div>
             <span className="font-display text-xl font-semibold tracking-tight">
-              ViaE <span className="text-gold">Cotizaciones</span>
+              ViaE <span className="text-gold">Sales Hub</span>
             </span>
           </Link>
           <div className="flex items-center gap-2">
@@ -37,14 +37,12 @@ function Landing() {
             Para agentes de viajes
           </span>
           <h1 className="mt-6 text-5xl font-semibold leading-tight tracking-tight text-foreground md:text-6xl">
-            Cotizaciones de viaje{" "}
-            <span className="italic text-primary">elegantes</span>,
+            ViaE <span className="italic text-primary">Sales Hub</span>
             <br />
-            listas para compartir.
+            para tu agencia.
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Crea propuestas profesionales para tus clientes en minutos y compártelas con
-            un enlace único. Simple, moderno, hecho para viajar.
+            Sistema profesional de cotizaciones y gestión comercial para turismo.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/dashboard">
@@ -91,7 +89,7 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} ViaE Cotizaciones
+        © {new Date().getFullYear()} ViaE Sales Hub
       </footer>
     </div>
   );

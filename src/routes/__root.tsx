@@ -78,21 +78,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ViaE — Cotizaciones de viajes profesionales" },
+      { title: "ViaE Sales Hub — Cotizaciones y gestión comercial" },
       {
         name: "description",
         content:
-          "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos.",
+          "Sistema profesional de cotizaciones y gestión comercial para turismo.",
       },
-      { property: "og:title", content: "ViaE — Cotizaciones de viajes profesionales" },
+      { property: "og:title", content: "ViaE Sales Hub — Cotizaciones y gestión comercial" },
       {
         property: "og:description",
-        content: "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos.",
+        content: "Sistema profesional de cotizaciones y gestión comercial para turismo.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "ViaE — Cotizaciones de viajes profesionales" },
-      { name: "twitter:description", content: "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos." },
+      { name: "twitter:title", content: "ViaE Sales Hub — Cotizaciones y gestión comercial" },
+      { name: "twitter:description", content: "Sistema profesional de cotizaciones y gestión comercial para turismo." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
     ],

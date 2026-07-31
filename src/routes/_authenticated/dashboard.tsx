@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
   head: () => ({
     meta: [
-      { title: "Dashboard — ViaE Cotizaciones" },
+      { title: "Dashboard — ViaE Sales Hub" },
       { name: "description", content: "Panel de control de tus cotizaciones." },
     ],
   }),

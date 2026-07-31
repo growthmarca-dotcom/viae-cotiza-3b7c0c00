@@ -6,14 +6,16 @@ import {
   PlusCircle,
   Users,
   Settings,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAccount } from "@/hooks/use-account";
 
-const nav = [
+const baseNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
@@ -21,8 +23,12 @@ const nav = [
   { to: "/settings", label: "Configuración", icon: Settings },
 ] as const;
 
+const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const { isAdmin } = useAccount();
+  const nav = isAdmin ? [...baseNav, ...adminNav] : [...baseNav];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {
@@ -34,13 +40,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <div className="grid min-h-screen md:grid-cols-[260px_1fr]">
         {/* Sidebar */}
-        <aside className="hidden bg-sidebar text-sidebar-foreground md:flex md:flex-col">
+        <aside data-print-hide className="hidden bg-sidebar text-sidebar-foreground md:flex md:flex-col">
           <div className="flex items-center gap-2 px-6 py-6">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-gold text-gold-foreground">
               <Compass className="h-5 w-5" />
             </div>
             <span className="font-display text-lg font-semibold">
-              ViaE <span className="text-gold">Cotizaciones</span>
+              ViaE <span className="text-gold">Sales Hub</span>
             </span>
           </div>
           <nav className="flex-1 space-y-1 px-3">
@@ -78,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Mobile top bar */}
-        <div className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 text-sidebar-foreground md:hidden">
+        <div data-print-hide className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 text-sidebar-foreground md:hidden">
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-gold text-gold-foreground">
               <Compass className="h-4 w-4" />
@@ -98,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Content */}
         <main className="min-w-0">
           {/* Mobile bottom nav */}
-          <div className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
+          <div data-print-hide className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
             {nav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}

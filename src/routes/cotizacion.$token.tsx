@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Loader2, MapPin, Calendar, Users, Moon } from "lucide-react";
+import { Compass, Download, Loader2, MapPin, Calendar, Users, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
 
 export const Route = createFileRoute("/cotizacion/$token")({
   component: PublicQuotationPage,
   head: () => ({
     meta: [
-      { title: "Cotización de viaje — ViaE" },
+      { title: "Cotización de viaje — ViaE Sales Hub" },
       { name: "description", content: "Detalle de tu propuesta de viaje." },
-      { property: "og:title", content: "Cotización de viaje — ViaE" },
+      { property: "og:title", content: "Cotización de viaje — ViaE Sales Hub" },
       { property: "og:description", content: "Detalle de tu propuesta de viaje." },
     ],
   }),
@@ -49,14 +50,19 @@ function PublicQuotationPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-card">
-        <div className="mx-auto flex max-w-5xl items-center gap-2 px-6 py-4">
+      <header data-print-hide className="border-b border-border/60 bg-card">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-6 py-4">
+          <div className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Compass className="h-5 w-5" />
           </div>
-          <span className="font-display text-lg font-semibold tracking-tight">
-            ViaE <span className="text-gold">Cotizaciones</span>
-          </span>
+            <span className="font-display text-lg font-semibold tracking-tight">
+              ViaE <span className="text-gold">Sales Hub</span>
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Download className="mr-2 h-4 w-4" /> Descargar PDF
+          </Button>
         </div>
       </header>
 
@@ -143,7 +149,7 @@ function PublicQuotationPage() {
         )}
 
         <footer className="pt-6 text-center text-xs text-muted-foreground">
-          Cotización generada con ViaE · {new Date(q.created_at).toLocaleDateString()}
+          Cotización generada con ViaE Sales Hub · {new Date(q.created_at).toLocaleDateString()}
         </footer>
       </main>
     </div>

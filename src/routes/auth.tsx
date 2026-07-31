@@ -17,8 +17,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Iniciar sesión — ViaE Cotizaciones" },
-      { name: "description", content: "Accede a tu cuenta de ViaE Cotizaciones." },
+      { title: "Iniciar sesión — ViaE Sales Hub" },
+      { name: "description", content: "Accede a tu cuenta de ViaE Sales Hub." },
     ],
   }),
 });
@@ -53,8 +53,11 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Cuenta creada. Revisa tu correo si es necesario.");
-        navigate({ to: "/dashboard", replace: true });
+        await supabase.auth.signOut();
+        toast.success(
+          "Registro enviado. Un administrador debe aprobar tu cuenta antes de que puedas ingresar.",
+        );
+        setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -76,7 +79,7 @@ function AuthPage() {
             <Compass className="h-5 w-5" />
           </div>
           <span className="font-display text-xl font-semibold">
-            ViaE <span className="text-gold">Cotizaciones</span>
+            ViaE <span className="text-gold">Sales Hub</span>
           </span>
         </Link>
         <div>
@@ -84,12 +87,11 @@ function AuthPage() {
             Cotizaciones que <span className="italic text-gold">inspiran</span> a viajar.
           </h2>
           <p className="mt-4 max-w-md text-primary-foreground/70">
-            Todo lo que necesitas para gestionar clientes y propuestas de viaje en un
-            solo lugar.
+            Sistema profesional de cotizaciones y gestión comercial para turismo.
           </p>
         </div>
         <p className="text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} ViaE Cotizaciones
+          © {new Date().getFullYear()} ViaE Sales Hub
         </p>
       </div>
 
@@ -101,7 +103,7 @@ function AuthPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin"
               ? "Bienvenido de vuelta. Ingresa tus credenciales."
-              : "Empieza a crear cotizaciones profesionales."}
+              : "El registro requiere aprobación de un administrador."}
           </p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
