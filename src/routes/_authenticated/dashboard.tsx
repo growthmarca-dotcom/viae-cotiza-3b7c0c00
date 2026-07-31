@@ -117,6 +117,10 @@ function Dashboard() {
         ))}
       </section>
 
+      <PipelineSection />
+
+
+
       <section className="grid gap-4 md:grid-cols-3">
         <QuickCard
           to="/quotations/new"
