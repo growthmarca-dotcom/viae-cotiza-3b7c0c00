@@ -140,6 +140,10 @@ function Dashboard() {
 
       <OperationsSection />
 
+      <CatalogSection />
+
+
+
 
 
 
