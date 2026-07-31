@@ -74,6 +74,7 @@ function ResourcesPage() {
   const [city, setCity] = useState("all");
   const [minCapacity, setMinCapacity] = useState("");
   const [selfDrive, setSelfDrive] = useState(false);
+  const [coverageScope, setCoverageScope] = useState<CoverageScope | "all">("all");
 
   const [resourceOpen, setResourceOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
@@ -94,6 +95,7 @@ function ResourcesPage() {
       city,
       minCapacity,
       selfDrive,
+      coverageScope,
     ],
     queryFn: () =>
       listResources({
@@ -109,6 +111,7 @@ function ResourcesPage() {
         city,
         minCapacity,
         selfDrive,
+        coverageScope,
       }),
   });
 
@@ -124,6 +127,34 @@ function ResourcesPage() {
   const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
   const companyName = new Map(companies.map((c) => [c.id, c.name]));
   const stats = computeResourceStats(resources);
+  /** La ciudad se acota a la provincia elegida (v1.8.2.1). */
+  const cityOptions = useMemo(
+    () => (state === "all" ? allCities() : cityNamesOf(DEFAULT_COUNTRY, state)),
+    [state],
+  );
+  const activeFilters =
+    (search ? 1 : 0) +
+    [kind, category, availability, zone, resourceClass, subtype, state, city, coverageScope].filter(
+      (v) => v !== "all",
+    ).length +
+    (minCapacity ? 1 : 0) +
+    (selfDrive ? 1 : 0);
+
+  function clearFilters() {
+    setSearch("");
+    setKind("all");
+    setCategory("all");
+    setAvailability("all");
+    setZone("all");
+    setResourceClass("all");
+    setSubtype("all");
+    setState("all");
+    setCity("all");
+    setCoverageScope("all");
+    setMinCapacity("");
+    setSelfDrive(false);
+  }
+
   const subtypeOptions =
     resourceClass === "all"
       ? Object.values(RESOURCE_SUBTYPES).flat()
@@ -273,7 +304,13 @@ function ResourcesPage() {
                   </option>
                 ))}
               </Filter>
-              <Filter value={state} onChange={setState}>
+              <Filter
+                value={state}
+                onChange={(v) => {
+                  setState(v);
+                  setCity("all");
+                }}
+              >
                 <option value="all">Toda provincia</option>
                 {allRegions().map((r) => (
                   <option key={r} value={r}>
@@ -283,9 +320,20 @@ function ResourcesPage() {
               </Filter>
               <Filter value={city} onChange={setCity}>
                 <option value="all">Toda ciudad</option>
-                {allCities().map((c) => (
+                {cityOptions.map((c) => (
                   <option key={c} value={c}>
                     {c}
+                  </option>
+                ))}
+              </Filter>
+              <Filter
+                value={coverageScope}
+                onChange={(v) => setCoverageScope(v as CoverageScope | "all")}
+              >
+                <option value="all">Toda cobertura</option>
+                {COVERAGE_SCOPES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
                   </option>
                 ))}
               </Filter>
@@ -313,7 +361,11 @@ function ResourcesPage() {
                 />
                 Ver archivados
               </label>
-
+              {activeFilters > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Limpiar filtros ({activeFilters})
+                </Button>
+              )}
             </div>
           </section>
 
