@@ -454,6 +454,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["booking_service_kind"]
           notes: string | null
+          provider_id: string | null
           provider_name: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           resource_id: string | null
@@ -471,6 +472,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
           notes?: string | null
+          provider_id?: string | null
           provider_name?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
@@ -488,6 +490,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
           notes?: string | null
+          provider_id?: string | null
           provider_name?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
@@ -511,6 +514,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
           {
@@ -1365,6 +1375,131 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_evaluations: {
+        Row: {
+          compliance: number
+          created_at: string
+          id: string
+          internal_rating: number
+          notes: string | null
+          provider_id: string
+          punctuality: number
+          quality: number
+          response_time: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compliance?: number
+          created_at?: string
+          id?: string
+          internal_rating?: number
+          notes?: string | null
+          provider_id: string
+          punctuality?: number
+          quality?: number
+          response_time?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compliance?: number
+          created_at?: string
+          id?: string
+          internal_rating?: number
+          notes?: string | null
+          provider_id?: string
+          punctuality?: number
+          quality?: number
+          response_time?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_evaluations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_company: boolean
+          legal_name: string | null
+          notes: string | null
+          operation_mode: Database["public"]["Enums"]["provider_operation_mode"]
+          phone: string | null
+          provider_type: Database["public"]["Enums"]["provider_type"]
+          state: string | null
+          status: Database["public"]["Enums"]["provider_status"]
+          tax_condition: string | null
+          tax_id: string | null
+          trade_name: string
+          updated_at: string
+          user_id: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_company?: boolean
+          legal_name?: string | null
+          notes?: string | null
+          operation_mode?: Database["public"]["Enums"]["provider_operation_mode"]
+          phone?: string | null
+          provider_type?: Database["public"]["Enums"]["provider_type"]
+          state?: string | null
+          status?: Database["public"]["Enums"]["provider_status"]
+          tax_condition?: string | null
+          tax_id?: string | null
+          trade_name: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_company?: boolean
+          legal_name?: string | null
+          notes?: string | null
+          operation_mode?: Database["public"]["Enums"]["provider_operation_mode"]
+          phone?: string | null
+          provider_type?: Database["public"]["Enums"]["provider_type"]
+          state?: string | null
+          status?: Database["public"]["Enums"]["provider_status"]
+          tax_condition?: string | null
+          tax_id?: string | null
+          trade_name?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       quotation_history: {
         Row: {
           action: string
@@ -1699,6 +1834,7 @@ export type Database = {
           owner_name: string | null
           owner_type: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity: number | null
+          provider_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           requires_advance_booking: boolean
           resource_class: Database["public"]["Enums"]["resource_class"]
@@ -1757,6 +1893,7 @@ export type Database = {
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
+          provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           requires_advance_booking?: boolean
           resource_class?: Database["public"]["Enums"]["resource_class"]
@@ -1815,6 +1952,7 @@ export type Database = {
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
+          provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           requires_advance_booking?: boolean
           resource_class?: Database["public"]["Enums"]["resource_class"]
@@ -1860,6 +1998,13 @@ export type Database = {
             columns: ["owner_company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
@@ -2001,6 +2146,7 @@ export type Database = {
           origin: string | null
           pax_count: number | null
           payment_mode: Database["public"]["Enums"]["transport_payment_mode"]
+          provider_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           rejected_at: string | null
           rejection_reason: string | null
@@ -2063,6 +2209,7 @@ export type Database = {
           origin?: string | null
           pax_count?: number | null
           payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
+          provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           rejected_at?: string | null
           rejection_reason?: string | null
@@ -2125,6 +2272,7 @@ export type Database = {
           origin?: string | null
           pax_count?: number | null
           payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
+          provider_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           rejected_at?: string | null
           rejection_reason?: string | null
@@ -2167,6 +2315,13 @@ export type Database = {
             columns: ["driver_resource_id"]
             isOneToOne: false
             referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
           {
@@ -2391,6 +2546,27 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "expired"
+      provider_operation_mode:
+        | "manual"
+        | "viae_portal"
+        | "api"
+        | "webhook"
+        | "email"
+        | "whatsapp"
+        | "other"
+      provider_status: "active" | "inactive" | "suspended" | "archived"
+      provider_type:
+        | "wholesaler"
+        | "hotel"
+        | "car_rental"
+        | "transport_company"
+        | "excursion_operator"
+        | "independent_guide"
+        | "gastronomy"
+        | "nautical"
+        | "air"
+        | "ground"
+        | "other"
       quotation_status:
         | "draft"
         | "sent"
@@ -2739,6 +2915,29 @@ export const Constants = {
         "confirmed",
         "cancelled",
         "expired",
+      ],
+      provider_operation_mode: [
+        "manual",
+        "viae_portal",
+        "api",
+        "webhook",
+        "email",
+        "whatsapp",
+        "other",
+      ],
+      provider_status: ["active", "inactive", "suspended", "archived"],
+      provider_type: [
+        "wholesaler",
+        "hotel",
+        "car_rental",
+        "transport_company",
+        "excursion_operator",
+        "independent_guide",
+        "gastronomy",
+        "nautical",
+        "air",
+        "ground",
+        "other",
       ],
       quotation_status: [
         "draft",
