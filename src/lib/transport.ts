@@ -303,7 +303,17 @@ export type TransportServiceInput = {
   collection_status: TransportCollectionStatus;
   collection_amount: string;
   collection_currency: string;
+  // --- economía del servicio (v1.6)
+  sale_amount: string;
+  sale_currency: string;
+  sale_exchange_rate: string;
+  sale_rate_date: string;
+  cost_amount: string;
+  cost_currency: string;
+  cost_exchange_rate: string;
+  cost_rate_date: string;
 };
+
 
 export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   service_type: "airport_transfer",
