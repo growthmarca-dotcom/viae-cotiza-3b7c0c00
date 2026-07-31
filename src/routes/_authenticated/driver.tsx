@@ -75,6 +75,11 @@ import {
   assignmentPayload,
   listMyNotifications,
   markAllNotificationsRead,
+  notificationKindClasses,
+  notificationKindLabel,
+  formatNotificationDate,
+  currentUserId,
+  subscribeToMyNotifications,
   unreadCount,
   type Notification,
 } from "@/lib/notifications";
@@ -138,6 +143,20 @@ function DriverPage() {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  // v1.5 · avisos en tiempo real para el conductor
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+    currentUserId().then((uid) => {
+      if (!uid || cancelled) return;
+      unsubscribe = subscribeToMyNotifications(uid, load);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [load]);
 
   const driver = resources.find((r) => r.category === "driver") ?? resources[0] ?? null;
@@ -308,48 +327,76 @@ function DriverPage() {
       </section>
 
 
-      {unread.length > 0 && (
-        <section className="rounded-2xl border border-gold/40 bg-gold/5 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-              <Bell className="h-4 w-4 text-gold" /> Nuevos servicios asignados (
-              {unreadCount(notifications)})
-            </h2>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() =>
-                run(
-                  () => markAllNotificationsRead(unread.map((n) => n.id)),
-                  "Avisos marcados como leídos",
-                )
-              }
-            >
-              Marcar todo como leído
-            </Button>
-          </div>
+      {/* v1.5 · Centro de avisos del conductor: nuevos servicios, cambios y avisos importantes */}
+      <section className="rounded-2xl border border-gold/40 bg-gold/5 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Bell className="h-4 w-4 text-gold" /> Centro de avisos
+            {unread.length > 0 && (
+              <span className="rounded-full bg-gold px-2 py-0.5 text-xs font-semibold text-gold-foreground">
+                {unreadCount(notifications)} sin leer
+              </span>
+            )}
+          </h2>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={unread.length === 0}
+            onClick={() =>
+              run(
+                () => markAllNotificationsRead(unread.map((n) => n.id)),
+                "Avisos marcados como leídos",
+              )
+            }
+          >
+            Marcar todo como leído
+          </Button>
+        </div>
+
+        {notifications.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">No tenés avisos por ahora.</p>
+        ) : (
           <ul className="mt-3 space-y-2 text-sm">
-            {unread.map((n) => {
+            {notifications.slice(0, 8).map((n) => {
               const p = assignmentPayload(n);
               return (
-                <li key={n.id} className="rounded-xl border border-border/70 bg-card p-3">
-                  <p className="font-medium">{n.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {p.service_date ?? "Sin fecha"} · {timeLabel(p.service_time ?? null)} ·{" "}
-                    {(p.origin ?? "—") + " → " + (p.destination ?? "—")}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Pasajeros: {p.pax_count ?? "—"} · Equipaje: {p.luggage_count ?? "—"}
-                    {p.collection_amount != null
-                      ? ` · A cobrar: ${p.collection_amount} ${p.collection_currency ?? ""}`
-                      : ""}
-                  </p>
+                <li
+                  key={n.id}
+                  className={`rounded-xl border border-border/70 p-3 ${
+                    n.read_at == null ? "bg-card" : "bg-card/50"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${notificationKindClasses(n.kind)}`}
+                    >
+                      {notificationKindLabel(n.kind)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatNotificationDate(n.created_at)}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-medium">{n.title}</p>
+                  {(p.origin || p.destination || p.service_date) && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {p.service_date ?? "Sin fecha"} · {timeLabel(p.service_time ?? null)} ·{" "}
+                      {(p.origin ?? "—") + " → " + (p.destination ?? "—")}
+                    </p>
+                  )}
+                  {n.body && !p.origin && (
+                    <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>
+                  )}
+                  {p.collection_amount != null && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      A cobrar: {p.collection_amount} {p.collection_currency ?? ""}
+                    </p>
+                  )}
                 </li>
               );
             })}
           </ul>
-        </section>
-      )}
+        )}
+      </section>
 
       <section>
         <h2 className="font-display text-xl font-semibold">Mis servicios</h2>
