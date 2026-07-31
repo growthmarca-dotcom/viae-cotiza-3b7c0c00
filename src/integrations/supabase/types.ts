@@ -961,76 +961,177 @@ export type Database = {
           },
         ]
       }
+      resource_availability_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          from_availability:
+            | Database["public"]["Enums"]["resource_availability"]
+            | null
+          id: string
+          note: string | null
+          owner_id: string
+          resource_id: string
+          to_availability: Database["public"]["Enums"]["resource_availability"]
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          from_availability?:
+            | Database["public"]["Enums"]["resource_availability"]
+            | null
+          id?: string
+          note?: string | null
+          owner_id: string
+          resource_id: string
+          to_availability: Database["public"]["Enums"]["resource_availability"]
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          from_availability?:
+            | Database["public"]["Enums"]["resource_availability"]
+            | null
+          id?: string
+          note?: string | null
+          owner_id?: string
+          resource_id?: string
+          to_availability?: Database["public"]["Enums"]["resource_availability"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_availability_log_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resources: {
         Row: {
+          advance_notice_hours: number | null
           agent_id: string | null
           availability: Database["public"]["Enums"]["resource_availability"]
+          base_city: string | null
           category: Database["public"]["Enums"]["resource_category"]
+          cities_served: string[]
           company_id: string | null
           contact_name: string | null
+          country: string | null
           created_at: string
           description: string | null
+          destinations: string[]
+          driver_first_name: string | null
+          driver_last_name: string | null
           email: string | null
           id: string
           kind: Database["public"]["Enums"]["company_kind"]
+          luggage_capacity: number | null
           main_zone: string | null
+          max_distance_km: number | null
           name: string
           notes: string | null
           operating_limit: number | null
           pax_capacity: number | null
           record_status: Database["public"]["Enums"]["record_status"]
+          requires_advance_booking: boolean
           specialties: string[]
+          state: string | null
+          transport_service_types: Database["public"]["Enums"]["transport_service_type"][]
           unit_count: number | null
           updated_at: string
           user_id: string
+          vehicle_brand: string | null
+          vehicle_color: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+          vehicle_type: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_year: number | null
           whatsapp: string | null
           zones: string[]
         }
         Insert: {
+          advance_notice_hours?: number | null
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
+          base_city?: string | null
           category?: Database["public"]["Enums"]["resource_category"]
+          cities_served?: string[]
           company_id?: string | null
           contact_name?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          destinations?: string[]
+          driver_first_name?: string | null
+          driver_last_name?: string | null
           email?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["company_kind"]
+          luggage_capacity?: number | null
           main_zone?: string | null
+          max_distance_km?: number | null
           name: string
           notes?: string | null
           operating_limit?: number | null
           pax_capacity?: number | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          requires_advance_booking?: boolean
           specialties?: string[]
+          state?: string | null
+          transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
           updated_at?: string
           user_id: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_year?: number | null
           whatsapp?: string | null
           zones?: string[]
         }
         Update: {
+          advance_notice_hours?: number | null
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
+          base_city?: string | null
           category?: Database["public"]["Enums"]["resource_category"]
+          cities_served?: string[]
           company_id?: string | null
           contact_name?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          destinations?: string[]
+          driver_first_name?: string | null
+          driver_last_name?: string | null
           email?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["company_kind"]
+          luggage_capacity?: number | null
           main_zone?: string | null
+          max_distance_km?: number | null
           name?: string
           notes?: string | null
           operating_limit?: number | null
           pax_capacity?: number | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          requires_advance_booking?: boolean
           specialties?: string[]
+          state?: string | null
+          transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
           updated_at?: string
           user_id?: string
+          vehicle_brand?: string | null
+          vehicle_color?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_year?: number | null
           whatsapp?: string | null
           zones?: string[]
         }
@@ -1047,6 +1148,167 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_service_history: {
+        Row: {
+          actor_id: string | null
+          comment: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["transport_service_status"]
+            | null
+          id: string
+          owner_id: string
+          service_id: string
+          to_status: Database["public"]["Enums"]["transport_service_status"]
+        }
+        Insert: {
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["transport_service_status"]
+            | null
+          id?: string
+          owner_id: string
+          service_id: string
+          to_status: Database["public"]["Enums"]["transport_service_status"]
+        }
+        Update: {
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["transport_service_status"]
+            | null
+          id?: string
+          owner_id?: string
+          service_id?: string
+          to_status?: Database["public"]["Enums"]["transport_service_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_service_history_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "transport_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_services: {
+        Row: {
+          amount: number | null
+          assigned_at: string | null
+          assigned_by: string | null
+          booking_id: string | null
+          commission_type: Database["public"]["Enums"]["commission_type"] | null
+          commission_value: number | null
+          company_id: string | null
+          created_at: string
+          currency: string
+          destination: string | null
+          driver_resource_id: string | null
+          id: string
+          luggage_count: number | null
+          notes: string | null
+          origin: string | null
+          pax_count: number | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          service_date: string | null
+          service_time: string | null
+          service_type: Database["public"]["Enums"]["transport_service_type"]
+          status: Database["public"]["Enums"]["transport_service_status"]
+          updated_at: string
+          user_id: string
+          vehicle_resource_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          booking_id?: string | null
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          company_id?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          driver_resource_id?: string | null
+          id?: string
+          luggage_count?: number | null
+          notes?: string | null
+          origin?: string | null
+          pax_count?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          service_date?: string | null
+          service_time?: string | null
+          service_type?: Database["public"]["Enums"]["transport_service_type"]
+          status?: Database["public"]["Enums"]["transport_service_status"]
+          updated_at?: string
+          user_id: string
+          vehicle_resource_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          booking_id?: string | null
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          company_id?: string | null
+          created_at?: string
+          currency?: string
+          destination?: string | null
+          driver_resource_id?: string | null
+          id?: string
+          luggage_count?: number | null
+          notes?: string | null
+          origin?: string | null
+          pax_count?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          service_date?: string | null
+          service_time?: string | null
+          service_type?: Database["public"]["Enums"]["transport_service_type"]
+          status?: Database["public"]["Enums"]["transport_service_status"]
+          updated_at?: string
+          user_id?: string
+          vehicle_resource_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_services_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_services_driver_resource_id_fkey"
+            columns: ["driver_resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_services_vehicle_resource_id_fkey"
+            columns: ["vehicle_resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
             referencedColumns: ["id"]
           },
         ]
@@ -1164,6 +1426,7 @@ export type Database = {
         | "busy"
         | "unavailable"
         | "out_of_service"
+        | "off_hours"
       resource_category:
         | "accommodation"
         | "room"
@@ -1177,6 +1440,34 @@ export type Database = {
         | "rental"
         | "tourism_service"
         | "agent"
+        | "other"
+      transport_service_status:
+        | "pending"
+        | "requested"
+        | "assigned"
+        | "accepted"
+        | "in_transit"
+        | "completed"
+        | "cancelled"
+      transport_service_type:
+        | "taxi"
+        | "airport_transfer"
+        | "tourist_transfer"
+        | "intercity_transfer"
+        | "private_transfer"
+        | "corporate_transfer"
+        | "group_transfer"
+        | "driver_excursion"
+        | "other"
+      vehicle_type:
+        | "sedan"
+        | "suv"
+        | "van"
+        | "minibus"
+        | "bus"
+        | "pickup"
+        | "motorcycle"
+        | "accessible"
         | "other"
     }
     CompositeTypes: {
@@ -1385,6 +1676,7 @@ export const Constants = {
         "busy",
         "unavailable",
         "out_of_service",
+        "off_hours",
       ],
       resource_category: [
         "accommodation",
@@ -1399,6 +1691,37 @@ export const Constants = {
         "rental",
         "tourism_service",
         "agent",
+        "other",
+      ],
+      transport_service_status: [
+        "pending",
+        "requested",
+        "assigned",
+        "accepted",
+        "in_transit",
+        "completed",
+        "cancelled",
+      ],
+      transport_service_type: [
+        "taxi",
+        "airport_transfer",
+        "tourist_transfer",
+        "intercity_transfer",
+        "private_transfer",
+        "corporate_transfer",
+        "group_transfer",
+        "driver_excursion",
+        "other",
+      ],
+      vehicle_type: [
+        "sedan",
+        "suv",
+        "van",
+        "minibus",
+        "bus",
+        "pickup",
+        "motorcycle",
+        "accessible",
         "other",
       ],
     },
