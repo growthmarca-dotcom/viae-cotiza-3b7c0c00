@@ -12,6 +12,9 @@ import {
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { listExtras, listServiceExtras } from "@/lib/resource-catalog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
