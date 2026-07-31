@@ -527,6 +527,10 @@ function DriverServiceCard({
         </div>
       </dl>
 
+      <DriverServiceExtras serviceId={s.id} />
+
+
+
       {/* Información de cobro */}
       <div className="mt-4 rounded-xl border border-border/70 bg-secondary/30 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
