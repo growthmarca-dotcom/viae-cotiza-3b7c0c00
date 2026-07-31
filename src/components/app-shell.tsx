@@ -29,6 +29,7 @@ const baseNav = [
   { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/resources", label: "Recursos", icon: Boxes },
   { to: "/transport", label: "Transporte", icon: RouteIcon },
+  { to: "/driver", label: "Panel conductor", icon: CarFront },
   { to: "/settings", label: "Configuración", icon: Settings },
 
 ] as const;
