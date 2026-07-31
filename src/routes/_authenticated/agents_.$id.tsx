@@ -123,22 +123,32 @@ function AgentLeadsSection({ agentId }: { agentId: string }) {
           <h3 className="mb-3 font-display text-lg font-semibold">Últimas consultas</h3>
           <ul className="space-y-2">
             {leads.slice(0, 6).map((l) => (
-              <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <Link
-                  to="/leads/$id"
-                  params={{ id: l.id }}
-                  className="font-medium hover:text-primary"
-                >
-                  {leadFullName(l)}
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  {l.destination || "Sin destino"} ·{" "}
-                  <span
-                    className={`rounded-full border px-2 py-0.5 ${leadStatusClasses(l.status)}`}
+              <li key={l.id} className="rounded-xl border border-border bg-background p-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    to="/leads/$id"
+                    params={{ id: l.id }}
+                    className="font-medium hover:text-primary"
                   >
-                    {leadStatusLabel(l.status)}
+                    {leadFullName(l)}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    {l.destination || "Sin destino"} ·{" "}
+                    <span
+                      className={`rounded-full border px-2 py-0.5 ${leadStatusClasses(l.status)}`}
+                    >
+                      {leadStatusLabel(l.status)}
+                    </span>
                   </span>
-                </span>
+                </div>
+                {leadNeedSummary(l) && (
+                  <p className="mt-1 text-xs text-muted-foreground">{leadNeedSummary(l)}</p>
+                )}
+                {l.commercial_notes && (
+                  <p className="mt-1 whitespace-pre-line text-xs text-foreground/80">
+                    {l.commercial_notes}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
