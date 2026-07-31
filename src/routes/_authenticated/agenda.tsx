@@ -214,7 +214,7 @@ function AgendaPage() {
               <CalendarDays className="mr-2 h-4 w-4" /> Hoy
             </Button>
           </div>
-          <DayBlock title={formatDayLabel(day)} services={servicesOfDay(services, day)} render={row} />
+          <DayBlock title={formatDayLabel(day)} services={servicesOfDay(filtered, day)} render={row} />
         </TabsContent>
 
         <TabsContent value="week" className="mt-4 space-y-4">
@@ -231,7 +231,7 @@ function AgendaPage() {
               <DayBlock
                 key={d}
                 title={formatDayLabel(d)}
-                services={servicesOfDay(services, d)}
+                services={servicesOfDay(filtered, d)}
                 render={row}
                 compact
               />
