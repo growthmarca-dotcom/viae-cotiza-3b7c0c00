@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2, PlusCircle, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ClientFormDialog } from "@/components/client-form-dialog";
 import {
   CLIENT_STATUSES,
+  RECORD_STATUSES,
   createClient,
   listClients,
   splitName,
@@ -15,6 +16,7 @@ import {
   statusLabel,
   type Client,
   type ClientInput,
+  type RecordStatus,
 } from "@/lib/clients";
 
 export const Route = createFileRoute("/_authenticated/clients")({
@@ -32,23 +34,24 @@ function ClientsPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [recordFilter, setRecordFilter] = useState<RecordStatus | "all">("active");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      setClients(await listClients());
+      setClients(await listClients(recordFilter));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudieron cargar los clientes");
     } finally {
       setLoading(false);
     }
-  }
+  }, [recordFilter]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -114,6 +117,19 @@ function ClientsPage() {
               {s.label}
             </option>
           ))}
+        </select>
+        <select
+          value={recordFilter}
+          onChange={(e) => setRecordFilter(e.target.value as RecordStatus | "all")}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="active">Activos</option>
+          {RECORD_STATUSES.filter((s) => s.value !== "active").map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}s
+            </option>
+          ))}
+          <option value="all">Todos los registros</option>
         </select>
       </div>
 

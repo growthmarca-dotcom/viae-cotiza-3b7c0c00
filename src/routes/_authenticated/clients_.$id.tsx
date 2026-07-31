@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, History as HistoryIcon, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Archive, ArrowLeft, History as HistoryIcon, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,12 @@ import {
 import { ClientFormDialog } from "@/components/client-form-dialog";
 import {
   CLIENT_STATUSES,
+  RECORD_STATUSES,
   clientToInput,
-  deleteClient,
   getClient,
+  recordStatusClasses,
+  recordStatusLabel,
+  setClientRecordStatus,
   splitName,
   statusClasses,
   statusLabel,
@@ -35,6 +38,7 @@ import {
   type Client,
   type ClientInput,
   type ClientStatus,
+  type RecordStatus,
 } from "@/lib/clients";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import { OpportunityPanel } from "@/components/opportunity-panel";
@@ -221,13 +225,28 @@ function ClientDetailPage() {
     }
   }
 
-  async function handleDelete() {
+  /** Los clientes no se eliminan: se archivan para preservar el historial. */
+  async function handleArchive() {
     try {
-      await deleteClient(id);
-      toast.success("Cliente eliminado");
+      await setClientRecordStatus(id, "archived");
+      toast.success("Cliente archivado");
+      setConfirmDelete(false);
       navigate({ to: "/clients" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el cliente");
+      toast.error(err instanceof Error ? err.message : "No se pudo archivar el cliente");
+    }
+  }
+
+  async function handleRecordStatus(value: string) {
+    if (!client) return;
+    const prev = client.record_status;
+    setClient({ ...client, record_status: value as RecordStatus });
+    try {
+      await setClientRecordStatus(id, value as RecordStatus);
+      toast.success(`Registro: ${recordStatusLabel(value)}`);
+    } catch (err) {
+      setClient({ ...client, record_status: prev });
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar el registro");
     }
   }
 
@@ -261,17 +280,32 @@ function ClientDetailPage() {
             {new Date(client.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${recordStatusClasses(client.record_status)}`}
+          >
+            {recordStatusLabel(client.record_status)}
+          </span>
+          <Select value={client.record_status} onValueChange={handleRecordStatus}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RECORD_STATUSES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-          </Button>
+          {client.record_status !== "archived" && (
+            <Button variant="outline" onClick={() => setConfirmDelete(true)}>
+              <Archive className="mr-2 h-4 w-4" /> Archivar
+            </Button>
+          )}
         </div>
       </header>
 
@@ -403,19 +437,16 @@ function ClientDetailPage() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogTitle>¿Archivar cliente?</AlertDialogTitle>
             <AlertDialogDescription>
-              Las cotizaciones asociadas se mantienen, pero perderán el vínculo con esta ficha.
+              Los clientes no se eliminan del sistema. Al archivarlo dejará de aparecer en los
+              listados activos, pero se conservan sus cotizaciones, oportunidades e historial.
+              Podés reactivarlo cuando quieras desde el filtro de archivados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleArchive}>Archivar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

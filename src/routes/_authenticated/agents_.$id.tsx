@@ -1,9 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Pencil, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Link as LinkIcon,
+  Loader2,
+  Mail,
+  Pencil,
+  ShieldCheck,
+  Unlink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -13,7 +23,8 @@ import {
 } from "@/components/ui/select";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import { useAccount } from "@/hooks/use-account";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
+import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { stageClasses, stageLabel, type Opportunity } from "@/lib/opportunities";
 import {
   AGENT_STATUSES,
@@ -23,12 +34,21 @@ import {
   agentToInput,
   computeAgentStats,
   getAgent,
+  inviteAgentUser,
+  invitationStatusClasses,
+  invitationStatusLabel,
+  isInvitationExpired,
+  linkAgentUser,
+  listLinkableProfiles,
   listOpportunitiesByAgent,
   setAgentStatus,
+  setInvitationStatus,
+  unlinkAgentUser,
   updateAgent,
   type Agent,
   type AgentInput,
   type AgentStatus,
+  type LinkableProfile,
 } from "@/lib/agents";
 
 export const Route = createFileRoute("/_authenticated/agents_/$id")({
@@ -70,6 +90,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 function AgentDetailPage() {
   const { id } = Route.useParams();
   const { isAdmin } = useAccount();
+  const analysisCurrency = useAnalysisCurrency();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
@@ -162,8 +183,14 @@ function AgentDetailPage() {
     );
   }
 
-  const stats = computeAgentStats(opportunities);
-  const currency = opportunities[0]?.currency ?? agent.commission_currency ?? "USD";
+  // Todas las estadísticas se expresan en la moneda de análisis configurada.
+  const normalized = opportunities.map((o) => ({
+    ...o,
+    estimated_value: toAnalysisCurrency(o.estimated_value, o.currency, analysisCurrency, null) ?? 0,
+    currency: analysisCurrency,
+  }));
+  const stats = computeAgentStats(normalized);
+  const currency = analysisCurrency;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
@@ -276,6 +303,9 @@ function AgentDetailPage() {
         </div>
       </div>
 
+      {isAdmin && <AccessSection agent={agent} onChanged={load} />}
+
+
       <h2 className="mb-3 mt-8 font-display text-xl font-semibold">Estadísticas</h2>
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
         <Stat label="Clientes asignados" value={stats.clients} />
@@ -377,5 +407,156 @@ function AgentDetailPage() {
         onSubmit={handleUpdate}
       />
     </div>
+  );
+}
+
+/** Gestión del acceso al sistema: invitación y vinculación de usuario. */
+function AccessSection({ agent, onChanged }: { agent: Agent; onChanged: () => void }) {
+  const [email, setEmail] = useState(agent.invited_email ?? "");
+  const [selected, setSelected] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [profiles, setProfiles] = useState<LinkableProfile[]>([]);
+
+  useEffect(() => {
+    listLinkableProfiles()
+      .then(setProfiles)
+      .catch(() => setProfiles([]));
+  }, [agent.id, agent.user_id]);
+
+  const expired = isInvitationExpired(agent);
+
+  async function run(fn: () => Promise<void>, ok: string) {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(ok);
+      onChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo completar la acción");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const linkedProfile = profiles.find((p) => p.id === agent.user_id);
+
+  return (
+    <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+        <ShieldCheck className="h-4 w-4 text-gold" /> Acceso al sistema
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Vincula este agente con un usuario para que pueda iniciar sesión y ver únicamente su
+        cartera. El agente puede existir sin acceso.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Estado:</span>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-medium ${invitationStatusClasses(
+            expired ? "expired" : agent.invitation_status,
+          )}`}
+        >
+          {agent.access_status === "linked"
+            ? "Usuario vinculado"
+            : `Invitación: ${invitationStatusLabel(expired ? "expired" : agent.invitation_status)}`}
+        </span>
+        {agent.user_id && (
+          <span className="text-muted-foreground">
+            {linkedProfile?.full_name ?? agent.invited_email ?? agent.user_id.slice(0, 8)}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Invitar por email</Label>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="agente@empresa.com"
+            />
+            <Button
+              variant="outline"
+              disabled={busy || !email.trim()}
+              onClick={() => run(() => inviteAgentUser(agent.id, email), "Invitación registrada")}
+            >
+              <Mail className="mr-2 h-4 w-4" /> Invitar
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            La invitación queda registrada y vence a los 7 días. El envío automático del email se
+            habilitará más adelante.
+          </p>
+          {agent.invitation_status === "pending" && (
+            <div className="flex gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() =>
+                  run(() => setInvitationStatus(agent.id, "rejected"), "Invitación rechazada")
+                }
+              >
+                Marcar rechazada
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() =>
+                  run(() => setInvitationStatus(agent.id, "expired"), "Invitación expirada")
+                }
+              >
+                Marcar expirada
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Vincular usuario existente</Label>
+          <div className="flex gap-2">
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              className="h-10 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Seleccionar usuario...</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name ?? p.id.slice(0, 8)}
+                  {p.agency_name ? ` · ${p.agency_name}` : ""}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              disabled={busy || !selected}
+              onClick={() =>
+                run(
+                  () => linkAgentUser(agent.id, selected),
+                  agent.user_id ? "Usuario reemplazado" : "Usuario vinculado",
+                )
+              }
+            >
+              <LinkIcon className="mr-2 h-4 w-4" /> {agent.user_id ? "Reemplazar" : "Vincular"}
+            </Button>
+          </div>
+          {agent.user_id && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => run(() => unlinkAgentUser(agent.id), "Usuario desvinculado")}
+            >
+              <Unlink className="mr-2 h-4 w-4" /> Desvincular usuario
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

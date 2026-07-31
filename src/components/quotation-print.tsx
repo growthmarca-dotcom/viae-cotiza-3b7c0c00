@@ -38,7 +38,7 @@ export function QuotationPrintDocument({
   imageUrls = [],
 }: {
   quotation: PrintQuotation;
-  company: CompanyInfo;
+  company: Omit<CompanyInfo, "analysisCurrency">;
   imageUrls?: string[];
 }) {
   const guest = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();

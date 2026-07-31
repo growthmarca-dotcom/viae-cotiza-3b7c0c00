@@ -11,7 +11,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
+import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -146,17 +147,42 @@ function Dashboard() {
 
 /** Indicadores del pipeline comercial (oportunidades). */
 function PipelineSection() {
+  const analysisCurrency = useAnalysisCurrency();
+
   const { data } = useQuery({
-    queryKey: ["opportunity-stats"],
+    queryKey: ["opportunity-stats", analysisCurrency],
     queryFn: async () => {
       const rows = await listOpportunities();
+
+      // Tipo de cambio de la cotización vinculada, para no mezclar monedas.
+      const quotationIds = rows.map((r) => r.quotation_id).filter(Boolean) as string[];
+      const rates = new Map<string, number | null>();
+      if (quotationIds.length) {
+        const { data: qs } = await supabase
+          .from("quotations")
+          .select("id, exchange_rate")
+          .in("id", quotationIds);
+        for (const q of qs ?? []) rates.set(q.id, q.exchange_rate);
+      }
+
+      const converted = rows.map((r) =>
+        toAnalysisCurrency(
+          r.estimated_value,
+          r.currency,
+          analysisCurrency,
+          r.quotation_id ? rates.get(r.quotation_id) : null,
+        ),
+      );
+
       const byStage = OPPORTUNITY_STAGES.map((s) => ({
         label: s.label,
         value: rows.filter((r) => r.stage === s.value).length,
       }));
+
       return {
         count: rows.length,
-        totalValue: rows.reduce((acc, r) => acc + Number(r.estimated_value ?? 0), 0),
+        totalValue: converted.reduce((acc: number, v) => acc + (v ?? 0), 0),
+        excluded: converted.filter((v) => v == null).length,
         quoted: rows.filter((r) => r.stage === "quoted").length,
         booked: rows.filter((r) => r.stage === "booked").length,
         lost: rows.filter((r) => r.stage === "lost" || r.stage === "cancelled").length,
@@ -167,7 +193,10 @@ function PipelineSection() {
 
   const cards = [
     { label: "Oportunidades", value: String(data?.count ?? 0) },
-    { label: "Valor total estimado", value: formatMoney("USD", data?.totalValue ?? 0) },
+    {
+      label: `Valor total estimado (${analysisCurrency})`,
+      value: formatMoney(analysisCurrency, data?.totalValue ?? 0),
+    },
     { label: "Cotizaciones enviadas", value: String(data?.quoted ?? 0) },
     { label: "Reservas confirmadas", value: String(data?.booked ?? 0) },
     { label: "Ventas perdidas", value: String(data?.lost ?? 0) },
@@ -184,6 +213,12 @@ function PipelineSection() {
           </div>
         ))}
       </div>
+      {(data?.excluded ?? 0) > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {data?.excluded} oportunidad(es) quedaron fuera del total porque su moneda no es
+          convertible a {analysisCurrency}.
+        </p>
+      )}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 font-display text-lg font-semibold">Oportunidades por estado</h3>
         <div className="grid gap-3 sm:grid-cols-3">
