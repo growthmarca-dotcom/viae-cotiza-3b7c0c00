@@ -296,6 +296,9 @@ export type ResourceInput = {
   /** Vehículo sin conductor (rent a car). */
   self_drive: boolean;
   company_id: string;
+  /** Proveedor responsable del recurso (v1.9). */
+  provider_id: string;
+
 
   agent_id: string;
   description: string;
