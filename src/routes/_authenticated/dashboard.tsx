@@ -154,8 +154,69 @@ function Dashboard() {
     </div>
   );
 }
+/** Gestión comercial de leads (v1.7). */
+function LeadsSection() {
+  const { data } = useQuery({
+    queryKey: ["lead-stats"],
+    queryFn: async () => {
+      const leads = await listLeads("active");
+      const agents = await listAgents();
+      const byAgent = countActiveLeadsByAgent(leads);
+      const top = agents
+        .map((a) => ({ name: agentFullName(a), value: byAgent[a.id] ?? 0 }))
+        .filter((r) => r.value > 0)
+        .sort((x, y) => y.value - x.value)
+        .slice(0, 5);
+      return { stats: computeLeadStats(leads), top };
+    },
+  });
+
+  const s = data?.stats;
+  const cards = [
+    { label: "Consultas recibidas", value: String(s?.total ?? 0) },
+    { label: "Sin asignar", value: String(s?.unassigned ?? 0) },
+    { label: "Asignadas", value: String(s?.assigned ?? 0) },
+    { label: "Contactadas", value: String(s?.contacted ?? 0) },
+    { label: "Ganadas", value: String(s?.won ?? 0) },
+    { label: "Conversión de leads", value: `${s?.conversion ?? 0}%` },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Gestión de consultas</h2>
+        <Link to="/leads" className="text-sm font-medium text-primary hover:underline">
+          Ir a la bandeja
+        </Link>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+      {(data?.top ?? []).length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-4 font-display text-lg font-semibold">Leads activos por agente</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(data?.top ?? []).map((r) => (
+              <div key={r.name} className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{r.name}</span>
+                <span className="font-medium">{r.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /** Economía del transporte (v1.6) en la moneda de análisis configurada. */
 function TransportEconomicsSection() {
+
   const analysisCurrency = useAnalysisCurrency();
   const { isAdmin } = useAccount();
 
