@@ -334,6 +334,82 @@ export type Database = {
           },
         ]
       }
+      booking_services: {
+        Row: {
+          booking_id: string
+          company_id: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["booking_service_kind"]
+          notes: string | null
+          provider_name: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          resource_id: string | null
+          responsible_user_id: string | null
+          service_date: string | null
+          status: Database["public"]["Enums"]["booking_operation_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_service_kind"]
+          notes?: string | null
+          provider_name?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          responsible_user_id?: string | null
+          service_date?: string | null
+          status?: Database["public"]["Enums"]["booking_operation_status"]
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["booking_service_kind"]
+          notes?: string | null
+          provider_name?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          responsible_user_id?: string | null
+          service_date?: string | null
+          status?: Database["public"]["Enums"]["booking_operation_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_services_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_status_history: {
         Row: {
           actor_id: string | null
@@ -388,6 +464,11 @@ export type Database = {
           exchange_rate: number | null
           id: string
           notes: string | null
+          operation_status: Database["public"]["Enums"]["booking_operation_status"]
+          operations_notes: string | null
+          operations_owner_id: string | null
+          operations_taken_at: string | null
+          operations_updated_at: string | null
           opportunity_id: string | null
           provider_id: string | null
           provider_name: string | null
@@ -415,6 +496,11 @@ export type Database = {
           exchange_rate?: number | null
           id?: string
           notes?: string | null
+          operation_status?: Database["public"]["Enums"]["booking_operation_status"]
+          operations_notes?: string | null
+          operations_owner_id?: string | null
+          operations_taken_at?: string | null
+          operations_updated_at?: string | null
           opportunity_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
@@ -442,6 +528,11 @@ export type Database = {
           exchange_rate?: number | null
           id?: string
           notes?: string | null
+          operation_status?: Database["public"]["Enums"]["booking_operation_status"]
+          operations_notes?: string | null
+          operations_owner_id?: string | null
+          operations_taken_at?: string | null
+          operations_updated_at?: string | null
           opportunity_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
@@ -1832,7 +1923,20 @@ export type Database = {
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
+      is_operations: { Args: { _user_id: string }; Returns: boolean }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
+      notify_operations_team: {
+        Args: {
+          _body: string
+          _data: Json
+          _entity: string
+          _entity_id: string
+          _kind: string
+          _owner: string
+          _title: string
+        }
+        Returns: undefined
+      }
       sync_booking_client_status: {
         Args: { _booking_id: string }
         Returns: undefined
@@ -1854,8 +1958,17 @@ export type Database = {
         | "inactive"
         | "archived"
       agent_wa_status: "available" | "busy" | "offline"
-      app_role: "admin" | "agent" | "provider"
+      app_role: "admin" | "agent" | "provider" | "operations"
       booking_document_kind: "voucher" | "receipt" | "invoice" | "other"
+      booking_operation_status:
+        | "pending_operation"
+        | "preparing"
+        | "services_coordinated"
+        | "ready"
+        | "in_execution"
+        | "finished"
+        | "incident"
+        | "cancelled"
       booking_payment_kind: "deposit" | "balance" | "other"
       booking_payment_status:
         | "pending"
@@ -1863,6 +1976,15 @@ export type Database = {
         | "paid"
         | "refunded"
         | "cancelled"
+      booking_service_kind:
+        | "accommodation"
+        | "transfer"
+        | "excursion"
+        | "car_rental"
+        | "flight"
+        | "insurance"
+        | "gastronomy"
+        | "other"
       booking_status:
         | "pending"
         | "confirmed"
@@ -2147,8 +2269,18 @@ export const Constants = {
         "archived",
       ],
       agent_wa_status: ["available", "busy", "offline"],
-      app_role: ["admin", "agent", "provider"],
+      app_role: ["admin", "agent", "provider", "operations"],
       booking_document_kind: ["voucher", "receipt", "invoice", "other"],
+      booking_operation_status: [
+        "pending_operation",
+        "preparing",
+        "services_coordinated",
+        "ready",
+        "in_execution",
+        "finished",
+        "incident",
+        "cancelled",
+      ],
       booking_payment_kind: ["deposit", "balance", "other"],
       booking_payment_status: [
         "pending",
@@ -2156,6 +2288,16 @@ export const Constants = {
         "paid",
         "refunded",
         "cancelled",
+      ],
+      booking_service_kind: [
+        "accommodation",
+        "transfer",
+        "excursion",
+        "car_rental",
+        "flight",
+        "insurance",
+        "gastronomy",
+        "other",
       ],
       booking_status: [
         "pending",
