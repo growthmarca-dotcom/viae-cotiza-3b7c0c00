@@ -106,8 +106,10 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     otherCharges: s(row.other_charges),
     totalAmount: s(row.total_amount),
     currency: s(row.currency) || "USD",
+    exchangeRate: s(row.exchange_rate),
     observations: s(row.notes),
   };
+
 }
 
 /** Duplica una cotización existente (incluye las imágenes ya cargadas). */
