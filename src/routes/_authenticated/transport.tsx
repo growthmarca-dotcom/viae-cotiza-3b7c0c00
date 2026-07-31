@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BadgeDollarSign, Bus, CarFront, Loader2, MapPin, Search, UserRound } from "lucide-react";
+import { useAccount } from "@/hooks/use-account";
+import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
+import { formatMoney } from "@/lib/currency";
+import { computeTransportEconomics } from "@/lib/transport-economics";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,7 +347,7 @@ function TransportEconomicsDashboard({ services }: { services: TransportService[
   const { isAdmin } = useAccount();
   const analysisCurrency = useAnalysisCurrency();
   const metrics = useMemo(
-    () => economicsSummary(services, analysisCurrency),
+    () => computeTransportEconomics(services, analysisCurrency),
     [services, analysisCurrency],
   );
 
@@ -355,17 +359,26 @@ function TransportEconomicsDashboard({ services }: { services: TransportService[
           {
             label: "Margen bruto ViaE",
             value: `${formatMoney(analysisCurrency, metrics.gross)}${
-              metrics.percent != null ? ` · ${metrics.percent}%` : ""
+              metrics.marginPercent != null ? ` · ${metrics.marginPercent}%` : ""
             }`,
           },
         ]
       : []),
-    { label: "Cobrado al pasajero", value: String(metrics.collected) },
-    { label: "Cobros pendientes", value: String(metrics.pendingCollection) },
+    { label: "Servicios finalizados", value: String(metrics.servicesDone) },
+    {
+      label: "Cobros pendientes",
+      value: `${metrics.pendingCollection} · ${formatMoney(analysisCurrency, metrics.pendingCollectionAmount)}`,
+    },
     ...(isAdmin
-      ? [{ label: "Liquidaciones pendientes", value: String(metrics.pendingSettlement) }]
+      ? [
+          {
+            label: "Liquidaciones pendientes",
+            value: `${metrics.pendingSettlement} · ${formatMoney(analysisCurrency, metrics.pendingSettlementAmount)}`,
+          },
+        ]
       : []),
   ];
+
 
   return (
     <div className="space-y-4">
