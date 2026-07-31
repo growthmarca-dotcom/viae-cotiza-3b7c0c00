@@ -338,6 +338,60 @@ function TransportPage() {
   );
 }
 
+/** Panel económico global (v1.6): ventas, costos, margen y estados de cobro/liquidación. */
+function TransportEconomicsDashboard({ services }: { services: TransportService[] }) {
+  const { isAdmin } = useAccount();
+  const analysisCurrency = useAnalysisCurrency();
+  const metrics = useMemo(
+    () => economicsSummary(services, analysisCurrency),
+    [services, analysisCurrency],
+  );
+
+  const cards = [
+    { label: `Ventas de transporte (${analysisCurrency})`, value: formatMoney(analysisCurrency, metrics.sales) },
+    ...(isAdmin
+      ? [
+          { label: `Costos operativos (${analysisCurrency})`, value: formatMoney(analysisCurrency, metrics.costs) },
+          {
+            label: "Margen bruto ViaE",
+            value: `${formatMoney(analysisCurrency, metrics.gross)}${
+              metrics.percent != null ? ` · ${metrics.percent}%` : ""
+            }`,
+          },
+        ]
+      : []),
+    { label: "Cobrado al pasajero", value: String(metrics.collected) },
+    { label: "Cobros pendientes", value: String(metrics.pendingCollection) },
+    ...(isAdmin
+      ? [{ label: "Liquidaciones pendientes", value: String(metrics.pendingSettlement) }]
+      : []),
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+      {metrics.excluded > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {metrics.excluded} servicio(s) quedaron fuera de los totales por falta de tipo de cambio.
+        </p>
+      )}
+      {!isAdmin && (
+        <p className="text-xs text-muted-foreground">
+          Los costos y márgenes sólo están disponibles para administradores.
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 function ServiceTable({ services }: { services: TransportService[] }) {
   if (services.length === 0) return <Empty text="No hay servicios con estos filtros." />;
   return (
