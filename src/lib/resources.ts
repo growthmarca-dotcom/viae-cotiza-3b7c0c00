@@ -691,7 +691,22 @@ export type ResourceStats = {
   available: number;
   unavailable: number;
   byCategory: { category: ResourceCategory; label: string; count: number }[];
+  /** Catálogo inteligente (v1.8.2). */
+  vehiclesAvailable: number;
+  driversAvailable: number;
+  byState: { state: string; count: number }[];
 };
+
+function isVehicleRow(r: Resource) {
+  return r.resource_class === "vehicle" || r.category === "vehicle";
+}
+
+function isDriverRow(r: Resource) {
+  return (
+    (r.resource_class === "person" && (r.subtype === "driver" || r.category === "driver")) ||
+    r.category === "driver"
+  );
+}
 
 export function computeResourceStats(resources: Resource[]): ResourceStats {
   const byCategory = RESOURCE_CATEGORIES.map((c) => ({
@@ -699,6 +714,12 @@ export function computeResourceStats(resources: Resource[]): ResourceStats {
     label: c.label,
     count: resources.filter((r) => r.category === c.value).length,
   })).filter((c) => c.count > 0);
+
+  const stateCounts = new Map<string, number>();
+  for (const r of resources) {
+    const key = r.state?.trim() || "Sin definir";
+    stateCounts.set(key, (stateCounts.get(key) ?? 0) + 1);
+  }
 
   return {
     total: resources.length,
@@ -709,5 +730,13 @@ export function computeResourceStats(resources: Resource[]): ResourceStats {
       (r) => r.availability === "unavailable" || r.availability === "out_of_service",
     ).length,
     byCategory,
+    vehiclesAvailable: resources.filter((r) => isVehicleRow(r) && r.availability === "available")
+      .length,
+    driversAvailable: resources.filter((r) => isDriverRow(r) && r.availability === "available")
+      .length,
+    byState: Array.from(stateCounts.entries())
+      .map(([state, count]) => ({ state, count }))
+      .sort((a, b) => b.count - a.count),
   };
+
 }
