@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationForm, type QuotationFormState, type ExistingImage } from "@/components/quotation-form";
 import { formToRow, rowToForm, saveQuotationImages, signImageUrls } from "@/lib/quotations";
+import { upsertClientFromQuotation } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/quotations/$id/edit")({
   component: EditQuotationPage,
@@ -84,9 +85,11 @@ function EditQuotationPage() {
               previousPaths,
             });
 
+            const clientId = await upsertClientFromQuotation(userId, form);
+
             const { error: updErr } = await supabase
               .from("quotations")
-              .update({ ...formToRow(form), images: finalImages })
+              .update({ ...formToRow(form), images: finalImages, ...(clientId ? { client_id: clientId } : {}) })
               .eq("id", id);
             if (updErr) throw updErr;
 

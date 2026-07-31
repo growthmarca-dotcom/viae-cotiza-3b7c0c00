@@ -21,14 +21,14 @@ const baseNav = [
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/settings", label: "Configuración", icon: Settings },
-];
+] as const;
+
+const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { isAdmin } = useAccount();
-  const nav = isAdmin
-    ? [...baseNav, { to: "/admin", label: "Administración", icon: ShieldCheck }]
-    : baseNav;
+  const nav = isAdmin ? [...baseNav, ...adminNav] : [...baseNav];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {

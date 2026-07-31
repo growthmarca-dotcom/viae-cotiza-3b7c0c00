@@ -5,12 +5,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationForm } from "@/components/quotation-form";
 import { formToRow, saveQuotationImages } from "@/lib/quotations";
+import { upsertClientFromQuotation } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({
   component: NewQuotationPage,
   head: () => ({
     meta: [
-      { title: "Nueva cotización — ViaE" },
+      { title: "Nueva cotización — ViaE Sales Hub" },
       { name: "description", content: "Crea una nueva cotización de viaje." },
     ],
   }),
@@ -58,9 +59,11 @@ function NewQuotationPage() {
             if (userErr || !userData.user) throw new Error("Sesión no válida.");
             const userId = userData.user.id;
 
+            const clientId = await upsertClientFromQuotation(userId, form);
+
             const { data: inserted, error: insertErr } = await supabase
               .from("quotations")
-              .insert({ ...formToRow(form), user_id: userId, status: "draft" })
+              .insert({ ...formToRow(form), user_id: userId, client_id: clientId, status: "draft" })
               .select("id")
               .single();
             if (insertErr) throw insertErr;
