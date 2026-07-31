@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   ShieldCheck,
+  UserRound,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ const baseNav = [
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/clients", label: "Clientes", icon: Users },
+  { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/settings", label: "Configuración", icon: Settings },
 ] as const;
 

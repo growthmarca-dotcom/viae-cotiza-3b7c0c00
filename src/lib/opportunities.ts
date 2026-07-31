@@ -117,6 +117,8 @@ export type OpportunityPatch = Partial<{
    * (columna `assigned_agent_id`, ya reservada en la base de datos).
    */
   owner_user_id: string;
+  /** Agente de la red comercial asignado a la oportunidad (módulo Agentes). */
+  assigned_agent_id: string | null;
   title: string;
   notes: string | null;
 }>;

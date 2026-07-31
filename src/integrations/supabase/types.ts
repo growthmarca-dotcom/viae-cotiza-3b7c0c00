@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      agents: {
+        Row: {
+          access_status: Database["public"]["Enums"]["agent_access_status"]
+          auto_receive_leads: boolean
+          available_for_assignment: boolean
+          city: string | null
+          commission_currency: string
+          commission_type: Database["public"]["Enums"]["commission_type"] | null
+          commission_value: number | null
+          company: string | null
+          country: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          first_name: string
+          id: string
+          invited_at: string | null
+          invited_email: string | null
+          languages: string[]
+          last_name: string | null
+          main_zone: string | null
+          max_active_clients: number | null
+          max_open_opportunities: number | null
+          notes: string | null
+          priority: number
+          specialties: string[]
+          state: string | null
+          status: Database["public"]["Enums"]["agent_status"]
+          updated_at: string
+          user_id: string | null
+          wa_extension: string | null
+          wa_number: string | null
+          wa_status: Database["public"]["Enums"]["agent_wa_status"]
+          whatsapp: string | null
+        }
+        Insert: {
+          access_status?: Database["public"]["Enums"]["agent_access_status"]
+          auto_receive_leads?: boolean
+          available_for_assignment?: boolean
+          city?: string | null
+          commission_currency?: string
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          invited_at?: string | null
+          invited_email?: string | null
+          languages?: string[]
+          last_name?: string | null
+          main_zone?: string | null
+          max_active_clients?: number | null
+          max_open_opportunities?: number | null
+          notes?: string | null
+          priority?: number
+          specialties?: string[]
+          state?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+          user_id?: string | null
+          wa_extension?: string | null
+          wa_number?: string | null
+          wa_status?: Database["public"]["Enums"]["agent_wa_status"]
+          whatsapp?: string | null
+        }
+        Update: {
+          access_status?: Database["public"]["Enums"]["agent_access_status"]
+          auto_receive_leads?: boolean
+          available_for_assignment?: boolean
+          city?: string | null
+          commission_currency?: string
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          invited_at?: string | null
+          invited_email?: string | null
+          languages?: string[]
+          last_name?: string | null
+          main_zone?: string | null
+          max_active_clients?: number | null
+          max_open_opportunities?: number | null
+          notes?: string | null
+          priority?: number
+          specialties?: string[]
+          state?: string | null
+          status?: Database["public"]["Enums"]["agent_status"]
+          updated_at?: string
+          user_id?: string | null
+          wa_extension?: string | null
+          wa_number?: string | null
+          wa_status?: Database["public"]["Enums"]["agent_wa_status"]
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           city: string | null
@@ -137,6 +246,8 @@ export type Database = {
       opportunities: {
         Row: {
           assigned_agent_id: string | null
+          assigned_at: string | null
+          assigned_by: string | null
           client_id: string
           created_at: string
           currency: string
@@ -156,6 +267,8 @@ export type Database = {
         }
         Insert: {
           assigned_agent_id?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
           client_id: string
           created_at?: string
           currency?: string
@@ -175,6 +288,8 @@ export type Database = {
         }
         Update: {
           assigned_agent_id?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
           client_id?: string
           created_at?: string
           currency?: string
@@ -193,6 +308,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "opportunities_assigned_agent_id_fkey"
+            columns: ["assigned_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "opportunities_client_id_fkey"
             columns: ["client_id"]
@@ -451,6 +573,7 @@ export type Database = {
     Functions: {
       admins_exist: { Args: never; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
+      current_agent_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -462,7 +585,17 @@ export type Database = {
     }
     Enums: {
       account_status: "pending" | "approved" | "rejected" | "suspended"
+      agent_access_status: "none" | "invited" | "linked"
+      agent_status:
+        | "pending"
+        | "training"
+        | "active"
+        | "suspended"
+        | "inactive"
+        | "archived"
+      agent_wa_status: "available" | "busy" | "offline"
       app_role: "admin" | "agent" | "provider"
+      commission_type: "percentage" | "fixed"
       lead_source:
         | "website"
         | "whatsapp"
@@ -627,7 +760,18 @@ export const Constants = {
   public: {
     Enums: {
       account_status: ["pending", "approved", "rejected", "suspended"],
+      agent_access_status: ["none", "invited", "linked"],
+      agent_status: [
+        "pending",
+        "training",
+        "active",
+        "suspended",
+        "inactive",
+        "archived",
+      ],
+      agent_wa_status: ["available", "busy", "offline"],
       app_role: ["admin", "agent", "provider"],
+      commission_type: ["percentage", "fixed"],
       lead_source: [
         "website",
         "whatsapp",

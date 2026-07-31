@@ -24,9 +24,12 @@ import {
   type OpportunityStage,
 } from "@/lib/opportunities";
 
+type AgentOption = { id: string; label: string };
+
 type Props = {
   opportunities: Opportunity[];
   responsables: { id: string; label: string }[];
+  agents?: AgentOption[];
   creating?: boolean;
   onCreate?: () => void;
   onChanged: () => void;
@@ -38,6 +41,7 @@ type Props = {
 export function OpportunityPanel({
   opportunities,
   responsables,
+  agents = [],
   creating,
   onCreate,
   onChanged,
@@ -72,6 +76,7 @@ export function OpportunityPanel({
               key={o.id}
               opportunity={o}
               responsables={responsables}
+              agents={agents}
               onChanged={onChanged}
             />
           ))}
@@ -84,10 +89,12 @@ export function OpportunityPanel({
 function OpportunityCard({
   opportunity,
   responsables,
+  agents = [],
   onChanged,
 }: {
   opportunity: Opportunity;
   responsables: { id: string; label: string }[];
+  agents?: AgentOption[];
   onChanged: () => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -282,11 +289,42 @@ function OpportunityCard({
             </SelectContent>
           </Select>
           <p className="mt-1 text-xs text-muted-foreground">
-            Por ahora el responsable es el usuario que creó la cotización. En una próxima versión
-            podrá asignarse a un Agente del sistema.
+            El responsable es el usuario del sistema a cargo de la oportunidad.
+          </p>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+            Agente asignado
+          </Label>
+          <Select
+            value={opportunity.assigned_agent_id ?? "none"}
+            onValueChange={(v) => patch({ assigned_agent_id: v === "none" ? null : v })}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Sin agente asignado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin agente asignado</SelectItem>
+              {agents.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {opportunity.assigned_agent_id
+              ? `Asignado el ${opportunity.assigned_at ? new Date(opportunity.assigned_at).toLocaleDateString() : "—"}${
+                  opportunity.assigned_by
+                    ? ` por ${responsables.find((r) => r.id === opportunity.assigned_by)?.label ?? "un usuario del sistema"}`
+                    : ""
+                }`
+              : "Podés asignar un agente de la red comercial."}
           </p>
         </div>
       </div>
+
 
       {saving && (
         <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
