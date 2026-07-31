@@ -283,7 +283,176 @@ export function ResourceFormDialog({
             </Select>
           </div>
 
+          <SectionTitle>Ubicación operativa</SectionTitle>
+          <div className="space-y-2">
+            <Label>Ciudad base</Label>
+            <Input
+              value={form.base_city}
+              onChange={(e) => set("base_city", e.target.value)}
+              placeholder="Neuquén Capital"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Provincia</Label>
+            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>País</Label>
+            <Input value={form.country} onChange={(e) => set("country", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Distancia máxima de operación (km)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.max_distance_km}
+              onChange={(e) => set("max_distance_km", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Ciudades donde opera</Label>
+            <Input
+              value={form.cities_served.join(", ")}
+              onChange={(e) => set("cities_served", parseList(e.target.value))}
+              placeholder="San Martín de los Andes, Villa La Angostura, Bariloche"
+            />
+            <p className="text-xs text-muted-foreground">Separá cada ciudad con una coma.</p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Destinos habilitados</Label>
+            <Input
+              value={form.destinations.join(", ")}
+              onChange={(e) => set("destinations", parseList(e.target.value))}
+              placeholder="Aeropuerto Chapelco, Aeropuerto Bariloche, Cerro Catedral"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Anticipación mínima (horas)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.advance_notice_hours}
+              onChange={(e) => set("advance_notice_hours", e.target.value)}
+            />
+          </div>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <Checkbox
+              checked={form.requires_advance_booking}
+              onCheckedChange={(v) => set("requires_advance_booking", v === true)}
+            />
+            Necesita reserva previa
+          </label>
+
+          {isTransport && (
+            <>
+              <SectionTitle>Servicios de transporte que presta</SectionTitle>
+              <div className="flex flex-wrap gap-3 sm:col-span-2">
+                {TRANSPORT_SERVICE_TYPES.map((t) => (
+                  <label key={t.value} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form.transport_service_types.includes(t.value)}
+                      onCheckedChange={() => toggleServiceType(t.value)}
+                    />
+                    {t.label}
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+
+          {isDriver && (
+            <>
+              <SectionTitle>Datos del conductor</SectionTitle>
+              <div className="space-y-2">
+                <Label>Nombre</Label>
+                <Input
+                  value={form.driver_first_name}
+                  onChange={(e) => set("driver_first_name", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Apellido</Label>
+                <Input
+                  value={form.driver_last_name}
+                  onChange={(e) => set("driver_last_name", e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {isVehicle && (
+            <>
+              <SectionTitle>Datos del vehículo</SectionTitle>
+              <div className="space-y-2">
+                <Label>Marca</Label>
+                <Input
+                  value={form.vehicle_brand}
+                  onChange={(e) => set("vehicle_brand", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Modelo</Label>
+                <Input
+                  value={form.vehicle_model}
+                  onChange={(e) => set("vehicle_model", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Año</Label>
+                <Input
+                  type="number"
+                  min={1950}
+                  value={form.vehicle_year}
+                  onChange={(e) => set("vehicle_year", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Patente</Label>
+                <Input
+                  value={form.vehicle_plate}
+                  onChange={(e) => set("vehicle_plate", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Color</Label>
+                <Input
+                  value={form.vehicle_color}
+                  onChange={(e) => set("vehicle_color", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de vehículo</Label>
+                <Select
+                  value={form.vehicle_type || NONE}
+                  onValueChange={(v) => set("vehicle_type", v === NONE ? "" : (v as VehicleType))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin definir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sin definir</SelectItem>
+                    {VEHICLE_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Capacidad de equipaje</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.luggage_capacity}
+                  onChange={(e) => set("luggage_capacity", e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           <SectionTitle>Zonas de cobertura</SectionTitle>
+
           <div className="flex flex-wrap gap-3 sm:col-span-2">
             {RESOURCE_ZONES.map((z) => (
               <label key={z} className="flex items-center gap-2 text-sm">
