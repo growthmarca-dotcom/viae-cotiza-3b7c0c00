@@ -210,9 +210,11 @@ function PublicQuotationPage() {
           className="mt-4 space-y-2 border-t pt-6 text-center text-xs text-muted-foreground"
           style={{ borderTopColor: `${company.accentColor}66` }}
         >
-          <div className="font-medium" style={{ color: company.primaryColor }}>
-            {company.companyName}
-          </div>
+          {company.companyName ? (
+            <div className="font-medium" style={{ color: company.primaryColor }}>
+              {company.companyName}
+            </div>
+          ) : null}
           {contactLines.length > 0 && <div>{contactLines.join(" · ")}</div>}
           {socialLines.length > 0 && <div>{socialLines.join(" · ")}</div>}
           <div>
