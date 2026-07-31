@@ -123,9 +123,12 @@ function Dashboard() {
         ))}
       </section>
 
+      <LeadsSection />
+
       <PipelineSection />
 
       <TransportEconomicsSection />
+
 
 
 

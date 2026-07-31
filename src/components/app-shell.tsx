@@ -7,7 +7,9 @@ import {
   Route as RouteIcon,
 
 
+  Inbox,
   LayoutDashboard,
+
   FileText,
   PlusCircle,
   Users,
@@ -29,10 +31,12 @@ import { useAccount } from "@/hooks/use-account";
 
 const baseNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/leads", label: "Consultas", icon: Inbox },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
+
   { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/resources", label: "Recursos", icon: Boxes },
   { to: "/transport", label: "Transporte", icon: RouteIcon },

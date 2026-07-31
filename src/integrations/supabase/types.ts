@@ -671,6 +671,9 @@ export type Database = {
           footer_text: string | null
           id: string
           instagram: string | null
+          lead_assignment_enabled: boolean
+          lead_assignment_mode: Database["public"]["Enums"]["lead_assignment_mode"]
+          lead_assignment_rules: Json
           linkedin: string | null
           logo_path: string | null
           primary_color: string
@@ -692,6 +695,9 @@ export type Database = {
           footer_text?: string | null
           id?: string
           instagram?: string | null
+          lead_assignment_enabled?: boolean
+          lead_assignment_mode?: Database["public"]["Enums"]["lead_assignment_mode"]
+          lead_assignment_rules?: Json
           linkedin?: string | null
           logo_path?: string | null
           primary_color?: string
@@ -713,6 +719,9 @@ export type Database = {
           footer_text?: string | null
           id?: string
           instagram?: string | null
+          lead_assignment_enabled?: boolean
+          lead_assignment_mode?: Database["public"]["Enums"]["lead_assignment_mode"]
+          lead_assignment_rules?: Json
           linkedin?: string | null
           logo_path?: string | null
           primary_color?: string
@@ -766,6 +775,175 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lead_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          comment: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["lead_status"] | null
+          id: string
+          lead_id: string
+          owner_id: string
+          to_status: Database["public"]["Enums"]["lead_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["lead_status"] | null
+          id?: string
+          lead_id: string
+          owner_id: string
+          to_status?: Database["public"]["Enums"]["lead_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["lead_status"] | null
+          id?: string
+          lead_id?: string
+          owner_id?: string
+          to_status?: Database["public"]["Enums"]["lead_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_agent_id: string | null
+          assigned_at: string | null
+          assigned_by: string | null
+          budget_amount: number | null
+          budget_currency: string
+          city: string | null
+          client_id: string | null
+          converted_at: string | null
+          country: string | null
+          created_at: string
+          destination: string | null
+          email: string | null
+          first_name: string
+          id: string
+          language: string | null
+          last_activity_at: string
+          last_name: string | null
+          notes: string | null
+          opportunity_id: string | null
+          pax_count: number | null
+          quotation_id: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          source: Database["public"]["Enums"]["lead_source"]
+          status: Database["public"]["Enums"]["lead_status"]
+          travel_date: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          assigned_agent_id?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          budget_amount?: number | null
+          budget_currency?: string
+          city?: string | null
+          client_id?: string | null
+          converted_at?: string | null
+          country?: string | null
+          created_at?: string
+          destination?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          language?: string | null
+          last_activity_at?: string
+          last_name?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          pax_count?: number | null
+          quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          travel_date?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          assigned_agent_id?: string | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          budget_amount?: number | null
+          budget_currency?: string
+          city?: string | null
+          client_id?: string | null
+          converted_at?: string | null
+          country?: string | null
+          created_at?: string
+          destination?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          language?: string | null
+          last_activity_at?: string
+          last_name?: string | null
+          notes?: string | null
+          opportunity_id?: string | null
+          pax_count?: number | null
+          quotation_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          travel_date?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_agent_id_fkey"
+            columns: ["assigned_agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1686,6 +1864,7 @@ export type Database = {
         | "trip_completed"
       company_kind: "internal" | "external"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
+      lead_assignment_mode: "manual" | "automatic"
       lead_source:
         | "website"
         | "whatsapp"
@@ -1695,6 +1874,15 @@ export type Database = {
         | "referral"
         | "existing_client"
         | "other"
+      lead_status:
+        | "new"
+        | "unassigned"
+        | "assigned"
+        | "contacted"
+        | "quoted"
+        | "following_up"
+        | "won"
+        | "lost"
       opportunity_stage:
         | "new"
         | "contacted"
@@ -1965,6 +2153,7 @@ export const Constants = {
       ],
       company_kind: ["internal", "external"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
+      lead_assignment_mode: ["manual", "automatic"],
       lead_source: [
         "website",
         "whatsapp",
@@ -1974,6 +2163,16 @@ export const Constants = {
         "referral",
         "existing_client",
         "other",
+      ],
+      lead_status: [
+        "new",
+        "unassigned",
+        "assigned",
+        "contacted",
+        "quoted",
+        "following_up",
+        "won",
+        "lost",
       ],
       opportunity_stage: [
         "new",
