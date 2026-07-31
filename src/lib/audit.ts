@@ -26,6 +26,8 @@ const ACTION_LABEL: Record<string, string> = {
   deleted: "eliminó",
   archived: "archivó",
   unarchived: "restauró",
+  status_changed: "cambió el estado de",
+  agent_assigned: "reasignó el agente de",
 };
 
 export function entityLabel(entity: string) {
