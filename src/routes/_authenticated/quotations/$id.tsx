@@ -12,6 +12,7 @@ import {
   Pencil,
   Share2,
   Trash2,
+  TicketCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,8 @@ import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/q
 import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { getBookingByQuotation, type Booking } from "@/lib/bookings";
 
 import type { Tables } from "@/integrations/supabase/types";
 import {
