@@ -17,7 +17,10 @@ export type CompanyKind = "internal" | "external";
 export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
 export type ResourceAvailability =
   | "available"
+  | "assigned"
   | "busy"
+  | "reserved"
+  | "in_service"
   | "unavailable"
   | "out_of_service"
   | "off_hours";
