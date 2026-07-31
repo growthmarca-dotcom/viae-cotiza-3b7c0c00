@@ -54,17 +54,47 @@ function PublicQuotationPage() {
   return (
     <>
     <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
-    <div className="min-h-screen bg-background print-screen-hide">
-      <header data-print-hide className="border-b border-border/60 bg-card">
-
+    <div
+      className="min-h-screen bg-background print-screen-hide"
+      style={
+        {
+          "--brand-primary": company.primaryColor,
+          "--brand-accent": company.accentColor,
+        } as React.CSSProperties
+      }
+    >
+      <header
+        data-print-hide
+        className="border-b bg-card"
+        style={{ borderBottomColor: company.accentColor }}
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-6 py-4">
-          <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Compass className="h-5 w-5" />
-          </div>
-            <span className="font-display text-lg font-semibold tracking-tight">
-              ViaE <span className="text-gold">Sales Hub</span>
-            </span>
+          <div className="flex items-center gap-3">
+            {company.logoUrl ? (
+              <img
+                src={company.logoUrl}
+                alt={company.companyName ?? "Logo"}
+                className="h-10 w-auto max-w-[160px] object-contain"
+              />
+            ) : (
+              <div
+                className="grid h-9 w-9 place-items-center rounded-lg text-white"
+                style={{ background: company.primaryColor }}
+              >
+                <Compass className="h-5 w-5" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <span
+                className="block truncate font-display text-lg font-semibold tracking-tight"
+                style={{ color: company.primaryColor }}
+              >
+                {company.companyName}
+              </span>
+              {company.address ? (
+                <span className="block truncate text-xs text-muted-foreground">{company.address}</span>
+              ) : null}
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Download className="mr-2 h-4 w-4" /> Descargar PDF
