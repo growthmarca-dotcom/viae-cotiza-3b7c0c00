@@ -50,6 +50,15 @@ function PublicQuotationPage() {
   const urls: string[] = data.imageUrls ?? [];
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
+  const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
+    Boolean,
+  ) as string[];
+  const socialLines = [
+    company.instagram && `Instagram: ${company.instagram}`,
+    company.facebook && `Facebook: ${company.facebook}`,
+    company.tiktok && `TikTok: ${company.tiktok}`,
+    company.linkedin && `LinkedIn: ${company.linkedin}`,
+  ].filter(Boolean) as string[];
 
   return (
     <>
@@ -150,8 +159,13 @@ function PublicQuotationPage() {
           </section>
         )}
 
-        <section className="rounded-2xl border border-primary/30 bg-primary/5 p-6">
-          <h2 className="font-display text-2xl font-semibold">Inversión</h2>
+        <section
+          className="rounded-2xl border p-6"
+          style={{ borderColor: `${company.accentColor}66`, background: `${company.primaryColor}0D` }}
+        >
+          <h2 className="font-display text-2xl font-semibold" style={{ color: company.primaryColor }}>
+            Inversión
+          </h2>
           <dl className="mt-4 space-y-2 text-sm">
             {q.price_per_night != null && (
               <Line label="Precio por noche" value={`${q.currency} ${Number(q.price_per_night).toLocaleString()}`} />
@@ -159,9 +173,15 @@ function PublicQuotationPage() {
             {q.taxes != null && (
               <Line label="Impuestos" value={`${q.currency} ${Number(q.taxes).toLocaleString()}`} />
             )}
-            <div className="mt-3 flex items-baseline justify-between border-t border-primary/20 pt-3">
+            {q.other_charges != null && (
+              <Line label="Otros cargos" value={`${q.currency} ${Number(q.other_charges).toLocaleString()}`} />
+            )}
+            <div
+              className="mt-3 flex items-baseline justify-between border-t pt-3"
+              style={{ borderTopColor: `${company.accentColor}66` }}
+            >
               <span className="font-display text-lg font-semibold">Total</span>
-              <span className="font-display text-2xl font-semibold text-primary">
+              <span className="font-display text-2xl font-semibold" style={{ color: company.primaryColor }}>
                 {q.currency} {Number(q.total_amount ?? 0).toLocaleString()}
               </span>
             </div>
@@ -184,9 +204,19 @@ function PublicQuotationPage() {
           </section>
         )}
 
-        <footer className="pt-6 text-center text-xs text-muted-foreground">
-          {company.footerText ?? `Cotización generada con ${company.companyName ?? "ViaE Sales Hub"}`} ·{" "}
-          {new Date(q.created_at).toLocaleDateString()}
+        <footer
+          className="mt-4 space-y-2 border-t pt-6 text-center text-xs text-muted-foreground"
+          style={{ borderTopColor: `${company.accentColor}66` }}
+        >
+          <div className="font-medium" style={{ color: company.primaryColor }}>
+            {company.companyName}
+          </div>
+          {contactLines.length > 0 && <div>{contactLines.join(" · ")}</div>}
+          {socialLines.length > 0 && <div>{socialLines.join(" · ")}</div>}
+          <div>
+            {company.footerText ?? "Cotización sin valor contractual."} ·{" "}
+            {new Date(q.created_at).toLocaleDateString()}
+          </div>
         </footer>
       </main>
     </div>
