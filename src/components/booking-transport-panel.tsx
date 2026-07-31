@@ -526,6 +526,9 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
 
               <ServiceEconomicsPanel service={s} onSaved={load} />
 
+              <ServiceExtrasPanel serviceId={s.id} />
+
+
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
 
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">
