@@ -16,6 +16,7 @@ export type PrintQuotation = {
   cancellation_policy: string | null;
   price_per_night: number | null;
   taxes: number | null;
+  other_charges?: number | null;
   total_amount: number | null;
   currency: string;
   notes: string | null;
@@ -118,6 +119,9 @@ export function QuotationPrintDocument({
           <PrintLine label="Precio por noche" value={money(q.price_per_night)} />
         ) : null}
         {q.taxes != null ? <PrintLine label="Impuestos" value={money(q.taxes)} /> : null}
+        {q.other_charges != null ? (
+          <PrintLine label="Otros cargos" value={money(q.other_charges)} />
+        ) : null}
         <div className="print-total" style={{ borderTop: `2px solid ${company.accentColor}` }}>
           <span>Total</span>
           <strong style={{ color: company.primaryColor }}>{money(q.total_amount)}</strong>
