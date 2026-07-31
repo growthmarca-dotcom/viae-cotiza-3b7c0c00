@@ -215,7 +215,7 @@ function DriverPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {RESOURCE_AVAILABILITIES.map((a) => (
+              {DRIVER_AVAILABILITIES.map((a) => (
                 <SelectItem key={a.value} value={a.value}>
                   {a.label}
                 </SelectItem>
