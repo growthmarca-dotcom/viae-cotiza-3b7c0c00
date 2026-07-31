@@ -88,16 +88,20 @@ function OperationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [b, s, a, u] = await Promise.all([
+      const [b, s, a, u, cl, inc] = await Promise.all([
         listBookings(),
         listAllBookingServices(),
         listAgents().catch(() => [] as Agent[]),
         listInternalUsers().catch(() => [] as InternalUser[]),
+        listChecklistByBooking().catch(() => new Map<string, ChecklistItem[]>()),
+        listAllIncidents().catch(() => [] as Incident[]),
       ]);
       setBookings(b);
       setServices(s);
       setAgents(a);
       setUsers(u);
+      setChecklistByBooking(cl);
+      setIncidents(inc);
 
       const ids = Array.from(new Set(b.map((x) => x.client_id).filter(Boolean)));
       if (ids.length) {
