@@ -1,9 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Pencil, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Link as LinkIcon,
+  Loader2,
+  Mail,
+  Pencil,
+  ShieldCheck,
+  Unlink,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
