@@ -69,6 +69,8 @@ const NONE = "__none__";
  * Operativos: acá sólo se solicitan, asignan y siguen sus estados.
  */
 export function BookingTransportTab({ bookingId }: { bookingId: string }) {
+  // v1.8: solicitar y asignar traslados es tarea de la central operativa.
+  const { isOperations } = useAccount();
   const [services, setServices] = useState<TransportService[]>([]);
   const [allServices, setAllServices] = useState<TransportService[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
