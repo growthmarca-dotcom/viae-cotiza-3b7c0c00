@@ -21,6 +21,8 @@ import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { AppFooter } from "@/components/app-footer";
+import { useDeveloperBranding } from "@/hooks/use-developer-branding";
 
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/hooks/use-account";
@@ -46,6 +48,7 @@ const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }]
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { isAdmin } = useAccount();
+  const showDeveloperBranding = useDeveloperBranding();
   const nav = isAdmin ? [...baseNav, ...adminNav] : [...baseNav];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -146,6 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </div>
           <div className="p-6 md:p-10">{children}</div>
+          <AppFooter show={showDeveloperBranding} />
         </main>
       </div>
     </div>

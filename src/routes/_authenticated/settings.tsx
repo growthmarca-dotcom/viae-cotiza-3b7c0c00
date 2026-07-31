@@ -37,6 +37,7 @@ type FormState = {
   accent_color: string;
   footer_text: string;
   analysis_currency: "ARS" | "USD";
+  show_developer_branding: boolean;
 };
 
 const EMPTY: FormState = {
@@ -53,6 +54,7 @@ const EMPTY: FormState = {
   accent_color: "#C4A264",
   footer_text: "",
   analysis_currency: "USD",
+  show_developer_branding: true,
 };
 
 function rowToForm(row: CompanyRow | null): FormState {
@@ -71,6 +73,7 @@ function rowToForm(row: CompanyRow | null): FormState {
     accent_color: row.accent_color ?? EMPTY.accent_color,
     footer_text: row.footer_text ?? "",
     analysis_currency: row.analysis_currency === "ARS" ? "ARS" : "USD",
+    show_developer_branding: row.show_developer_branding !== false,
   };
 }
 
@@ -125,6 +128,7 @@ function SettingsPage() {
         tiktok: form.tiktok || null,
         linkedin: form.linkedin || null,
         footer_text: form.footer_text || null,
+        show_developer_branding: form.show_developer_branding,
         logo_path: logoPath,
       });
 
@@ -300,6 +304,30 @@ function SettingsPage() {
           onChange={(e) => set("footer_text", e.target.value)}
           placeholder="Cotización sujeta a disponibilidad. Precios expresados en la moneda indicada."
         />
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="font-display text-xl font-semibold">Marca del desarrollador</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Muestra u oculta la firma "Desarrollado por MarCa Growth" en las pantallas internas.
+          Nunca aparece en las cotizaciones públicas ni en los PDF del cliente.
+        </p>
+        <div className="mt-4 flex gap-2">
+          {[true, false].map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              onClick={() => set("show_developer_branding", v)}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                form.show_developer_branding === v
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              {v ? "Mostrar" : "Ocultar"}
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="flex justify-end">
