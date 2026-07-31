@@ -132,7 +132,25 @@ export function QuotationPrintDocument({
           <span>Total</span>
           <strong style={{ color: company.primaryColor }}>{money(q.total_amount)}</strong>
         </div>
+        <PrintLine label="Moneda utilizada" value={q.currency} />
+        <PrintLine
+          label="Tipo de cambio utilizado"
+          value={totals.rate != null ? `1 USD = ARS ${totals.rate.toLocaleString("es-AR")}` : "—"}
+        />
+        <PrintLine
+          label="Total en USD"
+          value={totals.totalUsd != null ? formatMoney("USD", totals.totalUsd) : "—"}
+        />
+        <PrintLine
+          label="Total en ARS"
+          value={totals.totalArs != null ? formatMoney("ARS", totals.totalArs) : "—"}
+        />
+        <PrintLine
+          label="Fecha de la cotización"
+          value={new Date(q.created_at).toLocaleDateString()}
+        />
       </PrintBlock>
+
 
       {q.cancellation_policy ? (
         <PrintBlock title="Política de cancelación" color={company.primaryColor}>
