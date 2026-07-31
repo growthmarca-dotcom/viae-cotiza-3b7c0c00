@@ -33,6 +33,8 @@ import {
 import { BookingTransportTab } from "@/components/booking-transport-panel";
 import { BookingServicesPanel } from "@/components/booking-services-panel";
 import { BookingTrackingCard } from "@/components/booking-tracking-card";
+import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
+import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
 import { useAccount } from "@/hooks/use-account";
 import {
   listInternalUsers,
