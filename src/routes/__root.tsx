@@ -92,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "ViaE Sales Hub — Cotizaciones y gestión comercial" },
-      { name: "twitter:description", content: "Crea y comparte cotizaciones de viaje elegantes. La herramienta para agentes de viajes modernos." },
+      { name: "twitter:description", content: "Sistema profesional de cotizaciones y gestión comercial para turismo." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/30897b0a-cb13-4ca3-a909-30445421ad82" },
     ],
