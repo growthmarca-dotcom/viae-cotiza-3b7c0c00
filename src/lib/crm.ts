@@ -18,6 +18,7 @@ export async function upsertClientFromQuotation(
   const payload = {
     user_id: userId,
     full_name: fullName,
+    last_name: form.lastName.trim() || null,
     email,
     phone,
     destination: form.destination || null,
@@ -25,6 +26,7 @@ export async function upsertClientFromQuotation(
     travel_end: form.travelEnd || null,
     pax_count: form.pax ? Number(form.pax) : null,
   };
+
 
   try {
     // Buscar cliente existente por email o teléfono dentro de la cuenta del agente
