@@ -23,14 +23,19 @@ import { LEAD_SOURCES } from "@/lib/opportunities";
 import {
   EMPTY_LEAD,
   LEAD_LANGUAGES,
+  LEAD_SERVICES,
   LEAD_STATUSES,
+  TRIP_TYPES,
   type LeadInput,
   type LeadStatus,
+  type TripType,
 } from "@/lib/leads";
 import type { Agent } from "@/lib/agents";
 import { agentFullName } from "@/lib/agents";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const UNASSIGNED = "__none__";
+const NO_TRIP_TYPE = "__none__";
 
 export function LeadFormDialog({
   open,
