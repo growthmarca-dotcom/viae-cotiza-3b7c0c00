@@ -551,7 +551,9 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   if (filters.subtype && filters.subtype !== "all") q = q.eq("subtype", filters.subtype);
   if (filters.state && filters.state !== "all") q = q.eq("state", filters.state);
   if (filters.companyId && filters.companyId !== "all") q = q.eq("company_id", filters.companyId);
+  if (filters.selfDrive) q = q.eq("self_drive", true);
   const { data, error } = await q;
+
   if (error) throw error;
   let rows = (data ?? []) as Resource[];
 
