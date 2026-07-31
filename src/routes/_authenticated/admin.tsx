@@ -1,12 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { History, Loader2, Pause, Play, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import {
+  Download,
+  History,
+  Loader2,
+  Pause,
+  Play,
+  ScrollText,
+  ShieldCheck,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAccount, type AppRole } from "@/hooks/use-account";
 import { AdminRecovery } from "@/components/admin-recovery";
+import {
+  AUDIT_ENTITIES,
+  actionLabel,
+  changedFields,
+  entityLabel,
+  listAuditLog,
+} from "@/lib/audit";
+import { EXPORTABLE, exportTableCsv, type ExportableTable } from "@/lib/export";
 import {
   AlertDialog,
   AlertDialogAction,
