@@ -27,6 +27,14 @@ import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { stageClasses, stageLabel, type Opportunity } from "@/lib/opportunities";
 import {
+  computeLeadStats,
+  leadFullName,
+  leadStatusClasses,
+  leadStatusLabel,
+  listLeadsByAgent,
+  type Lead,
+} from "@/lib/leads";
+import {
   AGENT_STATUSES,
   agentFullName,
   agentStatusClasses,
