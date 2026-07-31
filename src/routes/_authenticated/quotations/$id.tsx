@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/quotations";
 import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
 import { QuotationPrintDocument } from "@/components/quotation-print";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 import type { Tables } from "@/integrations/supabase/types";
 import {
   AlertDialog,
