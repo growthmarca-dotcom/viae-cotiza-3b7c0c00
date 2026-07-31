@@ -279,7 +279,65 @@ function ResourceDetailPage() {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="font-display text-xl font-semibold">Ubicación y cobertura</h2>
+        <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
+          <Info label="País">{resource.country ?? "—"}</Info>
+          <Info label="Provincia / Región">{resource.state ?? "—"}</Info>
+          <Info label="Ciudad base">{resource.base_city ?? "—"}</Info>
+          <Info label="Zonas turísticas">{(resource.tourist_zones ?? []).join(", ") || "—"}</Info>
+          <Info label="Zona operativa">{resource.operating_zone ?? "—"}</Info>
+          <Info label="Alcance">{coverageScopeLabel(resource.coverage_scope)}</Info>
+          <Info label="Dirección">
+            {[resource.address, resource.postal_code].filter(Boolean).join(" · ") || "—"}
+          </Info>
+          <Info label="Radio geográfico">
+            {resource.geo_radius_km != null ? `${resource.geo_radius_km} km` : "—"}
+          </Info>
+          <Info label="Coordenadas">
+            {resource.latitude != null && resource.longitude != null
+              ? `${resource.latitude}, ${resource.longitude}`
+              : "—"}
+          </Info>
+          <Info label="Punto de encuentro">{resource.meeting_point ?? "—"}</Info>
+          <Info label="Entrega">{resource.pickup_location ?? "—"}</Info>
+          <Info label="Devolución">{resource.dropoff_location ?? "—"}</Info>
+        </div>
+      </div>
+
+      {resource.self_drive && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="font-display text-xl font-semibold">Alquiler sin conductor</h2>
+          <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
+            <Info label="Edad mínima">{resource.rental_min_age ?? "—"}</Info>
+            <Info label="Licencia requerida">
+              {RENTAL_LICENSES.find((l) => l.value === resource.rental_license_required)?.label ??
+                "—"}
+            </Info>
+            <Info label="Depósito">
+              {resource.rental_deposit_amount != null
+                ? `${resource.rental_deposit_amount} ${resource.rental_deposit_currency ?? ""}`
+                : "—"}
+            </Info>
+            <Info label="Km incluidos">{resource.rental_included_km ?? "—"}</Info>
+            <Info label="Costo km extra">{resource.rental_extra_km_cost ?? "—"}</Info>
+            <Info label="Combustible">
+              {RENTAL_FUEL_POLICIES.find((f) => f.value === resource.rental_fuel_policy)?.label ??
+                "—"}
+            </Info>
+            <Info label="Estado del vehículo">
+              {RENTAL_VEHICLE_CONDITIONS.find((c) => c.value === resource.rental_vehicle_condition)
+                ?.label ?? "—"}
+            </Info>
+            <Info label="Conductor de la empresa">
+              {resource.rental_requires_driver ? "Sí" : "No"}
+            </Info>
+          </div>
+        </div>
+      )}
+
       {isTransportResource(resource) && (
+
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="font-display text-xl font-semibold">Red de transporte</h2>
           <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
