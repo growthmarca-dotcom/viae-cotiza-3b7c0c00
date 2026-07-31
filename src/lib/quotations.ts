@@ -119,15 +119,18 @@ export async function duplicateQuotation(id: string): Promise<string> {
     share_token: _t,
     archived: _a,
     ...rest
-  } = row as Record<string, unknown>;
+  } = row as unknown as Record<string, unknown>;
+
+  const payload = {
+    ...rest,
+    title: `${String(row.title ?? "Cotización")} (copia)`,
+    status: "draft",
+  } as Parameters<ReturnType<typeof supabase.from<"quotations">>["insert"]>[0];
 
   const { data: inserted, error: insErr } = await supabase
     .from("quotations")
-    .insert({
-      ...(rest as never),
-      title: `${String(row.title ?? "Cotización")} (copia)`,
-      status: "draft",
-    })
+    .insert(payload)
+
     .select("id")
     .single();
   if (insErr) throw insErr;
