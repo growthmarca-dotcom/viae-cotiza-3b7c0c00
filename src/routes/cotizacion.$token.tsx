@@ -55,7 +55,7 @@ function PublicQuotationPage() {
             <Compass className="h-5 w-5" />
           </div>
           <span className="font-display text-lg font-semibold tracking-tight">
-            ViaE <span className="text-gold">Cotizaciones</span>
+            ViaE <span className="text-gold">Sales Hub</span>
           </span>
         </div>
       </header>
@@ -143,7 +143,7 @@ function PublicQuotationPage() {
         )}
 
         <footer className="pt-6 text-center text-xs text-muted-foreground">
-          Cotización generada con ViaE · {new Date(q.created_at).toLocaleDateString()}
+          Cotización generada con ViaE Sales Hub · {new Date(q.created_at).toLocaleDateString()}
         </footer>
       </main>
     </div>

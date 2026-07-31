@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Compass className="h-5 w-5" />
             </div>
             <span className="font-display text-lg font-semibold">
-              ViaE <span className="text-gold">Cotizaciones</span>
+              ViaE <span className="text-gold">Sales Hub</span>
             </span>
           </div>
           <nav className="flex-1 space-y-1 px-3">
