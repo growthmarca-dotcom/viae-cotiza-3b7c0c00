@@ -12,7 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listCompanies, listResources, type Company, type Resource } from "@/lib/resources";
+import {
+  availabilityLabel,
+  listCompanies,
+  listResources,
+  type Company,
+  type Resource,
+} from "@/lib/resources";
 import {
   archiveTransportService,
   createTransportService,
@@ -21,6 +27,7 @@ import {
   isDriverResource,
   isVehicleResource,
   listBookingTransportServices,
+  listTransportServices,
   serviceStatusClasses,
   serviceStatusLabel,
   serviceTypeLabel,
@@ -34,6 +41,14 @@ import {
   type TransportServiceStatus,
   type TransportServiceType,
 } from "@/lib/transport";
+import {
+  assignmentWarnings,
+  futureServicesOf,
+  resourceHeadline,
+  timeLabel,
+  type AssignmentWarning,
+} from "@/lib/transport-ops";
+import { coverageOf } from "@/lib/transport";
 
 const NONE = "__none__";
 
