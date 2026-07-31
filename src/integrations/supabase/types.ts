@@ -656,6 +656,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json
+          entity: string | null
+          entity_id: string | null
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          entity?: string | null
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           assigned_agent_id: string | null
@@ -1406,6 +1445,10 @@ export type Database = {
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
+      sync_transport_resource_state: {
+        Args: { _resource_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       account_status: "pending" | "approved" | "rejected" | "suspended"
@@ -1482,6 +1525,9 @@ export type Database = {
         | "unavailable"
         | "out_of_service"
         | "off_hours"
+        | "assigned"
+        | "reserved"
+        | "in_service"
       resource_category:
         | "accommodation"
         | "room"
@@ -1745,6 +1791,9 @@ export const Constants = {
         "unavailable",
         "out_of_service",
         "off_hours",
+        "assigned",
+        "reserved",
+        "in_service",
       ],
       resource_category: [
         "accommodation",
