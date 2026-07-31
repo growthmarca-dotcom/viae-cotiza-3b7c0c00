@@ -291,6 +291,11 @@ export type TransportServiceInput = {
   vehicle_resource_id: string;
   company_id: string;
   notes: string;
+  // --- información de cobro al pasajero (v1.2)
+  payment_mode: TransportPaymentMode;
+  collection_status: TransportCollectionStatus;
+  collection_amount: string;
+  collection_currency: string;
 };
 
 export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
@@ -306,6 +311,10 @@ export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   vehicle_resource_id: "",
   company_id: "",
   notes: "",
+  payment_mode: "prepaid_viae",
+  collection_status: "not_applicable",
+  collection_amount: "",
+  collection_currency: "ARS",
 };
 
 export function serviceToInput(s: TransportService): TransportServiceInput {
@@ -322,6 +331,10 @@ export function serviceToInput(s: TransportService): TransportServiceInput {
     vehicle_resource_id: s.vehicle_resource_id ?? "",
     company_id: s.company_id ?? "",
     notes: s.notes ?? "",
+    payment_mode: (s.payment_mode ?? "prepaid_viae") as TransportPaymentMode,
+    collection_status: (s.collection_status ?? "not_applicable") as TransportCollectionStatus,
+    collection_amount: s.collection_amount != null ? String(s.collection_amount) : "",
+    collection_currency: s.collection_currency ?? "ARS",
   };
 }
 
@@ -341,6 +354,10 @@ function servicePayload(input: TransportServiceInput) {
     vehicle_resource_id: input.vehicle_resource_id || null,
     company_id: input.company_id || null,
     notes: text(input.notes),
+    payment_mode: input.payment_mode,
+    collection_status: input.collection_status,
+    collection_amount: num(input.collection_amount),
+    collection_currency: input.collection_currency || "ARS",
   };
 }
 
