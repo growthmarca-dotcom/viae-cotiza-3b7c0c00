@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
+import { useAccount } from "@/hooks/use-account";
+import { listTransportServices } from "@/lib/transport";
+import { computeTransportEconomics } from "@/lib/transport-economics";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -121,6 +124,10 @@ function Dashboard() {
       </section>
 
       <PipelineSection />
+
+      <TransportEconomicsSection />
+
+
 
 
 
