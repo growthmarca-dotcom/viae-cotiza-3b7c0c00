@@ -1,36 +1,37 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const PUBLIC_FIELDS = [
-  "id",
-  "title",
-  "destination",
-  "travel_start",
-  "travel_end",
-  "nights",
-  "pax_count",
-  "guest_first_name",
-  "guest_last_name",
-  "accommodation_name",
-  "accommodation_address",
-  "accommodation_description",
-  "accommodation_services",
-  "cancellation_policy",
-  "price_per_night",
-  "taxes",
-  "total_amount",
-  "currency",
-  "notes",
-  "images",
-  "created_at",
-  "expires_at",
-].join(", ");
+type PublicQuotation = {
+  id: string;
+  title: string;
+  destination: string | null;
+  travel_start: string | null;
+  travel_end: string | null;
+  nights: number | null;
+  pax_count: number | null;
+  guest_first_name: string | null;
+  guest_last_name: string | null;
+  accommodation_name: string | null;
+  accommodation_address: string | null;
+  accommodation_description: string | null;
+  accommodation_services: string | null;
+  cancellation_policy: string | null;
+  price_per_night: number | null;
+  taxes: number | null;
+  total_amount: number | null;
+  currency: string;
+  notes: string | null;
+  created_at: string;
+};
+
+const PUBLIC_FIELDS =
+  "id, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, total_amount, currency, notes, created_at, images, expires_at";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
     z.object({ token: z.string().regex(/^[a-f0-9]{20,64}$/i) }).parse(data),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<{ quotation: PublicQuotation; imageUrls: string[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: q, error } = await supabaseAdmin
@@ -45,20 +46,22 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
     }
     if (!q) throw new Error("Cotización no encontrada");
 
-    const row = q as Record<string, unknown>;
-    if (row.expires_at && new Date(row.expires_at as string) < new Date()) {
+    const { images, expires_at, ...quotation } = q as unknown as PublicQuotation & {
+      images: string[] | null;
+      expires_at: string | null;
+    };
+
+    if (expires_at && new Date(expires_at) < new Date()) {
       throw new Error("Cotización no encontrada");
     }
 
-    const images = (row.images as string[] | null) ?? [];
     let imageUrls: string[] = [];
-    if (images.length > 0) {
+    if (images && images.length > 0) {
       const { data: signed } = await supabaseAdmin.storage
         .from("quotation-images")
         .createSignedUrls(images, 60 * 60 * 24 * 7);
       imageUrls = (signed ?? []).map((s) => s.signedUrl).filter((u): u is string => Boolean(u));
     }
 
-    const { images: _images, expires_at: _expires, ...quotation } = row;
-    return { quotation: quotation as Record<string, unknown>, imageUrls };
+    return { quotation, imageUrls };
   });
