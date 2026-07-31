@@ -326,7 +326,11 @@ function TransportPage() {
           <TabsContent value="assigned">
             <ServiceTable services={assigned} />
           </TabsContent>
+          <TabsContent value="economics">
+            <TransportEconomicsDashboard services={services} />
+          </TabsContent>
         </Tabs>
+
       )}
 
       <CommunicationEventsPanel />
