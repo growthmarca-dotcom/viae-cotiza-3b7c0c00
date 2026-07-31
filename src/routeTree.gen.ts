@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
+import { Route as AuthenticatedTransportRouteImport } from './routes/_authenticated/transport'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -47,6 +48,11 @@ const CotizacionTokenRoute = CotizacionTokenRouteImport.update({
   id: '/cotizacion/$token',
   path: '/cotizacion/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTransportRoute = AuthenticatedTransportRouteImport.update({
+  id: '/transport',
+  path: '/transport',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/_authenticated/agents_/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/resources'
     | '/settings'
+    | '/transport'
     | '/cotizacion/$token'
     | '/agents/$id'
     | '/bookings/$id'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/resources'
     | '/settings'
+    | '/transport'
     | '/cotizacion/$token'
     | '/agents/$id'
     | '/bookings/$id'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
+    | '/_authenticated/transport'
     | '/cotizacion/$token'
     | '/_authenticated/agents_/$id'
     | '/_authenticated/bookings_/$id'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cotizacion/$token'
       preLoaderRoute: typeof CotizacionTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/transport': {
+      id: '/_authenticated/transport'
+      path: '/transport'
+      fullPath: '/transport'
+      preLoaderRoute: typeof AuthenticatedTransportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -408,6 +427,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTransportRoute: typeof AuthenticatedTransportRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
@@ -426,6 +446,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTransportRoute: AuthenticatedTransportRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
