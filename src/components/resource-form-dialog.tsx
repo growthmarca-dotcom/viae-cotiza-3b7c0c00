@@ -305,6 +305,54 @@ export function ResourceFormDialog({
             </Select>
           </div>
 
+          <SectionTitle>Propietario del recurso</SectionTitle>
+          <div className="space-y-2">
+            <Label>Propietario</Label>
+            <Select
+              value={form.owner_type}
+              onValueChange={(v) => set("owner_type", v as ResourceOwnerType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RESOURCE_OWNER_TYPES.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Proveedor / empresa relacionada</Label>
+            <Select
+              value={form.owner_company_id || NONE}
+              onValueChange={(v) => set("owner_company_id", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin empresa</SelectItem>
+                {companies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Titular (si es particular u otro)</Label>
+            <Input
+              value={form.owner_name}
+              onChange={(e) => set("owner_name", e.target.value)}
+              placeholder="Nombre del titular"
+            />
+          </div>
+
+
           <div className="space-y-2 sm:col-span-2">
             <Label>Descripción</Label>
             <Textarea
