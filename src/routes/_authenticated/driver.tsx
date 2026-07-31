@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeDollarSign,
+  Bell,
   CarFront,
   CheckCircle2,
   Clock,
@@ -25,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   availabilityClasses,
   availabilityLabel,
-  RESOURCE_AVAILABILITIES,
+  DRIVER_AVAILABILITIES,
   type Resource,
   type ResourceAvailability,
 } from "@/lib/resources";
@@ -46,7 +47,6 @@ import {
   arriveAtOrigin,
   completeService,
   confirmCollection,
-  groupServices,
   lastUpdateOf,
   listMyDriverResources,
   listMyDriverServices,
@@ -60,6 +60,21 @@ import {
   startService,
   type DriverServiceContext,
 } from "@/lib/driver";
+import {
+  driverDaySummary,
+  filterDriverServices,
+  timeLabel,
+  todayISO,
+  type DriverFilter,
+} from "@/lib/transport-ops";
+import {
+  assignmentPayload,
+  listMyNotifications,
+  markAllNotificationsRead,
+  unreadCount,
+  type Notification,
+} from "@/lib/notifications";
+
 
 export const Route = createFileRoute("/_authenticated/driver")({
   component: DriverPage,
@@ -92,6 +107,8 @@ function DriverPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [services, setServices] = useState<TransportService[]>([]);
   const [context, setContext] = useState<Map<string, DriverServiceContext>>(new Map());
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filter, setFilter] = useState<DriverFilter>("today");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -100,12 +117,14 @@ function DriverPage() {
     try {
       const mine = await listMyDriverResources();
       setResources(mine);
-      const [svcs, ctx] = await Promise.all([
+      const [svcs, ctx, notis] = await Promise.all([
         listMyDriverServices(mine.map((r) => r.id)),
         listMyServiceContext(),
+        listMyNotifications(),
       ]);
       setServices(svcs);
       setContext(ctx);
+      setNotifications(notis);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar tu panel");
     } finally {
@@ -119,7 +138,19 @@ function DriverPage() {
 
   const driver = resources.find((r) => r.category === "driver") ?? resources[0] ?? null;
   const vehicleById = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
-  const groups = useMemo(() => groupServices(services), [services]);
+  const summary = useMemo(() => driverDaySummary(services), [services]);
+  const visible = useMemo(() => filterDriverServices(services, filter), [services, filter]);
+  const counts = useMemo(
+    () => ({
+      today: filterDriverServices(services, "today").length,
+      upcoming: filterDriverServices(services, "upcoming").length,
+      history: filterDriverServices(services, "history").length,
+    }),
+    [services],
+  );
+  const unread = useMemo(() => notifications.filter((n) => n.read_at == null), [notifications]);
+
+  
 
   async function run(action: () => Promise<void>, message: string) {
     setBusy(true);
@@ -184,7 +215,7 @@ function DriverPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {RESOURCE_AVAILABILITIES.map((a) => (
+              {DRIVER_AVAILABILITIES.map((a) => (
                 <SelectItem key={a.value} value={a.value}>
                   {a.label}
                 </SelectItem>
@@ -207,37 +238,104 @@ function DriverPage() {
       </p>
 
       <section>
+        <h2 className="font-display text-xl font-semibold">Resumen de hoy</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryCard label="Servicios pendientes" value={String(summary.pending)} />
+          <SummaryCard label="Servicios aceptados" value={String(summary.accepted)} />
+          <SummaryCard label="Servicios finalizados" value={String(summary.finished)} />
+          <SummaryCard
+            label="Importes pendientes de cobrar"
+            value={`${summary.pendingCollectionAmount.toLocaleString("es-AR")} ${summary.currency}`}
+            hint={`${summary.pendingCollection} servicio(s)`}
+          />
+        </div>
+      </section>
+
+      {unread.length > 0 && (
+        <section className="rounded-2xl border border-gold/40 bg-gold/5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+              <Bell className="h-4 w-4 text-gold" /> Nuevos servicios asignados (
+              {unreadCount(notifications)})
+            </h2>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                run(
+                  () => markAllNotificationsRead(unread.map((n) => n.id)),
+                  "Avisos marcados como leídos",
+                )
+              }
+            >
+              Marcar todo como leído
+            </Button>
+          </div>
+          <ul className="mt-3 space-y-2 text-sm">
+            {unread.map((n) => {
+              const p = assignmentPayload(n);
+              return (
+                <li key={n.id} className="rounded-xl border border-border/70 bg-card p-3">
+                  <p className="font-medium">{n.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {p.service_date ?? "Sin fecha"} · {timeLabel(p.service_time ?? null)} ·{" "}
+                    {(p.origin ?? "—") + " → " + (p.destination ?? "—")}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pasajeros: {p.pax_count ?? "—"} · Equipaje: {p.luggage_count ?? "—"}
+                    {p.collection_amount != null
+                      ? ` · A cobrar: ${p.collection_amount} ${p.collection_currency ?? ""}`
+                      : ""}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <section>
         <h2 className="font-display text-xl font-semibold">Mis servicios</h2>
-        <Tabs defaultValue="active" className="mt-4">
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as DriverFilter)} className="mt-4">
           <TabsList>
-            <TabsTrigger value="active">Activos ({groups.active.length})</TabsTrigger>
-            <TabsTrigger value="upcoming">Próximos ({groups.upcoming.length})</TabsTrigger>
-            <TabsTrigger value="finished">Finalizados ({groups.finished.length})</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelados ({groups.cancelled.length})</TabsTrigger>
+            <TabsTrigger value="today">Hoy ({counts.today})</TabsTrigger>
+            <TabsTrigger value="upcoming">Próximos ({counts.upcoming})</TabsTrigger>
+            <TabsTrigger value="history">Historial ({counts.history})</TabsTrigger>
           </TabsList>
-          {(["active", "upcoming", "finished", "cancelled"] as const).map((g) => (
-            <TabsContent key={g} value={g} className="mt-4 space-y-4">
-              {groups[g].length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hay servicios en esta sección.</p>
-              ) : (
-                groups[g].map((s) => (
-                  <DriverServiceCard
-                    key={s.id}
-                    service={s}
-                    ctx={context.get(s.id) ?? null}
-                    vehicle={s.vehicle_resource_id ? vehicleById.get(s.vehicle_resource_id) : null}
-                    busy={busy}
-                    onAction={run}
-                  />
-                ))
-              )}
-            </TabsContent>
-          ))}
+          <TabsContent value={filter} className="mt-4 space-y-4">
+            {visible.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No hay servicios en esta sección.</p>
+            ) : (
+              visible.map((s) => (
+                <DriverServiceCard
+                  key={s.id}
+                  service={s}
+                  ctx={context.get(s.id) ?? null}
+                  vehicle={s.vehicle_resource_id ? vehicleById.get(s.vehicle_resource_id) : null}
+                  busy={busy}
+                  onAction={run}
+                />
+              ))
+            )}
+          </TabsContent>
         </Tabs>
       </section>
+
     </div>
   );
 }
+
+function SummaryCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-2xl font-semibold">{value}</p>
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+
 
 function DriverServiceCard({
   service: s,

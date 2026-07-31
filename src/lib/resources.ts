@@ -17,7 +17,10 @@ export type CompanyKind = "internal" | "external";
 export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
 export type ResourceAvailability =
   | "available"
+  | "assigned"
   | "busy"
+  | "reserved"
+  | "in_service"
   | "unavailable"
   | "out_of_service"
   | "off_hours";
@@ -60,11 +63,32 @@ export const RESOURCE_CATEGORIES: { value: ResourceCategory; label: string }[] =
 
 export const RESOURCE_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
   { value: "available", label: "Disponible" },
+  { value: "assigned", label: "Asignado" },
   { value: "busy", label: "En viaje / ocupado" },
+  { value: "reserved", label: "Reservado" },
+  { value: "in_service", label: "En servicio" },
   { value: "unavailable", label: "No disponible" },
   { value: "off_hours", label: "Fuera de horario" },
   { value: "out_of_service", label: "Fuera de servicio" },
 ];
+
+/** Estados operativos propios del conductor (v1.3). */
+export const DRIVER_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
+  { value: "available", label: "Disponible" },
+  { value: "assigned", label: "Asignado" },
+  { value: "busy", label: "En viaje" },
+  { value: "unavailable", label: "No disponible" },
+  { value: "off_hours", label: "Fuera de horario" },
+];
+
+/** Estados operativos propios del vehículo (v1.3). */
+export const VEHICLE_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
+  { value: "available", label: "Disponible" },
+  { value: "reserved", label: "Reservado" },
+  { value: "in_service", label: "En servicio" },
+  { value: "out_of_service", label: "Fuera de servicio" },
+];
+
 
 
 export type AgentAvailability = "available" | "busy" | "unavailable" | "off_hours";
@@ -134,13 +158,25 @@ export function availabilityClasses(value: string) {
     case "available":
       return "bg-primary/10 text-primary border-primary/30";
     case "busy":
+    case "in_service":
       return "bg-gold/15 text-foreground border-gold/40";
+    case "assigned":
+    case "reserved":
+      return "bg-gold/10 text-foreground border-gold/30";
     case "unavailable":
     case "out_of_service":
       return "bg-destructive/10 text-destructive border-destructive/30";
     default:
       return "bg-secondary text-secondary-foreground border-border";
   }
+}
+
+/** Estados operativos según el tipo de recurso (conductor o vehículo). */
+export function availabilityOptionsFor(category: string) {
+  if (category === "vehicle") return VEHICLE_AVAILABILITIES;
+  if (category === "driver" || category === "taxi" || category === "transfer")
+    return DRIVER_AVAILABILITIES;
+  return RESOURCE_AVAILABILITIES;
 }
 
 // ------------------------------------------------------------------ empresas

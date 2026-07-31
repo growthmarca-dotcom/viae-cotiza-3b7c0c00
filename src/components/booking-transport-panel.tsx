@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Route as RouteIcon, Trash2 } from "lucide-react";
+import { AlertTriangle, Info, Loader2, Plus, Route as RouteIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { listCompanies, listResources, type Company, type Resource } from "@/lib/resources";
+import {
+  availabilityLabel,
+  listCompanies,
+  listResources,
+  type Company,
+  type Resource,
+} from "@/lib/resources";
 import {
   archiveTransportService,
   createTransportService,
@@ -21,6 +27,7 @@ import {
   isDriverResource,
   isVehicleResource,
   listBookingTransportServices,
+  listTransportServices,
   serviceStatusClasses,
   serviceStatusLabel,
   serviceTypeLabel,
@@ -34,6 +41,14 @@ import {
   type TransportServiceStatus,
   type TransportServiceType,
 } from "@/lib/transport";
+import {
+  assignmentWarnings,
+  futureServicesOf,
+  resourceHeadline,
+  timeLabel,
+  type AssignmentWarning,
+} from "@/lib/transport-ops";
+import { coverageOf } from "@/lib/transport";
 
 const NONE = "__none__";
 
@@ -44,6 +59,7 @@ const NONE = "__none__";
  */
 export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const [services, setServices] = useState<TransportService[]>([]);
+  const [allServices, setAllServices] = useState<TransportService[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [form, setForm] = useState<TransportServiceInput>(EMPTY_TRANSPORT_SERVICE);
@@ -54,14 +70,16 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [svcs, res, comps] = await Promise.all([
+      const [svcs, res, comps, all] = await Promise.all([
         listBookingTransportServices(bookingId),
         listResources(),
         listCompanies(true),
+        listTransportServices({}),
       ]);
       setServices(svcs);
       setResources(res);
       setCompanies(comps);
+      setAllServices(all);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar el transporte");
     } finally {
@@ -93,7 +111,26 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const drivers = candidates.filter(isDriverResource);
   const vehicles = candidates.filter(isVehicleResource);
   const byId = new Map(resources.map((r) => [r.id, r]));
+
   const companyById = new Map(companies.map((c) => [c.id, c]));
+
+  // Control de asignación (v1.3): informa, nunca bloquea.
+  const assignCtx = {
+    date: form.service_date || null,
+    time: form.service_time || null,
+    paxCount: form.pax_count ? Number(form.pax_count) : null,
+    luggageCount: form.luggage_count ? Number(form.luggage_count) : null,
+    origin: form.origin || null,
+  };
+  const selectedDriver = form.driver_resource_id ? byId.get(form.driver_resource_id) : undefined;
+  const selectedVehicle = form.vehicle_resource_id ? byId.get(form.vehicle_resource_id) : undefined;
+  const driverWarnings = selectedDriver
+    ? assignmentWarnings(selectedDriver, allServices, assignCtx)
+    : [];
+  const vehicleWarnings = selectedVehicle
+    ? assignmentWarnings(selectedVehicle, allServices, assignCtx)
+    : [];
+
 
   async function create() {
     setSaving(true);
@@ -244,6 +281,26 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
               </SelectContent>
             </Select>
           </div>
+
+          {(selectedDriver || selectedVehicle) && (
+            <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+              {selectedDriver && (
+                <AssignmentCheck
+                  resource={selectedDriver}
+                  warnings={driverWarnings}
+                  services={allServices}
+                />
+              )}
+              {selectedVehicle && (
+                <AssignmentCheck
+                  resource={selectedVehicle}
+                  warnings={vehicleWarnings}
+                  services={allServices}
+                />
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Empresa asignada</Label>
             <Select
@@ -369,6 +426,74 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Ficha de control previa a la asignación (v1.3).
+ * Muestra disponibilidad, ciudad base, cobertura, capacidad y los servicios
+ * futuros del recurso, junto con las advertencias detectadas. Nunca bloquea.
+ */
+function AssignmentCheck({
+  resource,
+  warnings,
+  services,
+}: {
+  resource: Resource;
+  warnings: AssignmentWarning[];
+  services: TransportService[];
+}) {
+  const future = futureServicesOf(services, resource.id).slice(0, 4);
+  const coverage = coverageOf(resource);
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 text-sm">
+      <p className="font-medium">{resourceHeadline(resource)}</p>
+      <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+        <div>Disponibilidad: {availabilityLabel(resource.availability)}</div>
+        <div>Ciudad base: {resource.base_city || "—"}</div>
+        <div>Cobertura: {coverage.length > 0 ? coverage.join(", ") : "—"}</div>
+        <div>
+          Capacidad: {resource.pax_capacity != null ? `${resource.pax_capacity} pax` : "—"}
+          {resource.luggage_capacity != null ? ` · ${resource.luggage_capacity} equipajes` : ""}
+        </div>
+      </dl>
+
+      <p className="mt-3 text-xs font-medium">Servicios futuros asignados</p>
+      {future.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Sin servicios futuros.</p>
+      ) : (
+        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+          {future.map((f) => (
+            <li key={f.id}>
+              {f.service_date ?? "s/f"} · {timeLabel(f.service_time)} · {f.origin ?? "—"} →{" "}
+              {f.destination ?? "—"}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {warnings.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {warnings.map((w, i) => (
+            <li
+              key={i}
+              className={`flex items-start gap-2 rounded-lg border px-2 py-1.5 text-xs ${
+                w.level === "warning"
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-gold/40 bg-gold/5 text-foreground"
+              }`}
+            >
+              {w.level === "warning" ? (
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              )}
+              <span>{w.message}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
