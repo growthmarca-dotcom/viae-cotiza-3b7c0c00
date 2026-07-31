@@ -17,7 +17,7 @@ import {
   subtypeLabel,
   type ResourceClass,
 } from "@/lib/resource-catalog";
-import { allCities, allRegions } from "@/lib/geo";
+import { allCities, allRegions, cityNamesOf, DEFAULT_COUNTRY } from "@/lib/geo";
 import {
   availabilityClasses,
   availabilityLabel,
@@ -37,6 +37,8 @@ import {
   type ResourceAvailability,
   type ResourceCategory,
   type ResourceInput,
+  COVERAGE_SCOPES,
+  type CoverageScope,
 } from "@/lib/resources";
 
 
