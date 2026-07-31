@@ -90,6 +90,17 @@ function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [responsables, setResponsables] = useState<{ id: string; label: string }[]>([]);
+  const [creatingOpp, setCreatingOpp] = useState(false);
+
+  async function loadOpportunities() {
+    try {
+      setOpportunities(await listOpportunitiesByClient(id));
+    } catch {
+      setOpportunities([]);
+    }
+  }
 
   async function load() {
     setLoading(true);
