@@ -46,11 +46,15 @@ function PublicQuotationPage() {
 
   const q = data.quotation;
   const urls: string[] = data.imageUrls ?? [];
+  const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
+    <div className="min-h-screen bg-background print-screen-hide">
       <header data-print-hide className="border-b border-border/60 bg-card">
+
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-6 py-4">
           <div className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
