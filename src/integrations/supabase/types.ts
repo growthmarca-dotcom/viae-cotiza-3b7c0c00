@@ -177,6 +177,62 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_checklist_items: {
+        Row: {
+          booking_id: string
+          code: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_critical: boolean
+          label: string
+          notes: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["checklist_item_status"]
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          code: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_critical?: boolean
+          label: string
+          notes?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["checklist_item_status"]
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          code?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_critical?: boolean
+          label?: string
+          notes?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["checklist_item_status"]
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_checklist_items_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_documents: {
         Row: {
           booking_id: string
@@ -214,6 +270,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "booking_documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_incidents: {
+        Row: {
+          booking_id: string
+          category: Database["public"]["Enums"]["incident_category"]
+          created_at: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["incident_priority"]
+          reported_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["incident_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          category?: Database["public"]["Enums"]["incident_category"]
+          created_at?: string
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["incident_priority"]
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["incident_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          category?: Database["public"]["Enums"]["incident_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["incident_priority"]
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["incident_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_incidents_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
@@ -1905,6 +2017,15 @@ export type Database = {
       claim_admin_if_none: { Args: never; Returns: boolean }
       current_agent_id: { Args: never; Returns: string }
       current_driver_resource_ids: { Args: never; Returns: string[] }
+      default_checklist_items: {
+        Args: never
+        Returns: {
+          code: string
+          is_critical: boolean
+          label: string
+          sort_order: number
+        }[]
+      }
       driver_service_context: {
         Args: never
         Returns: {
@@ -1993,6 +2114,11 @@ export type Database = {
         | "voucher_issued"
         | "completed"
         | "cancelled"
+      checklist_item_status:
+        | "pending"
+        | "in_progress"
+        | "done"
+        | "not_applicable"
       client_trip_status:
         | "confirmed"
         | "driver_assigned"
@@ -2009,6 +2135,20 @@ export type Database = {
         | "service_confirmed"
         | "trip_completed"
       company_kind: "internal" | "external"
+      incident_category:
+        | "flight"
+        | "hotel"
+        | "transfer"
+        | "excursion"
+        | "vehicle"
+        | "driver"
+        | "client"
+        | "payment"
+        | "documentation"
+        | "provider"
+        | "other"
+      incident_priority: "low" | "medium" | "high" | "urgent"
+      incident_status: "open" | "in_review" | "resolved" | "closed"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
       lead_assignment_mode: "manual" | "automatic"
       lead_source:
@@ -2308,6 +2448,12 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      checklist_item_status: [
+        "pending",
+        "in_progress",
+        "done",
+        "not_applicable",
+      ],
       client_trip_status: [
         "confirmed",
         "driver_assigned",
@@ -2326,6 +2472,21 @@ export const Constants = {
         "trip_completed",
       ],
       company_kind: ["internal", "external"],
+      incident_category: [
+        "flight",
+        "hotel",
+        "transfer",
+        "excursion",
+        "vehicle",
+        "driver",
+        "client",
+        "payment",
+        "documentation",
+        "provider",
+        "other",
+      ],
+      incident_priority: ["low", "medium", "high", "urgent"],
+      incident_status: ["open", "in_review", "resolved", "closed"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
       lead_assignment_mode: ["manual", "automatic"],
       lead_source: [

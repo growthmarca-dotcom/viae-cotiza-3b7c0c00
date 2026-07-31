@@ -14,6 +14,7 @@ import {
   listBookings,
   type BookingStatus,
 } from "@/lib/bookings";
+import { computeChecklistProgress, listChecklistByBooking } from "@/lib/checklist";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
@@ -48,6 +49,13 @@ function BookingsPage() {
   });
 
   const rows = useMemo(() => bookings ?? [], [bookings]);
+
+  const bookingIds = rows.map((b) => b.id);
+  const { data: checklistByBooking } = useQuery({
+    queryKey: ["bookings-checklist", bookingIds.join(",")],
+    enabled: bookingIds.length > 0,
+    queryFn: () => listChecklistByBooking(bookingIds),
+  });
 
   const clientIds = [...new Set(rows.map((b) => b.client_id))];
   const { data: clients } = useQuery({
@@ -163,10 +171,13 @@ function BookingsPage() {
                 <th className="px-4 py-3">Viaje</th>
                 <th className="px-4 py-3">Importe</th>
                 <th className="px-4 py-3">Estado</th>
+                <th className="px-4 py-3">Avance operativo</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((b) => (
+              {rows.map((b) => {
+                const progress = computeChecklistProgress(checklistByBooking?.get(b.id) ?? []);
+                return (
                 <tr key={b.id} className="border-t border-border/60 hover:bg-secondary/40">
                   <td className="px-4 py-3 font-medium">
                     <Link to="/bookings/$id" params={{ id: b.id }} className="hover:text-primary">
@@ -187,8 +198,20 @@ function BookingsPage() {
                       {bookingStatusLabel(b.status)}
                     </span>
                   </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="font-medium">{progress.percent} %</span>{" "}
+                    <span className="text-xs text-muted-foreground">
+                      ({progress.done}/{progress.total})
+                    </span>
+                    {progress.warnings.length > 0 && (
+                      <span className="ml-2 text-xs text-destructive">
+                        {progress.warnings.length} alerta(s)
+                      </span>
+                    )}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

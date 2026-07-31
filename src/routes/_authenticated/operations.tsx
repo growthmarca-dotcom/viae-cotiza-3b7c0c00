@@ -28,6 +28,15 @@ import {
   type InternalUser,
   type OperationStatus,
 } from "@/lib/operations";
+import {
+  computeChecklistIncidentStats,
+  computeChecklistProgress,
+  listAllIncidents,
+  listChecklistByBooking,
+  type ChecklistItem,
+  type Incident,
+} from "@/lib/checklist";
+import { ChecklistProgressBar } from "@/components/booking-checklist-panel";
 
 export const Route = createFileRoute("/_authenticated/operations")({
   component: OperationsPage,
@@ -62,6 +71,10 @@ function OperationsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [users, setUsers] = useState<InternalUser[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
+  const [checklistByBooking, setChecklistByBooking] = useState<Map<string, ChecklistItem[]>>(
+    new Map(),
+  );
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [query, setQuery] = useState("");
@@ -75,16 +88,20 @@ function OperationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [b, s, a, u] = await Promise.all([
+      const [b, s, a, u, cl, inc] = await Promise.all([
         listBookings(),
         listAllBookingServices(),
         listAgents().catch(() => [] as Agent[]),
         listInternalUsers().catch(() => [] as InternalUser[]),
+        listChecklistByBooking().catch(() => new Map<string, ChecklistItem[]>()),
+        listAllIncidents().catch(() => [] as Incident[]),
       ]);
       setBookings(b);
       setServices(s);
       setAgents(a);
       setUsers(u);
+      setChecklistByBooking(cl);
+      setIncidents(inc);
 
       const ids = Array.from(new Set(b.map((x) => x.client_id).filter(Boolean)));
       if (ids.length) {
@@ -170,6 +187,10 @@ function OperationsPage() {
   ]);
 
   const stats = useMemo(() => computeOperationsStats(bookings, services), [bookings, services]);
+  const opsStats = useMemo(
+    () => computeChecklistIncidentStats(checklistByBooking, incidents),
+    [checklistByBooking, incidents],
+  );
 
   async function changeStatus(b: Booking, status: OperationStatus) {
     try {
@@ -216,7 +237,11 @@ function OperationsPage() {
     { label: "Reservas pendientes", value: stats.pending },
     { label: "Viajes próximos (7 días)", value: stats.upcoming },
     { label: "Servicios sin asignar", value: stats.unassignedServices },
-    { label: "Incidencias", value: stats.incidents },
+    { label: "Reservas con incidencias", value: opsStats.bookingsWithIncidents },
+    { label: "Incidencias abiertas", value: opsStats.openIncidents },
+    { label: "Incidencias urgentes", value: opsStats.urgentIncidents },
+    { label: "Listas para viajar", value: opsStats.readyToTravel },
+    { label: "Avance operativo promedio", value: `${opsStats.averageProgress} %` },
     { label: "Servicios finalizados", value: stats.finishedServices },
   ];
 
@@ -328,6 +353,10 @@ function OperationsPage() {
         <div className="space-y-3">
           {filtered.map((b) => {
             const list = servicesByBooking.get(b.id) ?? [];
+            const progress = computeChecklistProgress(checklistByBooking.get(b.id) ?? []);
+            const openIncidents = incidents.filter(
+              (i) => i.booking_id === b.id && (i.status === "open" || i.status === "in_review"),
+            );
             return (
               <div
                 key={b.id}
@@ -393,6 +422,24 @@ function OperationsPage() {
                     </Select>
                   </div>
                 </div>
+
+                <div className="mt-4 max-w-md">
+                  <ChecklistProgressBar
+                    compact
+                    done={progress.done}
+                    total={progress.total}
+                    percent={progress.percent}
+                  />
+                </div>
+
+                {(progress.warnings.length > 0 || openIncidents.length > 0) && (
+                  <p className="mt-2 text-xs text-destructive">
+                    {progress.warnings.join(" ")}
+                    {openIncidents.length > 0 &&
+                      ` ${openIncidents.length} incidencia(s) abierta(s).`}
+                  </p>
+                )}
+
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   Tomada:{" "}
                   {b.operations_taken_at
