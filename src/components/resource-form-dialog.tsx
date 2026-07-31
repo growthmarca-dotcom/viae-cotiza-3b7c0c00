@@ -36,6 +36,13 @@ import {
   type ResourceCategory,
   type ResourceInput,
 } from "@/lib/resources";
+import {
+  TRANSPORT_SERVICE_TYPES,
+  VEHICLE_TYPES,
+  type TransportServiceType,
+  type VehicleType,
+} from "@/lib/transport";
+
 
 type Props = {
   open: boolean;
