@@ -306,3 +306,119 @@ export async function listOpportunitiesByAgent(agentId: string): Promise<Opportu
   if (error) throw error;
   return (data ?? []) as Opportunity[];
 }
+
+/* ------------------------------------------------------------------ */
+/* Vinculación agente ↔ usuario e invitaciones                         */
+/* ------------------------------------------------------------------ */
+
+export type InvitationStatus = "pending" | "accepted" | "rejected" | "expired";
+
+export const INVITATION_STATUSES: { value: InvitationStatus; label: string }[] = [
+  { value: "pending", label: "Pendiente" },
+  { value: "accepted", label: "Aceptada" },
+  { value: "rejected", label: "Rechazada" },
+  { value: "expired", label: "Expirada" },
+];
+
+export function invitationStatusLabel(value: string | null) {
+  if (!value) return "Sin invitación";
+  return INVITATION_STATUSES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function invitationStatusClasses(value: string | null) {
+  switch (value) {
+    case "accepted":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "rejected":
+    case "expired":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    case "pending":
+      return "bg-gold/15 text-foreground border-gold/40";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
+
+/** Una invitación vence a los 7 días. Marca como expiradas las vencidas. */
+export function isInvitationExpired(a: Pick<Agent, "invitation_status" | "invitation_expires_at">) {
+  if (a.invitation_status !== "pending" || !a.invitation_expires_at) return false;
+  return new Date(a.invitation_expires_at).getTime() < Date.now();
+}
+
+export type LinkableProfile = {
+  id: string;
+  full_name: string | null;
+  agency_name: string | null;
+};
+
+/** Usuarios de la plataforma disponibles para vincular con un agente. */
+export async function listLinkableProfiles(): Promise<LinkableProfile[]> {
+  const [{ data: profiles, error }, { data: linked }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, agency_name").order("full_name"),
+    supabase.from("agents").select("user_id").not("user_id", "is", null),
+  ]);
+  if (error) throw error;
+  const taken = new Set((linked ?? []).map((r) => r.user_id as string));
+  return (profiles ?? []).filter((p) => !taken.has(p.id)) as LinkableProfile[];
+}
+
+/**
+ * Registra la invitación de un usuario para el agente.
+ * El envío real del email se implementará más adelante: por ahora sólo
+ * se persiste el estado y la fecha de expiración.
+ */
+export async function inviteAgentUser(agentId: string, email: string) {
+  const { data: userData } = await supabase.auth.getUser();
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+  const { error } = await supabase
+    .from("agents")
+    .update({
+      access_status: "invited",
+      invited_email: email.trim().toLowerCase(),
+      invited_at: new Date().toISOString(),
+      invited_by: userData.user?.id ?? null,
+      invitation_status: "pending",
+      invitation_expires_at: expires.toISOString(),
+    })
+    .eq("id", agentId);
+  if (error) throw error;
+}
+
+export async function setInvitationStatus(agentId: string, status: InvitationStatus) {
+  const { error } = await supabase
+    .from("agents")
+    .update({
+      invitation_status: status,
+      access_status: status === "accepted" ? "invited" : "none",
+    })
+    .eq("id", agentId);
+  if (error) throw error;
+}
+
+/** Vincula (o reemplaza) el usuario que opera como este agente. */
+export async function linkAgentUser(agentId: string, userId: string) {
+  const { error } = await supabase
+    .from("agents")
+    .update({
+      user_id: userId,
+      access_status: "linked",
+      invitation_status: "accepted",
+    })
+    .eq("id", agentId);
+  if (error) throw error;
+}
+
+export async function unlinkAgentUser(agentId: string) {
+  const { error } = await supabase
+    .from("agents")
+    .update({
+      user_id: null,
+      access_status: "none",
+      linked_at: null,
+      linked_by: null,
+      invitation_status: null,
+    })
+    .eq("id", agentId);
+  if (error) throw error;
+}
