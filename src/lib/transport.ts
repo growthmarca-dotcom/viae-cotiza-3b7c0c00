@@ -408,8 +408,17 @@ function servicePayload(input: TransportServiceInput) {
     collection_status: input.collection_status,
     collection_amount: num(input.collection_amount),
     collection_currency: input.collection_currency || "ARS",
+    sale_amount: num(input.sale_amount),
+    sale_currency: input.sale_currency || "ARS",
+    sale_exchange_rate: num(input.sale_exchange_rate),
+    sale_rate_date: text(input.sale_rate_date),
+    cost_amount: num(input.cost_amount),
+    cost_currency: input.cost_currency || "ARS",
+    cost_exchange_rate: num(input.cost_exchange_rate),
+    cost_rate_date: text(input.cost_rate_date),
   };
 }
+
 
 /** Duración estimada por defecto según el tipo de servicio (minutos). */
 export const DEFAULT_DURATIONS: Record<string, number> = {
