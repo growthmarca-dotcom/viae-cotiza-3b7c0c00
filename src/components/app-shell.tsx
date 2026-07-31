@@ -24,7 +24,9 @@ const baseNav = [
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/agents", label: "Agentes", icon: UserRound },
+  { to: "/resources", label: "Recursos", icon: Boxes },
   { to: "/settings", label: "Configuración", icon: Settings },
+
 ] as const;
 
 const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
