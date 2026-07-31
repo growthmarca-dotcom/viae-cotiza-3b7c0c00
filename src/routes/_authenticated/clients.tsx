@@ -115,6 +115,19 @@ function ClientsPage() {
             </option>
           ))}
         </select>
+        <select
+          value={recordFilter}
+          onChange={(e) => setRecordFilter(e.target.value as RecordStatus | "all")}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="active">Activos</option>
+          {RECORD_STATUSES.filter((s) => s.value !== "active").map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}s
+            </option>
+          ))}
+          <option value="all">Todos los registros</option>
+        </select>
       </div>
 
       {loading ? (
