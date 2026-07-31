@@ -450,7 +450,12 @@ function ResourcesPage() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="extras" className="space-y-6">
+          <ExtrasManager includeArchived={includeArchived} />
+        </TabsContent>
       </Tabs>
+
 
       <ResourceFormDialog
         open={resourceOpen}
