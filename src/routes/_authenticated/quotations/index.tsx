@@ -1,9 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { PlusCircle, FileText, Eye, Pencil, Trash2, MoreVertical, Loader2 } from "lucide-react";
+import {
+  PlusCircle,
+  FileText,
+  Eye,
+  Pencil,
+  Trash2,
+  MoreVertical,
+  Loader2,
+  Copy,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { duplicateQuotation, setQuotationArchived } from "@/lib/quotations";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,11 +79,13 @@ function QuotationsPage() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [toDelete, setToDelete] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   async function load() {
     const { data, error } = await supabase
       .from("quotations")
-      .select("id, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status")
+      .select("id, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status, archived")
+      .eq("archived", showArchived)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error(error.message);
@@ -83,7 +97,9 @@ function QuotationsPage() {
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showArchived]);
+
 
   async function handleDelete() {
     if (!toDelete) return;
@@ -99,6 +115,26 @@ function QuotationsPage() {
     load();
   }
 
+  async function handleDuplicate(row: Row) {
+    try {
+      const newId = await duplicateQuotation(row.id);
+      toast.success("Cotización duplicada");
+      navigate({ to: "/quotations/$id/edit", params: { id: newId } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo duplicar");
+    }
+  }
+
+  async function handleArchive(row: Row) {
+    try {
+      await setQuotationArchived(row.id, !row.archived);
+      toast.success(row.archived ? "Cotización desarchivada" : "Cotización archivada");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo archivar");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
@@ -106,13 +142,20 @@ function QuotationsPage() {
           <h1 className="truncate font-display text-3xl font-semibold sm:text-4xl">Cotizaciones</h1>
           <p className="mt-1 text-sm text-muted-foreground">Administra tus propuestas y su estado.</p>
         </div>
-        <Link to="/quotations/new">
-          <Button className="shrink-0">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" onClick={() => setShowArchived((v) => !v)}>
+            <Archive className="mr-2 h-4 w-4" />
+            {showArchived ? "Ver activas" : "Ver archivadas"}
           </Button>
-        </Link>
+          <Link to="/quotations/new">
+            <Button className="shrink-0">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Nueva
+            </Button>
+          </Link>
+        </div>
       </header>
+
 
       {rows === null ? (
         <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -173,7 +216,12 @@ function QuotationsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <RowActions row={r} onDelete={() => setToDelete(r)} />
+                      <RowActions
+                        row={r}
+                        onDelete={() => setToDelete(r)}
+                        onDuplicate={() => handleDuplicate(r)}
+                        onArchive={() => handleArchive(r)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -194,7 +242,12 @@ function QuotationsPage() {
                       {r.destination ?? "—"} · {r.accommodation_name ?? "—"}
                     </div>
                   </div>
-                  <RowActions row={r} onDelete={() => setToDelete(r)} />
+                  <RowActions
+                    row={r}
+                    onDelete={() => setToDelete(r)}
+                    onDuplicate={() => handleDuplicate(r)}
+                    onArchive={() => handleArchive(r)}
+                  />
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[r.status]}`}>
@@ -233,7 +286,17 @@ function QuotationsPage() {
   );
 }
 
-function RowActions({ row, onDelete }: { row: Row; onDelete: () => void }) {
+function RowActions({
+  row,
+  onDelete,
+  onDuplicate,
+  onArchive,
+}: {
+  row: Row;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onArchive: () => void;
+}) {
   const navigate = useNavigate();
   return (
     <DropdownMenu>
@@ -249,6 +312,20 @@ function RowActions({ row, onDelete }: { row: Row; onDelete: () => void }) {
         <DropdownMenuItem onClick={() => navigate({ to: "/quotations/$id/edit", params: { id: row.id } })}>
           <Pencil className="mr-2 h-4 w-4" /> Editar
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDuplicate}>
+          <Copy className="mr-2 h-4 w-4" /> Duplicar
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onArchive}>
+          {row.archived ? (
+            <>
+              <ArchiveRestore className="mr-2 h-4 w-4" /> Desarchivar
+            </>
+          ) : (
+            <>
+              <Archive className="mr-2 h-4 w-4" /> Archivar
+            </>
+          )}
+        </DropdownMenuItem>
         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
           <Trash2 className="mr-2 h-4 w-4" /> Eliminar
         </DropdownMenuItem>
@@ -256,3 +333,4 @@ function RowActions({ row, onDelete }: { row: Row; onDelete: () => void }) {
     </DropdownMenu>
   );
 }
+
