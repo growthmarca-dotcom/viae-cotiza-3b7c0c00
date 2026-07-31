@@ -1,10 +1,24 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Copy, Download, ExternalLink, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Archive,
+  ArchiveRestore,
+  Copy,
+  Download,
+  ExternalLink,
+  History as HistoryIcon,
+  Loader2,
+  Pencil,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { signImageUrls } from "@/lib/quotations";
+import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/quotations";
+import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
+import { QuotationPrintDocument } from "@/components/quotation-print";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   AlertDialog,
