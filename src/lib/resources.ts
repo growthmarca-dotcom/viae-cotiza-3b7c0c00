@@ -329,18 +329,33 @@ export type ResourceInput = {
   // --- datos del vehículo
   vehicle_brand: string;
   vehicle_model: string;
+  vehicle_version: string;
   vehicle_year: string;
   vehicle_plate: string;
   vehicle_color: string;
   vehicle_type: VehicleType | "";
+  vehicle_fuel: string;
+  vehicle_transmission: string;
   luggage_capacity: string;
+  large_luggage_capacity: string;
+  cabin_luggage_capacity: string;
+  is_accessible: boolean;
+  has_air_conditioning: boolean;
+  vehicle_notes: string;
 };
 
 export const EMPTY_RESOURCE: ResourceInput = {
   name: "",
   kind: "external",
   category: "accommodation",
+  resource_class: "company",
+  subtype: "",
+  owner_type: "viae",
+  owner_company_id: "",
+  owner_name: "",
+  self_drive: false,
   company_id: "",
+
   agent_id: "",
   description: "",
   contact_name: "",
