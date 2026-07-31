@@ -358,6 +358,7 @@ export const EMPTY_RESOURCE: ResourceInput = {
   owner_name: "",
   self_drive: false,
   company_id: "",
+  provider_id: "",
 
   agent_id: "",
   description: "",
@@ -415,6 +416,7 @@ export function resourceToInput(r: Resource): ResourceInput {
     owner_name: r.owner_name ?? "",
     self_drive: r.self_drive ?? false,
     company_id: r.company_id ?? "",
+    provider_id: r.provider_id ?? "",
 
     agent_id: r.agent_id ?? "",
     description: r.description ?? "",
@@ -476,6 +478,7 @@ function resourcePayload(input: ResourceInput) {
     owner_name: text(input.owner_name),
     self_drive: input.self_drive,
     company_id: input.company_id || null,
+    provider_id: input.provider_id || null,
 
     agent_id: input.agent_id || null,
     description: text(input.description),
@@ -537,6 +540,7 @@ export type ResourceFilters = {
   brand?: string;
   minCapacity?: string;
   companyId?: string;
+  providerId?: string;
   /** Modo rent a car: solo vehículos sin conductor. */
   selfDrive?: boolean;
 
@@ -554,6 +558,8 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   if (filters.subtype && filters.subtype !== "all") q = q.eq("subtype", filters.subtype);
   if (filters.state && filters.state !== "all") q = q.eq("state", filters.state);
   if (filters.companyId && filters.companyId !== "all") q = q.eq("company_id", filters.companyId);
+  if (filters.providerId && filters.providerId !== "all")
+    q = q.eq("provider_id", filters.providerId);
   if (filters.selfDrive) q = q.eq("self_drive", true);
   const { data, error } = await q;
 
