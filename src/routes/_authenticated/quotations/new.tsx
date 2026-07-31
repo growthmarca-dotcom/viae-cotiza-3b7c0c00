@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { QuotationForm } from "@/components/quotation-form";
 import { formToRow, saveQuotationImages } from "@/lib/quotations";
 import { upsertClientFromQuotation } from "@/lib/crm";
+import { ensureOpportunityForQuotation } from "@/lib/opportunities";
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({
   component: NewQuotationPage,
