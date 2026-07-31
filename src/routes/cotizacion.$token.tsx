@@ -11,9 +11,9 @@ export const Route = createFileRoute("/cotizacion/$token")({
   component: PublicQuotationPage,
   head: () => ({
     meta: [
-      { title: "Cotización de viaje — ViaE Sales Hub" },
+      { title: "Tu cotización de viaje" },
       { name: "description", content: "Detalle de tu propuesta de viaje." },
-      { property: "og:title", content: "Cotización de viaje — ViaE Sales Hub" },
+      { property: "og:title", content: "Tu cotización de viaje" },
       { property: "og:description", content: "Detalle de tu propuesta de viaje." },
     ],
   }),
