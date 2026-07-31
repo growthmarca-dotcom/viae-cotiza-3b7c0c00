@@ -330,7 +330,7 @@ function ResourcesPage() {
                 <thead className="text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Recurso</th>
-                    <th className="px-4 py-3">Categoría</th>
+                    <th className="px-4 py-3">Clasificación</th>
                     <th className="px-4 py-3">Origen</th>
                     <th className="px-4 py-3">Empresa</th>
                     <th className="px-4 py-3">Zona</th>
