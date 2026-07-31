@@ -143,6 +143,8 @@ function DriverPage() {
   const driver = resources.find((r) => r.category === "driver") ?? resources[0] ?? null;
   const vehicleById = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
   const summary = useMemo(() => driverDaySummary(services), [services]);
+  const agenda = useMemo(() => driverAgenda(services), [services]);
+
   const visible = useMemo(() => filterDriverServices(services, filter), [services, filter]);
   const counts = useMemo(
     () => ({
