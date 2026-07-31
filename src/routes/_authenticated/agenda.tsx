@@ -17,17 +17,33 @@ import {
   type TransportService,
 } from "@/lib/transport";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   addDays,
+  AGENDA_ALL,
+  agendaFacets,
+  applyAgendaFilters,
+  endTimeLabel,
   formatDayLabel,
   groupAgenda,
+  hoursLabel,
   listServiceBookingInfo,
+  loadByDestination,
+  loadByZone,
   servicesOfDay,
   sortByTime,
   timeLabel,
   todayISO,
   weekDays,
+  type AgendaFilters,
   type ServiceBookingInfo,
 } from "@/lib/transport-ops";
+
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,

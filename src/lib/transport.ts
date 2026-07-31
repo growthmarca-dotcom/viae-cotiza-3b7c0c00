@@ -285,12 +285,19 @@ export type TransportServiceInput = {
   destination: string;
   service_date: string;
   service_time: string;
+  /** Duración estimada en minutos (v1.4). */
+  duration_minutes: string;
   pax_count: string;
   luggage_count: string;
   driver_resource_id: string;
   vehicle_resource_id: string;
   company_id: string;
   notes: string;
+  // --- ubicación estructurada (v1.4)
+  country: string;
+  state: string;
+  city: string;
+  tourist_zone: string;
   // --- información de cobro al pasajero (v1.2)
   payment_mode: TransportPaymentMode;
   collection_status: TransportCollectionStatus;
@@ -305,12 +312,17 @@ export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   destination: "",
   service_date: "",
   service_time: "",
+  duration_minutes: "",
   pax_count: "",
   luggage_count: "",
   driver_resource_id: "",
   vehicle_resource_id: "",
   company_id: "",
   notes: "",
+  country: "Argentina",
+  state: "",
+  city: "",
+  tourist_zone: "",
   payment_mode: "prepaid_viae",
   collection_status: "not_applicable",
   collection_amount: "",
@@ -325,12 +337,17 @@ export function serviceToInput(s: TransportService): TransportServiceInput {
     destination: s.destination ?? "",
     service_date: s.service_date ?? "",
     service_time: s.service_time ? String(s.service_time).slice(0, 5) : "",
+    duration_minutes: s.duration_minutes != null ? String(s.duration_minutes) : "",
     pax_count: s.pax_count != null ? String(s.pax_count) : "",
     luggage_count: s.luggage_count != null ? String(s.luggage_count) : "",
     driver_resource_id: s.driver_resource_id ?? "",
     vehicle_resource_id: s.vehicle_resource_id ?? "",
     company_id: s.company_id ?? "",
     notes: s.notes ?? "",
+    country: s.country ?? "Argentina",
+    state: s.state ?? "",
+    city: s.city ?? "",
+    tourist_zone: s.tourist_zone ?? "",
     payment_mode: (s.payment_mode ?? "prepaid_viae") as TransportPaymentMode,
     collection_status: (s.collection_status ?? "not_applicable") as TransportCollectionStatus,
     collection_amount: s.collection_amount != null ? String(s.collection_amount) : "",
@@ -348,17 +365,62 @@ function servicePayload(input: TransportServiceInput) {
     destination: text(input.destination),
     service_date: text(input.service_date),
     service_time: text(input.service_time),
+    duration_minutes: num(input.duration_minutes),
     pax_count: num(input.pax_count),
     luggage_count: num(input.luggage_count),
     driver_resource_id: input.driver_resource_id || null,
     vehicle_resource_id: input.vehicle_resource_id || null,
     company_id: input.company_id || null,
     notes: text(input.notes),
+    country: text(input.country),
+    state: text(input.state),
+    city: text(input.city),
+    tourist_zone: text(input.tourist_zone),
     payment_mode: input.payment_mode,
     collection_status: input.collection_status,
     collection_amount: num(input.collection_amount),
     collection_currency: input.collection_currency || "ARS",
   };
+}
+
+/** Duración estimada por defecto según el tipo de servicio (minutos). */
+export const DEFAULT_DURATIONS: Record<string, number> = {
+  taxi: 30,
+  airport_transfer: 45,
+  tourist_transfer: 60,
+  intercity_transfer: 180,
+  private_transfer: 60,
+  corporate_transfer: 45,
+  group_transfer: 90,
+  driver_excursion: 480,
+  other: 60,
+};
+
+export function defaultDurationFor(serviceType: string) {
+  return DEFAULT_DURATIONS[serviceType] ?? 60;
+}
+
+/** "14:30" + 45 → "15:15". */
+export function addMinutesToTime(time: string | null, minutes: number | null): string | null {
+  if (!time || minutes == null || Number.isNaN(minutes)) return null;
+  const [h, m] = String(time).slice(0, 5).split(":").map(Number);
+  if (Number.isNaN(h)) return null;
+  const total = ((h * 60 + (m || 0) + minutes) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** Hora estimada de finalización de un servicio ya guardado. */
+export function estimatedEndOf(s: TransportService): string | null {
+  if (s.estimated_end_time) return String(s.estimated_end_time).slice(0, 5);
+  return addMinutesToTime(s.service_time ? String(s.service_time) : null, s.duration_minutes);
+}
+
+export function durationLabel(minutes: number | null) {
+  if (minutes == null) return "—";
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
 export type TransportFilters = {
@@ -388,11 +450,12 @@ export async function listTransportServices(
   const term = filters.search?.trim().toLowerCase();
   if (!term) return rows;
   return rows.filter((s) =>
-    [s.origin, s.destination, s.notes]
+    [s.origin, s.destination, s.notes, s.city, s.state, s.tourist_zone]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(term)),
   );
 }
+
 
 export async function listBookingTransportServices(
   bookingId: string,
@@ -497,4 +560,28 @@ export function computeTransportStats(
       (s) => s.status === "assigned" || s.status === "accepted" || s.status === "in_transit",
     ).length,
   };
+}
+
+// -------------------------------------------- seguimiento operativo (v1.4)
+
+/** Nombres de los usuarios que actualizaron servicios (según RLS de perfiles). */
+export async function listActorNames(ids: (string | null)[]): Promise<Map<string, string>> {
+  const unique = Array.from(new Set(ids.filter((v): v is string => !!v)));
+  if (unique.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", unique);
+  if (error) return new Map();
+  return new Map(
+    ((data ?? []) as { id: string; full_name: string | null }[]).map((p) => [
+      p.id,
+      p.full_name ?? "Usuario",
+    ]),
+  );
+}
+
+export function formatStamp(value: string | null) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
 }

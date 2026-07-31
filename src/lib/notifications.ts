@@ -2,12 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 /**
- * Notificaciones internas (v1.3).
+ * Centro de notificaciones internas (v1.4).
  *
- * Hoy sólo se generan desde la base cuando se asigna un servicio de
- * transporte a un conductor. La tabla es genérica (`kind`, `entity`, `data`)
- * para que en el futuro puedan sumarse otros avisos (WhatsApp, reservas,
- * pagos) sin cambiar el modelo.
+ * La tabla es genérica (`kind`, `entity`, `data`) y la generan triggers de la
+ * base: asignaciones, cambios de estado del servicio, cambios de horario y
+ * cobros informados. Cada usuario ve únicamente sus notificaciones (RLS) y la
+ * lectura queda auditada mediante `mark_notifications_read`.
  */
 
 export type Notification = Tables<"notifications">;
@@ -31,6 +31,34 @@ export function assignmentPayload(n: Notification): AssignmentPayload {
   return (n.data ?? {}) as AssignmentPayload;
 }
 
+const KIND_LABEL: Record<string, string> = {
+  transport_assignment: "Traslado asignado",
+  transport_status: "Estado del servicio",
+  transport_schedule: "Cambio de horario",
+  transport_collection: "Cobro informado",
+};
+
+export function notificationKindLabel(kind: string) {
+  return KIND_LABEL[kind] ?? "Aviso";
+}
+
+export function notificationKindClasses(kind: string) {
+  switch (kind) {
+    case "transport_assignment":
+      return "bg-gold/15 text-foreground border-gold/40";
+    case "transport_collection":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "transport_schedule":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
+
+export function formatNotificationDate(value: string) {
+  return new Date(value).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
+}
+
 export async function listMyNotifications(limit = 30): Promise<Notification[]> {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
@@ -49,19 +77,15 @@ export function unreadCount(list: Notification[]) {
   return list.filter((n) => n.read_at == null).length;
 }
 
+/** La lectura se registra en la auditoría desde la base. */
 export async function markNotificationRead(id: string) {
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await supabase.rpc("mark_notifications_read", { _ids: [id] });
   if (error) throw error;
 }
 
 export async function markAllNotificationsRead(ids: string[]) {
   if (ids.length === 0) return;
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .in("id", ids);
+  const { error } = await supabase.rpc("mark_notifications_read", { _ids: ids });
   if (error) throw error;
 }
+

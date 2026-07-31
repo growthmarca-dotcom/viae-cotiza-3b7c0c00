@@ -48,7 +48,17 @@ import {
   timeLabel,
   type AssignmentWarning,
 } from "@/lib/transport-ops";
-import { coverageOf } from "@/lib/transport";
+import {
+  addMinutesToTime,
+  coverageOf,
+  defaultDurationFor,
+  durationLabel,
+  estimatedEndOf,
+  formatStamp,
+  listActorNames,
+} from "@/lib/transport";
+import { citiesOf, DEFAULT_COUNTRY, regionsOf, zonesOf, zonesOfCity } from "@/lib/geo";
+
 
 const NONE = "__none__";
 
@@ -112,16 +122,32 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const vehicles = candidates.filter(isVehicleResource);
   const byId = new Map(resources.map((r) => [r.id, r]));
 
+  const [actorNames, setActorNames] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    let active = true;
+    listActorNames(services.map((s) => s.last_updated_by)).then((m) => {
+      if (active) setActorNames(m);
+    });
+    return () => {
+      active = false;
+    };
+  }, [services]);
+
+
   const companyById = new Map(companies.map((c) => [c.id, c]));
 
-  // Control de asignación (v1.3): informa, nunca bloquea.
+  // Control de asignación (v1.3 · duración estimada v1.4): informa, nunca bloquea.
   const assignCtx = {
     date: form.service_date || null,
     time: form.service_time || null,
+    durationMinutes: form.duration_minutes
+      ? Number(form.duration_minutes)
+      : defaultDurationFor(form.service_type),
     paxCount: form.pax_count ? Number(form.pax_count) : null,
     luggageCount: form.luggage_count ? Number(form.luggage_count) : null,
     origin: form.origin || null,
   };
+
   const selectedDriver = form.driver_resource_id ? byId.get(form.driver_resource_id) : undefined;
   const selectedVehicle = form.vehicle_resource_id ? byId.get(form.vehicle_resource_id) : undefined;
   const driverWarnings = selectedDriver
@@ -216,13 +242,105 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
             />
           </div>
           <div className="space-y-2">
-            <Label>Horario</Label>
+            <Label>Hora de inicio</Label>
             <Input
               type="time"
               value={form.service_time}
               onChange={(e) => set("service_time", e.target.value)}
             />
           </div>
+          <div className="space-y-2">
+            <Label>Duración estimada (minutos)</Label>
+            <Input
+              type="number"
+              min={0}
+              step={5}
+              value={form.duration_minutes}
+              onChange={(e) => set("duration_minutes", e.target.value)}
+              placeholder={String(defaultDurationFor(form.service_type))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Finalización estimada</Label>
+            <Input
+              readOnly
+              value={
+                addMinutesToTime(
+                  form.service_time || null,
+                  form.duration_minutes ? Number(form.duration_minutes) : null,
+                ) ?? "--:--"
+              }
+              className="bg-secondary/40"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Provincia / Región</Label>
+            <Select
+              value={form.state || NONE}
+              onValueChange={(v) =>
+                setForm((f) => ({
+                  ...f,
+                  state: v === NONE ? "" : v,
+                  city: "",
+                  tourist_zone: "",
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin definir</SelectItem>
+                {regionsOf(form.country || DEFAULT_COUNTRY).map((r) => (
+                  <SelectItem key={r.name} value={r.name}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Ciudad / Localidad</Label>
+            <Select
+              value={form.city || NONE}
+              onValueChange={(v) => set("city", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin definir</SelectItem>
+                {citiesOf(form.country || DEFAULT_COUNTRY, form.state || null).map((c) => (
+                  <SelectItem key={c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Zona turística</Label>
+            <Select
+              value={form.tourist_zone || NONE}
+              onValueChange={(v) => set("tourist_zone", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin definir</SelectItem>
+                {(form.city
+                  ? zonesOfCity(form.city)
+                  : zonesOf(form.country || DEFAULT_COUNTRY, form.state || null)
+                ).map((z) => (
+                  <SelectItem key={z} value={z}>
+                    {z}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             <Label>Pasajeros</Label>
             <Input
@@ -353,11 +471,25 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
                     {(s.origin ?? "—") + " → " + (s.destination ?? "—")}
                     {s.service_date ? ` · ${s.service_date}` : ""}
                     {s.service_time ? ` ${String(s.service_time).slice(0, 5)}` : ""}
+                    {estimatedEndOf(s) ? ` → ${estimatedEndOf(s)}` : ""}
+                    {s.duration_minutes != null ? ` (${durationLabel(s.duration_minutes)})` : ""}
                   </p>
+                  {(s.city || s.state || s.tourist_zone) && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {[s.city, s.state, s.tourist_zone].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   <p className="mt-1 text-sm text-muted-foreground">
                     {s.pax_count != null ? `${s.pax_count} pax` : "Pax s/d"} ·{" "}
                     {s.luggage_count != null ? `${s.luggage_count} equipajes` : "Equipaje s/d"}
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Última actualización: {formatStamp(s.last_status_at)}
+                    {s.last_updated_by
+                      ? ` · por ${actorNames.get(s.last_updated_by) ?? "usuario del sistema"}`
+                      : ""}
+                  </p>
+
                   <p className="mt-1 text-sm">
                     Chofer:{" "}
                     {s.driver_resource_id
