@@ -71,6 +71,89 @@ export function leadFullName(l: Pick<Lead, "first_name" | "last_name">) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Necesidad del viaje (v1.7.1)                                        */
+/* ------------------------------------------------------------------ */
+
+export type TripType =
+  | "vacation"
+  | "family"
+  | "adventure"
+  | "honeymoon"
+  | "corporate"
+  | "getaway"
+  | "other";
+
+export const TRIP_TYPES: { value: TripType; label: string }[] = [
+  { value: "vacation", label: "Vacaciones" },
+  { value: "family", label: "Familia" },
+  { value: "adventure", label: "Aventura" },
+  { value: "honeymoon", label: "Luna de miel" },
+  { value: "corporate", label: "Corporativo" },
+  { value: "getaway", label: "Escapada" },
+  { value: "other", label: "Otro" },
+];
+
+export function tripTypeLabel(value: string | null | undefined) {
+  if (!value) return "—";
+  return TRIP_TYPES.find((t) => t.value === value)?.label ?? value;
+}
+
+/** Servicios de interés (multiselección). Se guardan por clave estable. */
+export const LEAD_SERVICES: { value: string; label: string }[] = [
+  { value: "accommodation", label: "Alojamiento" },
+  { value: "transfers", label: "Traslados" },
+  { value: "excursions", label: "Excursiones" },
+  { value: "car_rental", label: "Alquiler de auto" },
+  { value: "packages", label: "Paquetes turísticos" },
+  { value: "flights", label: "Vuelos" },
+  { value: "insurance", label: "Seguro de viaje" },
+  { value: "gastronomy", label: "Gastronomía / experiencias" },
+  { value: "other", label: "Otro" },
+];
+
+export function serviceLabel(value: string) {
+  return LEAD_SERVICES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function serviceLabels(values: string[] | null | undefined) {
+  return (values ?? []).map(serviceLabel);
+}
+
+/** Resumen compacto de la necesidad comercial, para listados y avisos. */
+export function leadNeedSummary(l: Lead): string {
+  const parts: string[] = [];
+  if (l.trip_type) parts.push(tripTypeLabel(l.trip_type));
+  if (l.destination) parts.push(l.destination);
+  const duration = leadDurationLabel(l);
+  if (duration) parts.push(duration);
+  const pax = leadPaxLabel(l);
+  if (pax) parts.push(pax);
+  const services = serviceLabels(l.services_interest);
+  if (services.length) parts.push(services.slice(0, 3).join(", "));
+  return parts.join(" · ");
+}
+
+export function leadDurationLabel(
+  l: Pick<Lead, "nights_count" | "days_count">,
+): string {
+  const out: string[] = [];
+  if (l.days_count != null) out.push(`${l.days_count} días`);
+  if (l.nights_count != null) out.push(`${l.nights_count} noches`);
+  return out.join(" / ");
+}
+
+export function leadPaxLabel(
+  l: Pick<Lead, "pax_count" | "adults_count" | "children_count" | "children_ages">,
+): string {
+  const detail: string[] = [];
+  if (l.adults_count != null) detail.push(`${l.adults_count} adultos`);
+  if (l.children_count != null) detail.push(`${l.children_count} niños`);
+  if (detail.length === 0) return l.pax_count != null ? `${l.pax_count} pax` : "";
+  const base = l.pax_count != null ? `${l.pax_count} pax (${detail.join(", ")})` : detail.join(", ");
+  return l.children_ages ? `${base} · edades ${l.children_ages}` : base;
+}
+
+/* ------------------------------------------------------------------ */
 /* Alta y edición                                                      */
 /* ------------------------------------------------------------------ */
 
