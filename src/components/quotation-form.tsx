@@ -32,8 +32,10 @@ export type QuotationFormState = {
   otherCharges: string;
   totalAmount: string;
   currency: string;
+  exchangeRate: string;
   observations: string;
 };
+
 
 export const EMPTY_QUOTATION: QuotationFormState = {
   firstName: "",
