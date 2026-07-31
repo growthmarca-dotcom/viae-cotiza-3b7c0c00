@@ -502,11 +502,19 @@ function resourcePayload(input: ResourceInput) {
     driver_last_name: text(input.driver_last_name),
     vehicle_brand: text(input.vehicle_brand),
     vehicle_model: text(input.vehicle_model),
+    vehicle_version: text(input.vehicle_version),
     vehicle_year: num(input.vehicle_year),
     vehicle_plate: text(input.vehicle_plate),
     vehicle_color: text(input.vehicle_color),
     vehicle_type: input.vehicle_type || null,
+    vehicle_fuel: input.vehicle_fuel || null,
+    vehicle_transmission: input.vehicle_transmission || null,
     luggage_capacity: num(input.luggage_capacity),
+    large_luggage_capacity: num(input.large_luggage_capacity),
+    cabin_luggage_capacity: num(input.cabin_luggage_capacity),
+    is_accessible: input.is_accessible,
+    has_air_conditioning: input.has_air_conditioning,
+    vehicle_notes: text(input.vehicle_notes),
   };
 }
 
@@ -518,6 +526,14 @@ export type ResourceFilters = {
   availability?: ResourceAvailability | "all";
   zone?: string;
   includeArchived?: boolean;
+  /** Filtros del catálogo inteligente (v1.8.2). */
+  resourceClass?: ResourceClass | "all";
+  subtype?: string;
+  state?: string;
+  city?: string;
+  brand?: string;
+  minCapacity?: string;
+  companyId?: string;
 };
 
 export async function listResources(filters: ResourceFilters = {}): Promise<Resource[]> {
@@ -527,6 +543,11 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   if (filters.category && filters.category !== "all") q = q.eq("category", filters.category);
   if (filters.availability && filters.availability !== "all")
     q = q.eq("availability", filters.availability);
+  if (filters.resourceClass && filters.resourceClass !== "all")
+    q = q.eq("resource_class", filters.resourceClass);
+  if (filters.subtype && filters.subtype !== "all") q = q.eq("subtype", filters.subtype);
+  if (filters.state && filters.state !== "all") q = q.eq("state", filters.state);
+  if (filters.companyId && filters.companyId !== "all") q = q.eq("company_id", filters.companyId);
   const { data, error } = await q;
   if (error) throw error;
   let rows = (data ?? []) as Resource[];
@@ -540,6 +561,19 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
         (r.tourist_zones ?? []).includes(zone),
     );
   }
+  const city = filters.city?.trim();
+  if (city && city !== "all") {
+    rows = rows.filter((r) => r.base_city === city || (r.cities_served ?? []).includes(city));
+  }
+  const brand = filters.brand?.trim().toLowerCase();
+  if (brand) {
+    rows = rows.filter((r) => (r.vehicle_brand ?? "").toLowerCase().includes(brand));
+  }
+  const minCapacity = filters.minCapacity?.trim();
+  if (minCapacity && Number(minCapacity) > 0) {
+    rows = rows.filter((r) => (r.pax_capacity ?? 0) >= Number(minCapacity));
+  }
+
   const term = filters.search?.trim().toLowerCase();
   if (!term) return rows;
   return rows.filter((r) =>
