@@ -38,6 +38,10 @@ import {
   type Resource,
   type ResourceAvailability,
   type ResourceInput,
+  coverageScopeLabel,
+  RENTAL_LICENSES,
+  RENTAL_FUEL_POLICIES,
+  RENTAL_VEHICLE_CONDITIONS,
 } from "@/lib/resources";
 
 export const Route = createFileRoute("/_authenticated/resources_/$id")({
