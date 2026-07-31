@@ -24,9 +24,12 @@ import {
 import { ClientFormDialog } from "@/components/client-form-dialog";
 import {
   CLIENT_STATUSES,
+  RECORD_STATUSES,
   clientToInput,
-  deleteClient,
   getClient,
+  recordStatusClasses,
+  recordStatusLabel,
+  setClientRecordStatus,
   splitName,
   statusClasses,
   statusLabel,
@@ -35,6 +38,7 @@ import {
   type Client,
   type ClientInput,
   type ClientStatus,
+  type RecordStatus,
 } from "@/lib/clients";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import { OpportunityPanel } from "@/components/opportunity-panel";
