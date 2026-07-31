@@ -358,10 +358,24 @@ function BookingDetailPage() {
           <TabsTrigger value="transport">
             <RouteIcon className="mr-2 h-4 w-4" /> Transporte
           </TabsTrigger>
+          <TabsTrigger value="checklist">
+            <CheckSquare className="mr-2 h-4 w-4" /> Checklist
+          </TabsTrigger>
+          <TabsTrigger value="incidents">
+            <AlertCircle className="mr-2 h-4 w-4" /> Incidencias
+          </TabsTrigger>
           <TabsTrigger value="provider">
             <Building2 className="mr-2 h-4 w-4" /> Proveedor
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="checklist">
+          <BookingChecklistPanel bookingId={booking.id} />
+        </TabsContent>
+
+        <TabsContent value="incidents">
+          <BookingIncidentsPanel bookingId={booking.id} />
+        </TabsContent>
 
         <TabsContent value="services">
           <BookingServicesPanel bookingId={booking.id} />
