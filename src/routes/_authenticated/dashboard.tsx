@@ -16,6 +16,8 @@ import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { useAccount } from "@/hooks/use-account";
 import { listTransportServices } from "@/lib/transport";
 import { computeTransportEconomics } from "@/lib/transport-economics";
+import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
+import { agentFullName, listAgents } from "@/lib/agents";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
