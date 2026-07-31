@@ -371,8 +371,17 @@ export function serviceToInput(s: TransportService): TransportServiceInput {
     collection_status: (s.collection_status ?? "not_applicable") as TransportCollectionStatus,
     collection_amount: s.collection_amount != null ? String(s.collection_amount) : "",
     collection_currency: s.collection_currency ?? "ARS",
+    sale_amount: s.sale_amount != null ? String(s.sale_amount) : "",
+    sale_currency: s.sale_currency ?? "ARS",
+    sale_exchange_rate: s.sale_exchange_rate != null ? String(s.sale_exchange_rate) : "",
+    sale_rate_date: s.sale_rate_date ?? "",
+    cost_amount: s.cost_amount != null ? String(s.cost_amount) : "",
+    cost_currency: s.cost_currency ?? "ARS",
+    cost_exchange_rate: s.cost_exchange_rate != null ? String(s.cost_exchange_rate) : "",
+    cost_rate_date: s.cost_rate_date ?? "",
   };
 }
+
 
 function servicePayload(input: TransportServiceInput) {
   const text = (v: string) => (v.trim() === "" ? null : v.trim());
