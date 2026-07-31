@@ -43,6 +43,15 @@ import {
   type VehicleType,
 } from "@/lib/transport";
 import {
+  RESOURCE_CLASSES,
+  RESOURCE_OWNER_TYPES,
+  RESOURCE_SUBTYPES,
+  VEHICLE_FUELS,
+  VEHICLE_TRANSMISSIONS,
+  type ResourceClass,
+  type ResourceOwnerType,
+} from "@/lib/resource-catalog";
+import {
   citiesOf,
   cityNamesOf,
   DEFAULT_COUNTRY,
@@ -51,6 +60,7 @@ import {
   regionsOf,
   zonesOf,
 } from "@/lib/geo";
+
 
 const NONE_GEO = "__none_geo__";
 
@@ -148,10 +158,14 @@ export function ResourceFormDialog({
     }));
   }
 
+  const isDriver = form.category === "driver" || form.subtype === "driver";
+  const isVehicle = form.category === "vehicle" || form.resource_class === "vehicle";
+  const isTransport =
+    ["driver", "vehicle", "taxi", "transfer"].includes(form.category) ||
+    form.resource_class === "vehicle" ||
+    isDriver;
+  const subtypes = RESOURCE_SUBTYPES[form.resource_class] ?? [];
 
-  const isDriver = form.category === "driver";
-  const isVehicle = form.category === "vehicle";
-  const isTransport = ["driver", "vehicle", "taxi", "transfer"].includes(form.category);
 
   return (
 
@@ -170,6 +184,51 @@ export function ResourceFormDialog({
             <Label>Nombre *</Label>
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
           </div>
+
+          <div className="space-y-2">
+            <Label>Clasificación</Label>
+            <Select
+              value={form.resource_class}
+              onValueChange={(v) =>
+                setForm((f) => ({ ...f, resource_class: v as ResourceClass, subtype: "" }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RESOURCE_CLASSES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {RESOURCE_CLASSES.find((c) => c.value === form.resource_class)?.hint}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Subtipo</Label>
+            <Select
+              value={form.subtype || NONE}
+              onValueChange={(v) => set("subtype", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin definir</SelectItem>
+                {subtypes.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div className="space-y-2">
             <Label>Categoría</Label>
@@ -245,6 +304,54 @@ export function ResourceFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          <SectionTitle>Propietario del recurso</SectionTitle>
+          <div className="space-y-2">
+            <Label>Propietario</Label>
+            <Select
+              value={form.owner_type}
+              onValueChange={(v) => set("owner_type", v as ResourceOwnerType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RESOURCE_OWNER_TYPES.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Proveedor / empresa relacionada</Label>
+            <Select
+              value={form.owner_company_id || NONE}
+              onValueChange={(v) => set("owner_company_id", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin empresa</SelectItem>
+                {companies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Titular (si es particular u otro)</Label>
+            <Input
+              value={form.owner_name}
+              onChange={(e) => set("owner_name", e.target.value)}
+              placeholder="Nombre del titular"
+            />
+          </div>
+
 
           <div className="space-y-2 sm:col-span-2">
             <Label>Descripción</Label>
@@ -563,6 +670,14 @@ export function ResourceFormDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label>Versión</Label>
+                <Input
+                  value={form.vehicle_version}
+                  onChange={(e) => set("vehicle_version", e.target.value)}
+                  placeholder="XEI 1.8 CVT"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Año</Label>
                 <Input
                   type="number"
@@ -586,6 +701,44 @@ export function ResourceFormDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label>Combustible</Label>
+                <Select
+                  value={form.vehicle_fuel || NONE}
+                  onValueChange={(v) => set("vehicle_fuel", v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin definir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sin definir</SelectItem>
+                    {VEHICLE_FUELS.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Transmisión</Label>
+                <Select
+                  value={form.vehicle_transmission || NONE}
+                  onValueChange={(v) => set("vehicle_transmission", v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin definir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sin definir</SelectItem>
+                    {VEHICLE_TRANSMISSIONS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Tipo de vehículo</Label>
                 <Select
                   value={form.vehicle_type || NONE}
@@ -605,7 +758,7 @@ export function ResourceFormDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Capacidad de equipaje</Label>
+                <Label>Capacidad de equipaje (total)</Label>
                 <Input
                   type="number"
                   min={0}
@@ -613,7 +766,55 @@ export function ResourceFormDialog({
                   onChange={(e) => set("luggage_capacity", e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Equipaje grande</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.large_luggage_capacity}
+                  onChange={(e) => set("large_luggage_capacity", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Equipaje de mano</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.cabin_luggage_capacity}
+                  onChange={(e) => set("cabin_luggage_capacity", e.target.value)}
+                />
+              </div>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.is_accessible}
+                  onCheckedChange={(v) => set("is_accessible", v === true)}
+                />
+                Accesibilidad
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.has_air_conditioning}
+                  onCheckedChange={(v) => set("has_air_conditioning", v === true)}
+                />
+                Aire acondicionado
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.self_drive}
+                  onCheckedChange={(v) => set("self_drive", v === true)}
+                />
+                Sin conductor (rent a car)
+              </label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Observaciones del vehículo</Label>
+                <Textarea
+                  rows={2}
+                  value={form.vehicle_notes}
+                  onChange={(e) => set("vehicle_notes", e.target.value)}
+                />
+              </div>
             </>
+
           )}
 
           <SectionTitle>Zonas de cobertura</SectionTitle>

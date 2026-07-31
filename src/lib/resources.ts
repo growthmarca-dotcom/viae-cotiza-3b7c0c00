@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TransportServiceType, VehicleType } from "@/lib/transport";
+import type { ResourceClass, ResourceOwnerType } from "@/lib/resource-catalog";
+
 
 
 /**
@@ -283,7 +285,18 @@ export type ResourceInput = {
   name: string;
   kind: CompanyKind;
   category: ResourceCategory;
+  /** Clasificación principal del catálogo (v1.8.2). */
+  resource_class: ResourceClass;
+  /** Subtipo dependiente de la clasificación. */
+  subtype: string;
+  /** Propietario del recurso (v1.8.2). */
+  owner_type: ResourceOwnerType;
+  owner_company_id: string;
+  owner_name: string;
+  /** Vehículo sin conductor (rent a car). */
+  self_drive: boolean;
   company_id: string;
+
   agent_id: string;
   description: string;
   contact_name: string;
@@ -316,18 +329,33 @@ export type ResourceInput = {
   // --- datos del vehículo
   vehicle_brand: string;
   vehicle_model: string;
+  vehicle_version: string;
   vehicle_year: string;
   vehicle_plate: string;
   vehicle_color: string;
   vehicle_type: VehicleType | "";
+  vehicle_fuel: string;
+  vehicle_transmission: string;
   luggage_capacity: string;
+  large_luggage_capacity: string;
+  cabin_luggage_capacity: string;
+  is_accessible: boolean;
+  has_air_conditioning: boolean;
+  vehicle_notes: string;
 };
 
 export const EMPTY_RESOURCE: ResourceInput = {
   name: "",
   kind: "external",
   category: "accommodation",
+  resource_class: "company",
+  subtype: "",
+  owner_type: "viae",
+  owner_company_id: "",
+  owner_name: "",
+  self_drive: false,
   company_id: "",
+
   agent_id: "",
   description: "",
   contact_name: "",
@@ -356,11 +384,20 @@ export const EMPTY_RESOURCE: ResourceInput = {
   driver_last_name: "",
   vehicle_brand: "",
   vehicle_model: "",
+  vehicle_version: "",
   vehicle_year: "",
   vehicle_plate: "",
   vehicle_color: "",
   vehicle_type: "",
+  vehicle_fuel: "",
+  vehicle_transmission: "",
   luggage_capacity: "",
+  large_luggage_capacity: "",
+  cabin_luggage_capacity: "",
+  is_accessible: false,
+  has_air_conditioning: false,
+  vehicle_notes: "",
+
 };
 
 export function resourceToInput(r: Resource): ResourceInput {
@@ -368,7 +405,14 @@ export function resourceToInput(r: Resource): ResourceInput {
     name: r.name ?? "",
     kind: r.kind as CompanyKind,
     category: r.category as ResourceCategory,
+    resource_class: (r.resource_class ?? "company") as ResourceClass,
+    subtype: r.subtype ?? "",
+    owner_type: (r.owner_type ?? "viae") as ResourceOwnerType,
+    owner_company_id: r.owner_company_id ?? "",
+    owner_name: r.owner_name ?? "",
+    self_drive: r.self_drive ?? false,
     company_id: r.company_id ?? "",
+
     agent_id: r.agent_id ?? "",
     description: r.description ?? "",
     contact_name: r.contact_name ?? "",
@@ -397,11 +441,22 @@ export function resourceToInput(r: Resource): ResourceInput {
     driver_last_name: r.driver_last_name ?? "",
     vehicle_brand: r.vehicle_brand ?? "",
     vehicle_model: r.vehicle_model ?? "",
+    vehicle_version: r.vehicle_version ?? "",
     vehicle_year: r.vehicle_year != null ? String(r.vehicle_year) : "",
     vehicle_plate: r.vehicle_plate ?? "",
     vehicle_color: r.vehicle_color ?? "",
     vehicle_type: (r.vehicle_type ?? "") as VehicleType | "",
+    vehicle_fuel: r.vehicle_fuel ?? "",
+    vehicle_transmission: r.vehicle_transmission ?? "",
     luggage_capacity: r.luggage_capacity != null ? String(r.luggage_capacity) : "",
+    large_luggage_capacity:
+      r.large_luggage_capacity != null ? String(r.large_luggage_capacity) : "",
+    cabin_luggage_capacity:
+      r.cabin_luggage_capacity != null ? String(r.cabin_luggage_capacity) : "",
+    is_accessible: r.is_accessible ?? false,
+    has_air_conditioning: r.has_air_conditioning ?? false,
+    vehicle_notes: r.vehicle_notes ?? "",
+
   };
 }
 
@@ -411,7 +466,14 @@ function resourcePayload(input: ResourceInput) {
     name: input.name.trim(),
     kind: input.kind,
     category: input.category,
+    resource_class: input.resource_class,
+    subtype: input.subtype || null,
+    owner_type: input.owner_type,
+    owner_company_id: input.owner_company_id || null,
+    owner_name: text(input.owner_name),
+    self_drive: input.self_drive,
     company_id: input.company_id || null,
+
     agent_id: input.agent_id || null,
     description: text(input.description),
     contact_name: text(input.contact_name),
@@ -440,11 +502,19 @@ function resourcePayload(input: ResourceInput) {
     driver_last_name: text(input.driver_last_name),
     vehicle_brand: text(input.vehicle_brand),
     vehicle_model: text(input.vehicle_model),
+    vehicle_version: text(input.vehicle_version),
     vehicle_year: num(input.vehicle_year),
     vehicle_plate: text(input.vehicle_plate),
     vehicle_color: text(input.vehicle_color),
     vehicle_type: input.vehicle_type || null,
+    vehicle_fuel: input.vehicle_fuel || null,
+    vehicle_transmission: input.vehicle_transmission || null,
     luggage_capacity: num(input.luggage_capacity),
+    large_luggage_capacity: num(input.large_luggage_capacity),
+    cabin_luggage_capacity: num(input.cabin_luggage_capacity),
+    is_accessible: input.is_accessible,
+    has_air_conditioning: input.has_air_conditioning,
+    vehicle_notes: text(input.vehicle_notes),
   };
 }
 
@@ -456,6 +526,17 @@ export type ResourceFilters = {
   availability?: ResourceAvailability | "all";
   zone?: string;
   includeArchived?: boolean;
+  /** Filtros del catálogo inteligente (v1.8.2). */
+  resourceClass?: ResourceClass | "all";
+  subtype?: string;
+  state?: string;
+  city?: string;
+  brand?: string;
+  minCapacity?: string;
+  companyId?: string;
+  /** Modo rent a car: solo vehículos sin conductor. */
+  selfDrive?: boolean;
+
 };
 
 export async function listResources(filters: ResourceFilters = {}): Promise<Resource[]> {
@@ -465,7 +546,14 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   if (filters.category && filters.category !== "all") q = q.eq("category", filters.category);
   if (filters.availability && filters.availability !== "all")
     q = q.eq("availability", filters.availability);
+  if (filters.resourceClass && filters.resourceClass !== "all")
+    q = q.eq("resource_class", filters.resourceClass);
+  if (filters.subtype && filters.subtype !== "all") q = q.eq("subtype", filters.subtype);
+  if (filters.state && filters.state !== "all") q = q.eq("state", filters.state);
+  if (filters.companyId && filters.companyId !== "all") q = q.eq("company_id", filters.companyId);
+  if (filters.selfDrive) q = q.eq("self_drive", true);
   const { data, error } = await q;
+
   if (error) throw error;
   let rows = (data ?? []) as Resource[];
 
@@ -478,13 +566,39 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
         (r.tourist_zones ?? []).includes(zone),
     );
   }
+  const city = filters.city?.trim();
+  if (city && city !== "all") {
+    rows = rows.filter((r) => r.base_city === city || (r.cities_served ?? []).includes(city));
+  }
+  const brand = filters.brand?.trim().toLowerCase();
+  if (brand) {
+    rows = rows.filter((r) => (r.vehicle_brand ?? "").toLowerCase().includes(brand));
+  }
+  const minCapacity = filters.minCapacity?.trim();
+  if (minCapacity && Number(minCapacity) > 0) {
+    rows = rows.filter((r) => (r.pax_capacity ?? 0) >= Number(minCapacity));
+  }
+
   const term = filters.search?.trim().toLowerCase();
   if (!term) return rows;
   return rows.filter((r) =>
-    [r.name, r.description, r.contact_name, r.main_zone, ...(r.zones ?? []), ...(r.specialties ?? [])]
+    [
+      r.name,
+      r.description,
+      r.contact_name,
+      r.main_zone,
+      r.base_city,
+      r.state,
+      r.vehicle_brand,
+      r.vehicle_model,
+      r.vehicle_plate,
+      ...(r.zones ?? []),
+      ...(r.specialties ?? []),
+    ]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(term)),
   );
+
 }
 
 export async function getResource(id: string): Promise<Resource | null> {
@@ -582,7 +696,22 @@ export type ResourceStats = {
   available: number;
   unavailable: number;
   byCategory: { category: ResourceCategory; label: string; count: number }[];
+  /** Catálogo inteligente (v1.8.2). */
+  vehiclesAvailable: number;
+  driversAvailable: number;
+  byState: { state: string; count: number }[];
 };
+
+function isVehicleRow(r: Resource) {
+  return r.resource_class === "vehicle" || r.category === "vehicle";
+}
+
+function isDriverRow(r: Resource) {
+  return (
+    (r.resource_class === "person" && (r.subtype === "driver" || r.category === "driver")) ||
+    r.category === "driver"
+  );
+}
 
 export function computeResourceStats(resources: Resource[]): ResourceStats {
   const byCategory = RESOURCE_CATEGORIES.map((c) => ({
@@ -590,6 +719,12 @@ export function computeResourceStats(resources: Resource[]): ResourceStats {
     label: c.label,
     count: resources.filter((r) => r.category === c.value).length,
   })).filter((c) => c.count > 0);
+
+  const stateCounts = new Map<string, number>();
+  for (const r of resources) {
+    const key = r.state?.trim() || "Sin definir";
+    stateCounts.set(key, (stateCounts.get(key) ?? 0) + 1);
+  }
 
   return {
     total: resources.length,
@@ -600,5 +735,13 @@ export function computeResourceStats(resources: Resource[]): ResourceStats {
       (r) => r.availability === "unavailable" || r.availability === "out_of_service",
     ).length,
     byCategory,
+    vehiclesAvailable: resources.filter((r) => isVehicleRow(r) && r.availability === "available")
+      .length,
+    driversAvailable: resources.filter((r) => isDriverRow(r) && r.availability === "available")
+      .length,
+    byState: Array.from(stateCounts.entries())
+      .map(([state, count]) => ({ state, count }))
+      .sort((a, b) => b.count - a.count),
   };
+
 }

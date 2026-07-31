@@ -1,14 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, Building2, Loader2, Plus, Search } from "lucide-react";
+import { Boxes, Building2, Loader2, Package, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyFormDialog } from "@/components/company-form-dialog";
 import { ResourceFormDialog } from "@/components/resource-form-dialog";
+import { ExtrasManager } from "@/components/extras-manager";
 import { listAssignableAgents } from "@/lib/agents";
+import {
+  RESOURCE_CLASSES,
+  RESOURCE_SUBTYPES,
+  resourceClassLabel,
+  subtypeLabel,
+  type ResourceClass,
+} from "@/lib/resource-catalog";
+import { allCities, allRegions } from "@/lib/geo";
 import {
   availabilityClasses,
   availabilityLabel,
@@ -29,6 +38,7 @@ import {
   type ResourceCategory,
   type ResourceInput,
 } from "@/lib/resources";
+
 
 export const Route = createFileRoute("/_authenticated/resources")({
   component: ResourcesPage,
@@ -58,16 +68,50 @@ function ResourcesPage() {
   const [availability, setAvailability] = useState<ResourceAvailability | "all">("all");
   const [zone, setZone] = useState("all");
   const [includeArchived, setIncludeArchived] = useState(false);
+  const [resourceClass, setResourceClass] = useState<ResourceClass | "all">("all");
+  const [subtype, setSubtype] = useState("all");
+  const [state, setState] = useState("all");
+  const [city, setCity] = useState("all");
+  const [minCapacity, setMinCapacity] = useState("");
+  const [selfDrive, setSelfDrive] = useState(false);
 
   const [resourceOpen, setResourceOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const resourcesQuery = useQuery({
-    queryKey: ["resources", search, kind, category, availability, zone, includeArchived],
+    queryKey: [
+      "resources",
+      search,
+      kind,
+      category,
+      availability,
+      zone,
+      includeArchived,
+      resourceClass,
+      subtype,
+      state,
+      city,
+      minCapacity,
+      selfDrive,
+    ],
     queryFn: () =>
-      listResources({ search, kind, category, availability, zone, includeArchived }),
+      listResources({
+        search,
+        kind,
+        category,
+        availability,
+        zone,
+        includeArchived,
+        resourceClass,
+        subtype,
+        state,
+        city,
+        minCapacity,
+        selfDrive,
+      }),
   });
+
 
   const companiesQuery = useQuery({
     queryKey: ["companies", includeArchived],
@@ -80,6 +124,11 @@ function ResourcesPage() {
   const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
   const companyName = new Map(companies.map((c) => [c.id, c.name]));
   const stats = computeResourceStats(resources);
+  const subtypeOptions =
+    resourceClass === "all"
+      ? Object.values(RESOURCE_SUBTYPES).flat()
+      : (RESOURCE_SUBTYPES[resourceClass] ?? []);
+
 
   async function submitResource(input: ResourceInput) {
     setSaving(true);
@@ -134,12 +183,11 @@ function ResourcesPage() {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Recursos" value={String(stats.total)} />
-        <Stat label="Internos" value={String(stats.internal)} />
-        <Stat label="Externos" value={String(stats.external)} />
         <Stat label="Disponibles" value={String(stats.available)} />
-        <Stat label="No disponibles" value={String(stats.unavailable)} />
+        <Stat label="Vehículos disponibles" value={String(stats.vehiclesAvailable)} />
+        <Stat label="Choferes disponibles" value={String(stats.driversAvailable)} />
       </section>
 
       <Tabs defaultValue="resources">
@@ -150,7 +198,11 @@ function ResourcesPage() {
           <TabsTrigger value="companies">
             <Building2 className="mr-2 h-4 w-4" /> Empresas
           </TabsTrigger>
+          <TabsTrigger value="extras">
+            <Package className="mr-2 h-4 w-4" /> Extras
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="resources" className="space-y-6">
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -199,6 +251,60 @@ function ResourcesPage() {
                   </option>
                 ))}
               </Filter>
+              <Filter
+                value={resourceClass}
+                onChange={(v) => {
+                  setResourceClass(v as ResourceClass | "all");
+                  setSubtype("all");
+                }}
+              >
+                <option value="all">Toda clasificación</option>
+                {RESOURCE_CLASSES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={subtype} onChange={setSubtype}>
+                <option value="all">Todos los subtipos</option>
+                {subtypeOptions.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={state} onChange={setState}>
+                <option value="all">Toda provincia</option>
+                {allRegions().map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={city} onChange={setCity}>
+                <option value="all">Toda ciudad</option>
+                {allCities().map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Filter>
+              <Input
+                type="number"
+                min={0}
+                value={minCapacity}
+                onChange={(e) => setMinCapacity(e.target.value)}
+                placeholder="Pax mín."
+                className="h-10 w-28"
+              />
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={selfDrive}
+                  onChange={(e) => setSelfDrive(e.target.checked)}
+                />
+                Rent a car
+              </label>
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
@@ -207,6 +313,7 @@ function ResourcesPage() {
                 />
                 Ver archivados
               </label>
+
             </div>
           </section>
 
@@ -223,7 +330,7 @@ function ResourcesPage() {
                 <thead className="text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Recurso</th>
-                    <th className="px-4 py-3">Categoría</th>
+                    <th className="px-4 py-3">Clasificación</th>
                     <th className="px-4 py-3">Origen</th>
                     <th className="px-4 py-3">Empresa</th>
                     <th className="px-4 py-3">Zona</th>
@@ -248,7 +355,15 @@ function ResourcesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">{categoryLabel(r.category)}</td>
+                      <td className="px-4 py-3">
+                        {resourceClassLabel(r.resource_class)}
+                        <span className="block text-xs text-muted-foreground">
+                          {r.subtype
+                            ? subtypeLabel(r.resource_class, r.subtype)
+                            : categoryLabel(r.category)}
+                        </span>
+                      </td>
+
                       <td className="px-4 py-3">{companyKindLabel(r.kind)}</td>
                       <td className="px-4 py-3">
                         {r.company_id ? (companyName.get(r.company_id) ?? "—") : "—"}
@@ -287,7 +402,24 @@ function ResourcesPage() {
               </div>
             </section>
           )}
+
+          {stats.byState.length > 0 && (
+            <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="font-display text-xl font-semibold">Distribución geográfica</h2>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {stats.byState.map((s) => (
+                  <span
+                    key={s.state}
+                    className="rounded-full border border-border px-3 py-1 text-xs"
+                  >
+                    {s.state}: <strong>{s.count}</strong>
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
         </TabsContent>
+
 
         <TabsContent value="companies" className="space-y-6">
           {companiesQuery.isLoading ? (
@@ -326,7 +458,12 @@ function ResourcesPage() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="extras" className="space-y-6">
+          <ExtrasManager includeArchived={includeArchived} />
+        </TabsContent>
       </Tabs>
+
 
       <ResourceFormDialog
         open={resourceOpen}

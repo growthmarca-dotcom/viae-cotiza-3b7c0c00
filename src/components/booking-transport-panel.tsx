@@ -59,6 +59,8 @@ import {
 } from "@/lib/transport";
 import { citiesOf, DEFAULT_COUNTRY, regionsOf, zonesOf, zonesOfCity } from "@/lib/geo";
 import { ServiceEconomicsPanel } from "@/components/service-economics-panel";
+import { ServiceExtrasPanel } from "@/components/service-extras-panel";
+
 import { useAccount } from "@/hooks/use-account";
 
 
@@ -525,6 +527,9 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
               </div>
 
               <ServiceEconomicsPanel service={s} onSaved={load} />
+
+              <ServiceExtrasPanel serviceId={s.id} />
+
 
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
 

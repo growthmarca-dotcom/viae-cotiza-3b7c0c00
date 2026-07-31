@@ -12,6 +12,9 @@ import {
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { listExtras, listServiceExtras } from "@/lib/resource-catalog";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -527,6 +530,10 @@ function DriverServiceCard({
         </div>
       </dl>
 
+      <DriverServiceExtras serviceId={s.id} />
+
+
+
       {/* Información de cobro */}
       <div className="mt-4 rounded-xl border border-border/70 bg-secondary/30 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -683,5 +690,41 @@ function DriverServiceCard({
         </ul>
       )}
     </article>
+  );
+}
+
+/**
+ * Extras solicitados para el servicio, en modo lectura para el conductor
+ * (v1.8.2): cadenas, sillas infantiles, portaesquí, GPS, etc.
+ */
+function DriverServiceExtras({ serviceId }: { serviceId: string }) {
+  const catalogQuery = useQuery({
+    queryKey: ["resource-extras", false],
+    queryFn: () => listExtras(),
+  });
+  const linksQuery = useQuery({
+    queryKey: ["service-extras", serviceId],
+    queryFn: () => listServiceExtras(serviceId),
+  });
+
+  const links = linksQuery.data ?? [];
+  if (links.length === 0) return null;
+  const nameOf = new Map((catalogQuery.data ?? []).map((e) => [e.id, e.name]));
+
+  return (
+    <div className="mt-4 rounded-xl border border-border/70 bg-secondary/30 p-4">
+      <p className="text-sm font-medium">Extras requeridos</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {links.map((l) => (
+          <span
+            key={l.id}
+            className={`rounded-full border px-3 py-1 text-xs ${l.is_required ? "border-gold text-foreground" : "border-border text-muted-foreground"}`}
+          >
+            {nameOf.get(l.extra_id) ?? "Extra"} × {l.quantity ?? 1}
+            {l.is_required ? " · obligatorio" : ""}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

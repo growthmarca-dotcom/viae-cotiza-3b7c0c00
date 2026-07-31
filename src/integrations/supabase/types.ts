@@ -1563,12 +1563,115 @@ export type Database = {
           },
         ]
       }
+      resource_extra_links: {
+        Row: {
+          created_at: string
+          currency: string
+          extra_cost: number | null
+          extra_id: string
+          id: string
+          is_included: boolean
+          notes: string | null
+          quantity: number
+          resource_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          extra_cost?: number | null
+          extra_id: string
+          id?: string
+          is_included?: boolean
+          notes?: string | null
+          quantity?: number
+          resource_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          extra_cost?: number | null
+          extra_id?: string
+          id?: string
+          is_included?: boolean
+          notes?: string | null
+          quantity?: number
+          resource_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_extra_links_extra_id_fkey"
+            columns: ["extra_id"]
+            isOneToOne: false
+            referencedRelation: "resource_extras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_extra_links_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_extras: {
+        Row: {
+          cost: number | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_included: boolean
+          name: string
+          price: number | null
+          quantity_available: number | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_included?: boolean
+          name: string
+          price?: number | null
+          quantity_available?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_included?: boolean
+          name?: string
+          price?: number | null
+          quantity_available?: number | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           advance_notice_hours: number | null
           agent_id: string | null
           availability: Database["public"]["Enums"]["resource_availability"]
           base_city: string | null
+          cabin_luggage_capacity: number | null
           category: Database["public"]["Enums"]["resource_category"]
           cities_served: string[]
           company_id: string | null
@@ -1581,19 +1684,28 @@ export type Database = {
           driver_last_name: string | null
           driver_user_id: string | null
           email: string | null
+          has_air_conditioning: boolean
           id: string
+          is_accessible: boolean
           kind: Database["public"]["Enums"]["company_kind"]
+          large_luggage_capacity: number | null
           luggage_capacity: number | null
           main_zone: string | null
           max_distance_km: number | null
           name: string
           notes: string | null
           operating_limit: number | null
+          owner_company_id: string | null
+          owner_name: string | null
+          owner_type: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity: number | null
           record_status: Database["public"]["Enums"]["record_status"]
           requires_advance_booking: boolean
+          resource_class: Database["public"]["Enums"]["resource_class"]
+          self_drive: boolean
           specialties: string[]
           state: string | null
+          subtype: string | null
           tourist_zones: string[]
           transport_service_types: Database["public"]["Enums"]["transport_service_type"][]
           unit_count: number | null
@@ -1601,9 +1713,13 @@ export type Database = {
           user_id: string
           vehicle_brand: string | null
           vehicle_color: string | null
+          vehicle_fuel: string | null
           vehicle_model: string | null
+          vehicle_notes: string | null
           vehicle_plate: string | null
+          vehicle_transmission: string | null
           vehicle_type: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_version: string | null
           vehicle_year: number | null
           whatsapp: string | null
           zones: string[]
@@ -1613,6 +1729,7 @@ export type Database = {
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
           base_city?: string | null
+          cabin_luggage_capacity?: number | null
           category?: Database["public"]["Enums"]["resource_category"]
           cities_served?: string[]
           company_id?: string | null
@@ -1625,19 +1742,28 @@ export type Database = {
           driver_last_name?: string | null
           driver_user_id?: string | null
           email?: string | null
+          has_air_conditioning?: boolean
           id?: string
+          is_accessible?: boolean
           kind?: Database["public"]["Enums"]["company_kind"]
+          large_luggage_capacity?: number | null
           luggage_capacity?: number | null
           main_zone?: string | null
           max_distance_km?: number | null
           name: string
           notes?: string | null
           operating_limit?: number | null
+          owner_company_id?: string | null
+          owner_name?: string | null
+          owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
           record_status?: Database["public"]["Enums"]["record_status"]
           requires_advance_booking?: boolean
+          resource_class?: Database["public"]["Enums"]["resource_class"]
+          self_drive?: boolean
           specialties?: string[]
           state?: string | null
+          subtype?: string | null
           tourist_zones?: string[]
           transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
@@ -1645,9 +1771,13 @@ export type Database = {
           user_id: string
           vehicle_brand?: string | null
           vehicle_color?: string | null
+          vehicle_fuel?: string | null
           vehicle_model?: string | null
+          vehicle_notes?: string | null
           vehicle_plate?: string | null
+          vehicle_transmission?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_version?: string | null
           vehicle_year?: number | null
           whatsapp?: string | null
           zones?: string[]
@@ -1657,6 +1787,7 @@ export type Database = {
           agent_id?: string | null
           availability?: Database["public"]["Enums"]["resource_availability"]
           base_city?: string | null
+          cabin_luggage_capacity?: number | null
           category?: Database["public"]["Enums"]["resource_category"]
           cities_served?: string[]
           company_id?: string | null
@@ -1669,19 +1800,28 @@ export type Database = {
           driver_last_name?: string | null
           driver_user_id?: string | null
           email?: string | null
+          has_air_conditioning?: boolean
           id?: string
+          is_accessible?: boolean
           kind?: Database["public"]["Enums"]["company_kind"]
+          large_luggage_capacity?: number | null
           luggage_capacity?: number | null
           main_zone?: string | null
           max_distance_km?: number | null
           name?: string
           notes?: string | null
           operating_limit?: number | null
+          owner_company_id?: string | null
+          owner_name?: string | null
+          owner_type?: Database["public"]["Enums"]["resource_owner_type"]
           pax_capacity?: number | null
           record_status?: Database["public"]["Enums"]["record_status"]
           requires_advance_booking?: boolean
+          resource_class?: Database["public"]["Enums"]["resource_class"]
+          self_drive?: boolean
           specialties?: string[]
           state?: string | null
+          subtype?: string | null
           tourist_zones?: string[]
           transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
@@ -1689,9 +1829,13 @@ export type Database = {
           user_id?: string
           vehicle_brand?: string | null
           vehicle_color?: string | null
+          vehicle_fuel?: string | null
           vehicle_model?: string | null
+          vehicle_notes?: string | null
           vehicle_plate?: string | null
+          vehicle_transmission?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_type"] | null
+          vehicle_version?: string | null
           vehicle_year?: number | null
           whatsapp?: string | null
           zones?: string[]
@@ -1709,6 +1853,64 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_owner_company_id_fkey"
+            columns: ["owner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_service_extras: {
+        Row: {
+          created_at: string
+          extra_id: string
+          id: string
+          is_required: boolean
+          notes: string | null
+          quantity: number
+          service_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extra_id: string
+          id?: string
+          is_required?: boolean
+          notes?: string | null
+          quantity?: number
+          service_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extra_id?: string
+          id?: string
+          is_required?: boolean
+          notes?: string | null
+          quantity?: number
+          service_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_service_extras_extra_id_fkey"
+            columns: ["extra_id"]
+            isOneToOne: false
+            referencedRelation: "resource_extras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_service_extras_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "transport_services"
             referencedColumns: ["id"]
           },
         ]
@@ -2220,6 +2422,13 @@ export type Database = {
         | "tourism_service"
         | "agent"
         | "other"
+      resource_class: "person" | "vehicle" | "company" | "equipment"
+      resource_owner_type:
+        | "viae"
+        | "provider"
+        | "partner_company"
+        | "private"
+        | "other"
       transport_collection_status:
         | "not_applicable"
         | "pending"
@@ -2563,6 +2772,14 @@ export const Constants = {
         "rental",
         "tourism_service",
         "agent",
+        "other",
+      ],
+      resource_class: ["person", "vehicle", "company", "equipment"],
+      resource_owner_type: [
+        "viae",
+        "provider",
+        "partner_company",
+        "private",
         "other",
       ],
       transport_collection_status: [

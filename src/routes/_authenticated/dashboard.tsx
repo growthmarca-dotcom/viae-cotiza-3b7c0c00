@@ -15,6 +15,9 @@ import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { useAccount } from "@/hooks/use-account";
 import { listTransportServices } from "@/lib/transport";
+import { computeResourceStats, listResources } from "@/lib/resources";
+import { listAllServiceExtras, listExtras, topExtras } from "@/lib/resource-catalog";
+
 import { computeTransportEconomics } from "@/lib/transport-economics";
 import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
 import { agentFullName, listAgents } from "@/lib/agents";
@@ -139,6 +142,10 @@ function Dashboard() {
       <TransportEconomicsSection />
 
       <OperationsSection />
+
+      <CatalogSection />
+
+
 
 
 
@@ -443,5 +450,59 @@ function QuickCard({ to, title, body }: { to: string; title: string; body: strin
         Ir <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
+  );
+}
+
+/**
+ * Catálogo inteligente de recursos (v1.8.2): distribución por clasificación,
+ * disponibilidad de flota y extras más solicitados.
+ */
+function CatalogSection() {
+  const { data } = useQuery({
+    queryKey: ["catalog-dashboard"],
+    queryFn: async () => {
+      const [resources, extras, links] = await Promise.all([
+        listResources(),
+        listExtras(),
+        listAllServiceExtras(),
+      ]);
+      return { stats: computeResourceStats(resources), top: topExtras(links, extras) };
+    },
+  });
+
+  if (!data) return null;
+  const { stats, top } = data;
+
+  return (
+    <section className="space-y-4">
+      <h2 className="font-display text-xl font-semibold">Catálogo de recursos</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MiniStat label="Recursos activos" value={String(stats.total)} />
+        <MiniStat label="Vehículos disponibles" value={String(stats.vehiclesAvailable)} />
+        <MiniStat label="Choferes disponibles" value={String(stats.driversAvailable)} />
+        <MiniStat
+          label="Extra más solicitado"
+          value={top.length > 0 ? `${top[0].name} (${top[0].count})` : "—"}
+        />
+      </div>
+      {stats.byState.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {stats.byState.slice(0, 8).map((s) => (
+            <span key={s.state} className="rounded-full border border-border px-3 py-1 text-xs">
+              {s.state}: <strong>{s.count}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <p className="mt-3 font-display text-xl font-semibold tracking-tight">{value}</p>
+    </div>
   );
 }
