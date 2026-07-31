@@ -334,3 +334,10 @@ export function topExtras(
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 }
+
+/** Todos los extras solicitados en servicios visibles para el usuario. */
+export async function listAllServiceExtras(): Promise<TransportServiceExtra[]> {
+  const { data, error } = await supabase.from("transport_service_extras").select("*");
+  if (error) throw error;
+  return (data ?? []) as TransportServiceExtra[];
+}
