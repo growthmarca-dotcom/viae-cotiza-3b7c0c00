@@ -135,6 +135,42 @@ export const RESOURCE_SPECIALTIES = [
   "Otro",
 ] as const;
 
+/** Alcance de cobertura operativa (v1.8.2.1). */
+export type CoverageScope = "city" | "state" | "regional" | "national" | "international";
+
+export const COVERAGE_SCOPES: { value: CoverageScope; label: string }[] = [
+  { value: "city", label: "Ciudad" },
+  { value: "state", label: "Provincial" },
+  { value: "regional", label: "Regional" },
+  { value: "national", label: "Nacional" },
+  { value: "international", label: "Internacional" },
+];
+
+export function coverageScopeLabel(value: string | null | undefined) {
+  return COVERAGE_SCOPES.find((c) => c.value === value)?.label ?? "—";
+}
+
+/** Alquiler sin conductor (rent a car): opciones preparadas, sin lógica asociada. */
+export const RENTAL_LICENSES = [
+  { value: "national", label: "Licencia nacional" },
+  { value: "international", label: "Licencia internacional" },
+  { value: "professional", label: "Licencia profesional" },
+];
+
+export const RENTAL_FUEL_POLICIES = [
+  { value: "full_to_full", label: "Lleno / lleno" },
+  { value: "same_level", label: "Mismo nivel" },
+  { value: "prepaid", label: "Prepago" },
+  { value: "included", label: "Incluido" },
+];
+
+export const RENTAL_VEHICLE_CONDITIONS = [
+  { value: "excellent", label: "Excelente" },
+  { value: "good", label: "Bueno" },
+  { value: "maintenance", label: "En mantenimiento" },
+  { value: "repair", label: "En reparación" },
+];
+
 export function companyKindLabel(value: string) {
   return COMPANY_KINDS.find((k) => k.value === value)?.label ?? value;
 }
@@ -345,6 +381,28 @@ export type ResourceInput = {
   is_accessible: boolean;
   has_air_conditioning: boolean;
   vehicle_notes: string;
+  // --- cobertura (v1.8.2.1)
+  coverage_scope: CoverageScope | "";
+  // --- ubicación detallada, sólo almacenamiento (preparación de mapas)
+  address: string;
+  postal_code: string;
+  latitude: string;
+  longitude: string;
+  meeting_point: string;
+  pickup_location: string;
+  dropoff_location: string;
+  geo_radius_km: string;
+  operating_zone: string;
+  // --- alquiler sin conductor (estructura preparada, sin lógica)
+  rental_requires_driver: boolean;
+  rental_min_age: string;
+  rental_license_required: string;
+  rental_deposit_amount: string;
+  rental_deposit_currency: string;
+  rental_included_km: string;
+  rental_extra_km_cost: string;
+  rental_fuel_policy: string;
+  rental_vehicle_condition: string;
 };
 
 export const EMPTY_RESOURCE: ResourceInput = {
@@ -401,7 +459,25 @@ export const EMPTY_RESOURCE: ResourceInput = {
   is_accessible: false,
   has_air_conditioning: false,
   vehicle_notes: "",
-
+  coverage_scope: "",
+  address: "",
+  postal_code: "",
+  latitude: "",
+  longitude: "",
+  meeting_point: "",
+  pickup_location: "",
+  dropoff_location: "",
+  geo_radius_km: "",
+  operating_zone: "",
+  rental_requires_driver: false,
+  rental_min_age: "",
+  rental_license_required: "",
+  rental_deposit_amount: "",
+  rental_deposit_currency: "ARS",
+  rental_included_km: "",
+  rental_extra_km_cost: "",
+  rental_fuel_policy: "",
+  rental_vehicle_condition: "",
 };
 
 export function resourceToInput(r: Resource): ResourceInput {
@@ -461,7 +537,27 @@ export function resourceToInput(r: Resource): ResourceInput {
     is_accessible: r.is_accessible ?? false,
     has_air_conditioning: r.has_air_conditioning ?? false,
     vehicle_notes: r.vehicle_notes ?? "",
-
+    coverage_scope: (r.coverage_scope ?? "") as CoverageScope | "",
+    address: r.address ?? "",
+    postal_code: r.postal_code ?? "",
+    latitude: r.latitude != null ? String(r.latitude) : "",
+    longitude: r.longitude != null ? String(r.longitude) : "",
+    meeting_point: r.meeting_point ?? "",
+    pickup_location: r.pickup_location ?? "",
+    dropoff_location: r.dropoff_location ?? "",
+    geo_radius_km: r.geo_radius_km != null ? String(r.geo_radius_km) : "",
+    operating_zone: r.operating_zone ?? "",
+    rental_requires_driver: r.rental_requires_driver ?? false,
+    rental_min_age: r.rental_min_age != null ? String(r.rental_min_age) : "",
+    rental_license_required: r.rental_license_required ?? "",
+    rental_deposit_amount:
+      r.rental_deposit_amount != null ? String(r.rental_deposit_amount) : "",
+    rental_deposit_currency: r.rental_deposit_currency ?? "ARS",
+    rental_included_km: r.rental_included_km != null ? String(r.rental_included_km) : "",
+    rental_extra_km_cost:
+      r.rental_extra_km_cost != null ? String(r.rental_extra_km_cost) : "",
+    rental_fuel_policy: r.rental_fuel_policy ?? "",
+    rental_vehicle_condition: r.rental_vehicle_condition ?? "",
   };
 }
 
@@ -521,7 +617,46 @@ function resourcePayload(input: ResourceInput) {
     is_accessible: input.is_accessible,
     has_air_conditioning: input.has_air_conditioning,
     vehicle_notes: text(input.vehicle_notes),
+    coverage_scope: input.coverage_scope || null,
+    address: text(input.address),
+    postal_code: text(input.postal_code),
+    latitude: num(input.latitude),
+    longitude: num(input.longitude),
+    meeting_point: text(input.meeting_point),
+    pickup_location: text(input.pickup_location),
+    dropoff_location: text(input.dropoff_location),
+    geo_radius_km: num(input.geo_radius_km),
+    operating_zone: text(input.operating_zone),
+    rental_requires_driver: input.rental_requires_driver,
+    rental_min_age: num(input.rental_min_age),
+    rental_license_required: input.rental_license_required || null,
+    rental_deposit_amount: num(input.rental_deposit_amount),
+    rental_deposit_currency: input.rental_deposit_currency || "ARS",
+    rental_included_km: num(input.rental_included_km),
+    rental_extra_km_cost: num(input.rental_extra_km_cost),
+    rental_fuel_policy: input.rental_fuel_policy || null,
+    rental_vehicle_condition: input.rental_vehicle_condition || null,
   };
+}
+
+/**
+ * Validaciones de coherencia geográfica (v1.8.2.1).
+ * Devuelve el primer problema encontrado o null si el recurso es válido.
+ * No bloquea información existente: sólo valida lo que se está editando.
+ */
+export function validateResource(input: ResourceInput): string | null {
+  if (input.name.trim().length === 0) return "El recurso necesita un nombre.";
+  if ((input.base_city.trim() || input.cities_served.length > 0) && !input.state.trim()) {
+    return "No se puede indicar una ciudad sin provincia / región.";
+  }
+  if (
+    input.tourist_zones.length > 0 &&
+    !input.base_city.trim() &&
+    input.cities_served.length === 0
+  ) {
+    return "No se puede indicar una zona turística sin una ciudad.";
+  }
+  return null;
 }
 
 
@@ -543,6 +678,8 @@ export type ResourceFilters = {
   providerId?: string;
   /** Modo rent a car: solo vehículos sin conductor. */
   selfDrive?: boolean;
+  /** Alcance de cobertura (v1.8.2.1). */
+  coverageScope?: CoverageScope | "all";
 
 };
 
@@ -561,6 +698,8 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   if (filters.providerId && filters.providerId !== "all")
     q = q.eq("provider_id", filters.providerId);
   if (filters.selfDrive) q = q.eq("self_drive", true);
+  if (filters.coverageScope && filters.coverageScope !== "all")
+    q = q.eq("coverage_scope", filters.coverageScope);
   const { data, error } = await q;
 
   if (error) throw error;
