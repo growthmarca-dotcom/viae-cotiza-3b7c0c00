@@ -40,6 +40,7 @@ type Row = {
   guest_last_name: string | null;
   total_amount: number | null;
   currency: string;
+  archived: boolean;
   status: "draft" | "sent" | "pending" | "accepted" | "rejected" | "expired";
 };
 
