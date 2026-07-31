@@ -20,6 +20,11 @@ import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/lead
 import { agentFullName, listAgents } from "@/lib/agents";
 import { listBookings } from "@/lib/bookings";
 import { computeOperationsStats, listAllBookingServices } from "@/lib/operations";
+import {
+  computeChecklistIncidentStats,
+  listAllIncidents,
+  listChecklistByBooking,
+} from "@/lib/checklist";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
