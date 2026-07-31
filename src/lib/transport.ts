@@ -151,8 +151,11 @@ export function serviceStatusClasses(value: string) {
     case "completed":
       return "bg-primary/10 text-primary border-primary/30";
     case "cancelled":
+    case "rejected":
       return "bg-destructive/10 text-destructive border-destructive/30";
     case "assigned":
+    case "en_route":
+    case "at_origin":
     case "in_transit":
       return "bg-gold/15 text-foreground border-gold/40";
     default:
