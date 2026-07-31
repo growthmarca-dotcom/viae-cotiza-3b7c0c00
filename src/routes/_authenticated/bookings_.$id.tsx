@@ -9,6 +9,7 @@ import {
   FileText,
   History,
   Loader2,
+  Route as RouteIcon,
   Save,
   TicketCheck,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookingTransportTab } from "@/components/booking-transport-panel";
 import { formatMoney } from "@/lib/currency";
 import { stageLabel } from "@/lib/opportunities";
 import {
@@ -314,6 +316,9 @@ function BookingDetailPage() {
           <TabsTrigger value="resources">
             <Boxes className="mr-2 h-4 w-4" /> Recursos
           </TabsTrigger>
+          <TabsTrigger value="transport">
+            <RouteIcon className="mr-2 h-4 w-4" /> Transporte
+          </TabsTrigger>
           <TabsTrigger value="provider">
             <Building2 className="mr-2 h-4 w-4" /> Proveedor
           </TabsTrigger>
@@ -416,6 +421,10 @@ function BookingDetailPage() {
 
         <TabsContent value="resources">
           <ResourcesTab bookingId={booking.id} />
+        </TabsContent>
+
+        <TabsContent value="transport">
+          <BookingTransportTab bookingId={booking.id} />
         </TabsContent>
 
         <TabsContent value="provider">
