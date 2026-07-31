@@ -115,12 +115,94 @@ export function LeadFormDialog({
           <Field label="Fecha estimada de viaje">
             <Input type="date" value={form.travel_date} onChange={(e) => set("travel_date", e.target.value)} />
           </Field>
+          <Field label="Tipo de viaje">
+            <Select
+              value={form.trip_type || NO_TRIP_TYPE}
+              onValueChange={(v) => set("trip_type", v === NO_TRIP_TYPE ? "" : (v as TripType))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_TRIP_TYPE}>Sin definir</SelectItem>
+                {TRIP_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <div className="sm:col-span-2">
+            <Field label="Servicios de interés">
+              <div className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 sm:grid-cols-3">
+                {LEAD_SERVICES.map((s) => {
+                  const checked = form.services_interest.includes(s.value);
+                  return (
+                    <label key={s.value} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          set(
+                            "services_interest",
+                            v
+                              ? [...form.services_interest, s.value]
+                              : form.services_interest.filter((x) => x !== s.value),
+                          )
+                        }
+                      />
+                      {s.label}
+                    </label>
+                  );
+                })}
+              </div>
+            </Field>
+          </div>
+          <Field label="Cantidad de días">
+            <Input
+              type="number"
+              min={0}
+              value={form.days_count}
+              onChange={(e) => set("days_count", e.target.value)}
+            />
+          </Field>
+          <Field label="Cantidad de noches">
+            <Input
+              type="number"
+              min={0}
+              value={form.nights_count}
+              onChange={(e) => set("nights_count", e.target.value)}
+            />
+          </Field>
           <Field label="Cantidad de pasajeros">
             <Input
               type="number"
               min={1}
               value={form.pax_count}
               onChange={(e) => set("pax_count", e.target.value)}
+            />
+          </Field>
+          <Field label="Adultos">
+            <Input
+              type="number"
+              min={0}
+              value={form.adults_count}
+              onChange={(e) => set("adults_count", e.target.value)}
+            />
+          </Field>
+          <Field label="Niños">
+            <Input
+              type="number"
+              min={0}
+              value={form.children_count}
+              onChange={(e) => set("children_count", e.target.value)}
+            />
+          </Field>
+          <Field label="Edades de los niños (opcional)">
+            <Input
+              value={form.children_ages}
+              onChange={(e) => set("children_ages", e.target.value)}
+              placeholder="Ej: 4, 8, 12"
             />
           </Field>
           <Field label="Presupuesto estimado">
