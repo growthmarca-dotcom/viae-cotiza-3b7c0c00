@@ -12,6 +12,7 @@ import {
   Route as RouteIcon,
   Save,
   TicketCheck,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,8 +21,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BookingTransportTab } from "@/components/booking-transport-panel";
+import { BookingServicesPanel } from "@/components/booking-services-panel";
 import { BookingTrackingCard } from "@/components/booking-tracking-card";
+import { useAccount } from "@/hooks/use-account";
+import {
+  listInternalUsers,
+  OPERATION_STATUSES,
+  operationStatusClasses,
+  operationStatusLabel,
+  setOperationsNotes,
+  setOperationsOwner,
+  setOperationStatus,
+  type InternalUser,
+  type OperationStatus,
+} from "@/lib/operations";
 import { formatMoney } from "@/lib/currency";
 import { stageLabel } from "@/lib/opportunities";
 import {
