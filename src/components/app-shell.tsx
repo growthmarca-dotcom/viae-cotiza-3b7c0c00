@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
+  CarFront,
   Compass,
   Route as RouteIcon,
 
