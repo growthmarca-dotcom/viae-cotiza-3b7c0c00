@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Compass, Download, Loader2, MapPin, Calendar, Users, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
+import { QuotationPrintDocument } from "@/components/quotation-print";
+
 
 export const Route = createFileRoute("/cotizacion/$token")({
   component: PublicQuotationPage,
@@ -153,11 +155,14 @@ function PublicQuotationPage() {
         )}
 
         <footer className="pt-6 text-center text-xs text-muted-foreground">
-          Cotización generada con ViaE Sales Hub · {new Date(q.created_at).toLocaleDateString()}
+          {company.footerText ?? `Cotización generada con ${company.companyName ?? "ViaE Sales Hub"}`} ·{" "}
+          {new Date(q.created_at).toLocaleDateString()}
         </footer>
       </main>
     </div>
+    </>
   );
+
 }
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: unknown }) {
