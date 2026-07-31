@@ -246,6 +246,60 @@ function ResourcesPage() {
                   </option>
                 ))}
               </Filter>
+              <Filter
+                value={resourceClass}
+                onChange={(v) => {
+                  setResourceClass(v as ResourceClass | "all");
+                  setSubtype("all");
+                }}
+              >
+                <option value="all">Toda clasificación</option>
+                {RESOURCE_CLASSES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={subtype} onChange={setSubtype}>
+                <option value="all">Todos los subtipos</option>
+                {subtypeOptions.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={state} onChange={setState}>
+                <option value="all">Toda provincia</option>
+                {allRegions().map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </Filter>
+              <Filter value={city} onChange={setCity}>
+                <option value="all">Toda ciudad</option>
+                {allCities().map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Filter>
+              <Input
+                type="number"
+                min={0}
+                value={minCapacity}
+                onChange={(e) => setMinCapacity(e.target.value)}
+                placeholder="Pax mín."
+                className="h-10 w-28"
+              />
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={selfDrive}
+                  onChange={(e) => setSelfDrive(e.target.checked)}
+                />
+                Rent a car
+              </label>
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
@@ -254,6 +308,7 @@ function ResourcesPage() {
                 />
                 Ver archivados
               </label>
+
             </div>
           </section>
 
