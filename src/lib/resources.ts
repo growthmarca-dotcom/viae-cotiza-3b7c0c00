@@ -577,10 +577,23 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
   const term = filters.search?.trim().toLowerCase();
   if (!term) return rows;
   return rows.filter((r) =>
-    [r.name, r.description, r.contact_name, r.main_zone, ...(r.zones ?? []), ...(r.specialties ?? [])]
+    [
+      r.name,
+      r.description,
+      r.contact_name,
+      r.main_zone,
+      r.base_city,
+      r.state,
+      r.vehicle_brand,
+      r.vehicle_model,
+      r.vehicle_plate,
+      ...(r.zones ?? []),
+      ...(r.specialties ?? []),
+    ]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(term)),
   );
+
 }
 
 export async function getResource(id: string): Promise<Resource | null> {
