@@ -61,6 +61,46 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
+export type AnalysisCurrency = "ARS" | "USD";
+
+/** Tipo de cambio por defecto para las estadísticas (ARS por 1 USD). */
+export const DEFAULT_ANALYSIS_RATE = 1000;
+
+/**
+ * Convierte un importe a la moneda de análisis configurada.
+ * Devuelve `null` cuando la moneda de origen no es convertible (ni ARS ni USD),
+ * para no mezclar monedas distintas dentro de una misma estadística.
+ */
+export function toAnalysisCurrency(
+  amount: number | null | undefined,
+  from: string,
+  to: AnalysisCurrency,
+  rate: number | null | undefined,
+): number | null {
+  const value = Number(amount ?? 0);
+  if (from === to) return round2(value);
+  const r = rate != null && Number(rate) > 0 ? Number(rate) : DEFAULT_ANALYSIS_RATE;
+  if (from === "USD" && to === "ARS") return round2(value * r);
+  if (from === "ARS" && to === "USD") return round2(value / r);
+  return null;
+}
+
+/** Suma una lista de importes convirtiéndolos a la moneda de análisis. */
+export function sumInAnalysisCurrency(
+  items: { amount: number | null | undefined; currency: string }[],
+  to: AnalysisCurrency,
+  rate?: number | null,
+): { total: number; skipped: number } {
+  let total = 0;
+  let skipped = 0;
+  for (const item of items) {
+    const converted = toAnalysisCurrency(item.amount, item.currency, to, rate);
+    if (converted == null) skipped += 1;
+    else total += converted;
+  }
+  return { total: round2(total), skipped };
+}
+
 /**
  * Placeholder para una futura integración con una API de tipo de cambio.
  * Hoy devuelve null: el valor siempre lo carga manualmente el agente.
