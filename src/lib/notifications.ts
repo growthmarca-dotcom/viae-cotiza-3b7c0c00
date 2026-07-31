@@ -39,6 +39,11 @@ const KIND_LABEL: Record<string, string> = {
   lead_assigned: "Lead asignado",
   lead_new: "Nueva consulta",
   lead_status: "Estado del lead",
+  operation_pending: "Reserva pendiente de operación",
+  operation_assigned: "Responsable operativo",
+  operation_status: "Cambio operativo",
+  operation_service: "Servicio de la reserva",
+  operation_incident: "Incidencia operativa",
 };
 
 
@@ -50,12 +55,16 @@ export function notificationKindClasses(kind: string) {
   switch (kind) {
     case "transport_assignment":
     case "lead_assigned":
+    case "operation_assigned":
+    case "operation_pending":
       return "bg-gold/15 text-foreground border-gold/40";
     case "transport_collection":
     case "lead_status":
+    case "operation_service":
       return "bg-primary/10 text-primary border-primary/30";
 
     case "transport_schedule":
+    case "operation_incident":
       return "bg-destructive/10 text-destructive border-destructive/30";
     default:
       return "bg-secondary text-secondary-foreground border-border";
