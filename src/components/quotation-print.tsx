@@ -44,6 +44,8 @@ export function QuotationPrintDocument({
   const guest = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
   const money = (v: number | null | undefined) =>
     `${q.currency} ${Number(v ?? 0).toLocaleString()}`;
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate ?? null);
+
 
   const contact = [company.whatsapp, company.email, company.website].filter(Boolean);
   const socials = [
