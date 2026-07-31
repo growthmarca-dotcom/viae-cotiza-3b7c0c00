@@ -338,6 +338,134 @@ function AdminPage() {
   );
 }
 
+/** Auditoría global del sistema: quién, cuándo, qué acción, entidad e ID. */
+function SystemAuditSection({ nameById }: { nameById: Map<string, string> }) {
+  const [entity, setEntity] = useState<string>("all");
+  const { data, isLoading } = useQuery({
+    queryKey: ["system-audit", entity],
+    queryFn: () => listAuditLog(entity),
+  });
+  const rows = data ?? [];
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+            <ScrollText className="h-4 w-4 text-gold" /> Auditoría del sistema
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Usuario, fecha, acción, entidad e identificador de cada cambio. Solo visible para
+            administradores.
+          </p>
+        </div>
+        <select
+          value={entity}
+          onChange={(e) => setEntity(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {AUDIT_ENTITIES.map((e) => (
+            <option key={e.value} value={e.value}>
+              {e.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Cargando auditoría...
+        </div>
+      ) : rows.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">Todavía no hay movimientos registrados.</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="py-2 pr-4">Fecha</th>
+                <th className="py-2 pr-4">Usuario</th>
+                <th className="py-2 pr-4">Acción</th>
+                <th className="py-2 pr-4">Entidad</th>
+                <th className="py-2 pr-4">ID</th>
+                <th className="py-2">Campos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t border-border/60 align-top">
+                  <td className="py-2 pr-4 whitespace-nowrap text-xs text-muted-foreground">
+                    {new Date(r.created_at).toLocaleString()}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {r.actor_id ? (nameById.get(r.actor_id) ?? "Usuario") : "Sistema"}
+                  </td>
+                  <td className="py-2 pr-4">{actionLabel(r.action)}</td>
+                  <td className="py-2 pr-4">{entityLabel(r.entity)}</td>
+                  <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">
+                    {r.entity_id ? r.entity_id.slice(0, 8) : "—"}
+                  </td>
+                  <td className="py-2 text-xs text-muted-foreground">
+                    {changedFields(r.details).join(", ") || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Backup: exportación a CSV de las entidades principales. */
+function BackupSection() {
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function handleExport(table: ExportableTable, label: string) {
+    setBusy(table);
+    try {
+      const count = await exportTableCsv(table);
+      if (count === 0) toast.info(`No hay ${label.toLowerCase()} para exportar.`);
+      else toast.success(`${count} ${label.toLowerCase()} exportados`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo exportar");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+        <Download className="h-4 w-4 text-gold" /> Backup y exportación
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Descarga una copia en CSV de la información del sistema. Se exporta todo lo que tu cuenta
+        puede ver.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {EXPORTABLE.map((e) => (
+          <Button
+            key={e.table}
+            variant="outline"
+            size="sm"
+            disabled={busy !== null}
+            onClick={() => handleExport(e.table, e.label)}
+          >
+            {busy === e.table ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            {e.label}
+          </Button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function describeAudit(a: AuditEntry): string {
   const roleLabel = ROLES.find((r) => r.value === a.role)?.label ?? a.role ?? "";
   if (a.action === "role_granted") return `recibió el rol ${roleLabel}`;
