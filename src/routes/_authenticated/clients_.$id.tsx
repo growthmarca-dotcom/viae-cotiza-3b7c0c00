@@ -280,17 +280,32 @@ function ClientDetailPage() {
             {new Date(client.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${recordStatusClasses(client.record_status)}`}
+          >
+            {recordStatusLabel(client.record_status)}
+          </span>
+          <Select value={client.record_status} onValueChange={handleRecordStatus}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RECORD_STATUSES.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-          </Button>
+          {client.record_status !== "archived" && (
+            <Button variant="outline" onClick={() => setConfirmDelete(true)}>
+              <Archive className="mr-2 h-4 w-4" /> Archivar
+            </Button>
+          )}
         </div>
       </header>
 
