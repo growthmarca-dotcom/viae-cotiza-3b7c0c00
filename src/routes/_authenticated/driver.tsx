@@ -26,7 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   availabilityClasses,
   availabilityLabel,
-  RESOURCE_AVAILABILITIES,
+  DRIVER_AVAILABILITIES,
   type Resource,
   type ResourceAvailability,
 } from "@/lib/resources";
