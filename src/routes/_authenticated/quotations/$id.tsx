@@ -110,6 +110,8 @@ function QuotationDetailPage() {
 
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/cotizacion/${q.share_token}`;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim() || "—";
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
+
 
   async function copyShare() {
     await navigator.clipboard.writeText(shareUrl);
