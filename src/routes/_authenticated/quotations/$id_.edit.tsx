@@ -7,7 +7,7 @@ import { QuotationForm, type QuotationFormState, type ExistingImage } from "@/co
 import { formToRow, rowToForm, saveQuotationImages, signImageUrls } from "@/lib/quotations";
 import { upsertClientFromQuotation } from "@/lib/crm";
 
-export const Route = createFileRoute("/_authenticated/quotations/$id/edit")({
+export const Route = createFileRoute("/_authenticated/quotations/$id_/edit")({
   component: EditQuotationPage,
   head: () => ({
     meta: [
