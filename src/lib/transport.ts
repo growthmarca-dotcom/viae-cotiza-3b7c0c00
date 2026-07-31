@@ -337,7 +337,16 @@ export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   collection_status: "not_applicable",
   collection_amount: "",
   collection_currency: "ARS",
+  sale_amount: "",
+  sale_currency: "ARS",
+  sale_exchange_rate: "",
+  sale_rate_date: "",
+  cost_amount: "",
+  cost_currency: "ARS",
+  cost_exchange_rate: "",
+  cost_rate_date: "",
 };
+
 
 export function serviceToInput(s: TransportService): TransportServiceInput {
   return {
