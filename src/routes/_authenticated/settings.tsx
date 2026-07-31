@@ -263,6 +263,32 @@ function SettingsPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="font-display text-xl font-semibold">Moneda de análisis</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Todas las estadísticas del sistema (dashboard, pipeline y rendimiento de agentes) se
+          expresan en esta moneda. Los importes registrados en otra moneda se convierten usando el
+          tipo de cambio de cada cotización, evitando mezclar valores.
+        </p>
+        <div className="mt-4 flex gap-2">
+          {(["ARS", "USD"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => set("analysis_currency", c)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                form.analysis_currency === c
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              {c === "ARS" ? "Pesos argentinos (ARS)" : "Dólares (USD)"}
+            </button>
+          ))}
+        </div>
+      </section>
+
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="font-display text-xl font-semibold">Pie de página</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Texto legal o de cierre que aparecerá al final de cada PDF y enlace compartido.
