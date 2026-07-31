@@ -15,6 +15,9 @@ import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { useAccount } from "@/hooks/use-account";
 import { listTransportServices } from "@/lib/transport";
+import { computeResourceStats, listResources } from "@/lib/resources";
+import { listAllServiceExtras, listExtras, topExtras } from "@/lib/resource-catalog";
+
 import { computeTransportEconomics } from "@/lib/transport-economics";
 import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
 import { agentFullName, listAgents } from "@/lib/agents";
