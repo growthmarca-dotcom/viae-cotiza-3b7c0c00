@@ -36,7 +36,11 @@ const KIND_LABEL: Record<string, string> = {
   transport_status: "Estado del servicio",
   transport_schedule: "Cambio de horario",
   transport_collection: "Cobro informado",
+  lead_assigned: "Lead asignado",
+  lead_new: "Nueva consulta",
+  lead_status: "Estado del lead",
 };
+
 
 export function notificationKindLabel(kind: string) {
   return KIND_LABEL[kind] ?? "Aviso";
@@ -45,9 +49,12 @@ export function notificationKindLabel(kind: string) {
 export function notificationKindClasses(kind: string) {
   switch (kind) {
     case "transport_assignment":
+    case "lead_assigned":
       return "bg-gold/15 text-foreground border-gold/40";
     case "transport_collection":
+    case "lead_status":
       return "bg-primary/10 text-primary border-primary/30";
+
     case "transport_schedule":
       return "bg-destructive/10 text-destructive border-destructive/30";
     default:
