@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CommunicationEventsPanel } from "@/components/communication-events-panel";
 import {
   availabilityClasses,
   availabilityLabel,
@@ -323,6 +324,8 @@ function TransportPage() {
           </TabsContent>
         </Tabs>
       )}
+
+      <CommunicationEventsPanel />
     </div>
   );
 }
