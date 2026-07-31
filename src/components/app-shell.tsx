@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  TicketCheck,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
