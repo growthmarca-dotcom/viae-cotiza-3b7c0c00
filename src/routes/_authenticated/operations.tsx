@@ -353,6 +353,10 @@ function OperationsPage() {
         <div className="space-y-3">
           {filtered.map((b) => {
             const list = servicesByBooking.get(b.id) ?? [];
+            const progress = computeChecklistProgress(checklistByBooking.get(b.id) ?? []);
+            const openIncidents = incidents.filter(
+              (i) => i.booking_id === b.id && (i.status === "open" || i.status === "in_review"),
+            );
             return (
               <div
                 key={b.id}
