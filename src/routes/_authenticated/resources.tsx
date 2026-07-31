@@ -68,16 +68,50 @@ function ResourcesPage() {
   const [availability, setAvailability] = useState<ResourceAvailability | "all">("all");
   const [zone, setZone] = useState("all");
   const [includeArchived, setIncludeArchived] = useState(false);
+  const [resourceClass, setResourceClass] = useState<ResourceClass | "all">("all");
+  const [subtype, setSubtype] = useState("all");
+  const [state, setState] = useState("all");
+  const [city, setCity] = useState("all");
+  const [minCapacity, setMinCapacity] = useState("");
+  const [selfDrive, setSelfDrive] = useState(false);
 
   const [resourceOpen, setResourceOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const resourcesQuery = useQuery({
-    queryKey: ["resources", search, kind, category, availability, zone, includeArchived],
+    queryKey: [
+      "resources",
+      search,
+      kind,
+      category,
+      availability,
+      zone,
+      includeArchived,
+      resourceClass,
+      subtype,
+      state,
+      city,
+      minCapacity,
+      selfDrive,
+    ],
     queryFn: () =>
-      listResources({ search, kind, category, availability, zone, includeArchived }),
+      listResources({
+        search,
+        kind,
+        category,
+        availability,
+        zone,
+        includeArchived,
+        resourceClass,
+        subtype,
+        state,
+        city,
+        minCapacity,
+        selfDrive,
+      }),
   });
+
 
   const companiesQuery = useQuery({
     queryKey: ["companies", includeArchived],
