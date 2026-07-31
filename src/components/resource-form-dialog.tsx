@@ -108,7 +108,21 @@ export function ResourceFormDialog({
     });
   }
 
+  function toggleServiceType(value: TransportServiceType) {
+    setForm((f) => ({
+      ...f,
+      transport_service_types: f.transport_service_types.includes(value)
+        ? f.transport_service_types.filter((v) => v !== value)
+        : [...f.transport_service_types, value],
+    }));
+  }
+
+  const isDriver = form.category === "driver";
+  const isVehicle = form.category === "vehicle";
+  const isTransport = ["driver", "vehicle", "taxi", "transfer"].includes(form.category);
+
   return (
+
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
