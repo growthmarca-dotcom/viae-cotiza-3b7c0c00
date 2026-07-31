@@ -454,6 +454,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["booking_service_kind"]
           notes: string | null
+          organization_id: string | null
           provider_id: string | null
           provider_name: string | null
           record_status: Database["public"]["Enums"]["record_status"]
@@ -472,6 +473,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
           notes?: string | null
+          organization_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
@@ -490,6 +492,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
           notes?: string | null
+          organization_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
@@ -514,6 +517,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_services_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -592,6 +602,7 @@ export type Database = {
           operations_taken_at: string | null
           operations_updated_at: string | null
           opportunity_id: string | null
+          organization_id: string | null
           provider_id: string | null
           provider_name: string | null
           provider_notes: string | null
@@ -624,6 +635,7 @@ export type Database = {
           operations_taken_at?: string | null
           operations_updated_at?: string | null
           opportunity_id?: string | null
+          organization_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
           provider_notes?: string | null
@@ -656,6 +668,7 @@ export type Database = {
           operations_taken_at?: string | null
           operations_updated_at?: string | null
           opportunity_id?: string | null
+          organization_id?: string | null
           provider_id?: string | null
           provider_name?: string | null
           provider_notes?: string | null
@@ -690,6 +703,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -832,6 +852,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["company_kind"]
           name: string
           notes: string | null
+          organization_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           state: string | null
           updated_at: string
@@ -848,6 +869,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["company_kind"]
           name: string
           notes?: string | null
+          organization_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           state?: string | null
           updated_at?: string
@@ -864,13 +886,22 @@ export type Database = {
           kind?: Database["public"]["Enums"]["company_kind"]
           name?: string
           notes?: string | null
+          organization_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           state?: string | null
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_settings: {
         Row: {
@@ -1312,6 +1343,116 @@ export type Database = {
           },
         ]
       }
+      organization_roles: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          legal_name: string | null
+          logo_path: string | null
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["record_status"]
+          tax_condition: string | null
+          tax_id: string | null
+          tax_id_type: string | null
+          trade_name: string
+          updated_at: string
+          user_id: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_path?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          tax_condition?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          trade_name: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_path?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          tax_condition?: string | null
+          tax_id?: string | null
+          tax_id_type?: string | null
+          trade_name?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       permission_audit_log: {
         Row: {
           action: string
@@ -1438,6 +1579,7 @@ export type Database = {
           legal_name: string | null
           notes: string | null
           operation_mode: Database["public"]["Enums"]["provider_operation_mode"]
+          organization_id: string | null
           phone: string | null
           provider_type: Database["public"]["Enums"]["provider_type"]
           state: string | null
@@ -1462,6 +1604,7 @@ export type Database = {
           legal_name?: string | null
           notes?: string | null
           operation_mode?: Database["public"]["Enums"]["provider_operation_mode"]
+          organization_id?: string | null
           phone?: string | null
           provider_type?: Database["public"]["Enums"]["provider_type"]
           state?: string | null
@@ -1486,6 +1629,7 @@ export type Database = {
           legal_name?: string | null
           notes?: string | null
           operation_mode?: Database["public"]["Enums"]["provider_operation_mode"]
+          organization_id?: string | null
           phone?: string | null
           provider_type?: Database["public"]["Enums"]["provider_type"]
           state?: string | null
@@ -1498,7 +1642,15 @@ export type Database = {
           website?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotation_history: {
         Row: {
@@ -1838,6 +1990,7 @@ export type Database = {
           notes: string | null
           operating_limit: number | null
           operating_zone: string | null
+          organization_id: string | null
           owner_company_id: string | null
           owner_name: string | null
           owner_type: Database["public"]["Enums"]["resource_owner_type"]
@@ -1916,6 +2069,7 @@ export type Database = {
           notes?: string | null
           operating_limit?: number | null
           operating_zone?: string | null
+          organization_id?: string | null
           owner_company_id?: string | null
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
@@ -1994,6 +2148,7 @@ export type Database = {
           notes?: string | null
           operating_limit?: number | null
           operating_zone?: string | null
+          organization_id?: string | null
           owner_company_id?: string | null
           owner_name?: string | null
           owner_type?: Database["public"]["Enums"]["resource_owner_type"]
@@ -2048,6 +2203,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -2200,6 +2362,7 @@ export type Database = {
           luggage_count: number | null
           notes: string | null
           onboard_at: string | null
+          organization_id: string | null
           origin: string | null
           pax_count: number | null
           payment_mode: Database["public"]["Enums"]["transport_payment_mode"]
@@ -2263,6 +2426,7 @@ export type Database = {
           luggage_count?: number | null
           notes?: string | null
           onboard_at?: string | null
+          organization_id?: string | null
           origin?: string | null
           pax_count?: number | null
           payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
@@ -2326,6 +2490,7 @@ export type Database = {
           luggage_count?: number | null
           notes?: string | null
           onboard_at?: string | null
+          organization_id?: string | null
           origin?: string | null
           pax_count?: number | null
           payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
@@ -2372,6 +2537,13 @@ export type Database = {
             columns: ["driver_resource_id"]
             isOneToOne: false
             referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transport_services_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -2447,6 +2619,10 @@ export type Database = {
           client_name: string
           service_id: string
         }[]
+      }
+      ensure_provider_organization: {
+        Args: { _provider_id: string }
+        Returns: string
       }
       expire_stale_invitations: { Args: never; Returns: number }
       has_role: {
@@ -2603,6 +2779,12 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "expired"
+      organization_role:
+        | "provider"
+        | "agency"
+        | "wholesaler"
+        | "corporate_client"
+        | "partner"
       provider_operation_mode:
         | "manual"
         | "viae_portal"
@@ -2972,6 +3154,13 @@ export const Constants = {
         "confirmed",
         "cancelled",
         "expired",
+      ],
+      organization_role: [
+        "provider",
+        "agency",
+        "wholesaler",
+        "corporate_client",
+        "partner",
       ],
       provider_operation_mode: [
         "manual",
