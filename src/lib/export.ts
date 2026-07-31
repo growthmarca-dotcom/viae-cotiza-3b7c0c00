@@ -46,6 +46,7 @@ export const EXPORTABLE = [
   { table: "companies", label: "Empresas" },
   { table: "resources", label: "Recursos" },
   { table: "booking_resources", label: "Recursos asignados" },
+  { table: "transport_services", label: "Servicios de transporte" },
 ] as const;
 
 

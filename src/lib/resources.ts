@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import type { TransportServiceType, VehicleType } from "@/lib/transport";
+
 
 /**
  * Módulo de Recursos Operativos (v1.0).
@@ -13,7 +15,13 @@ export type BookingResource = Tables<"booking_resources">;
 
 export type CompanyKind = "internal" | "external";
 export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
-export type ResourceAvailability = "available" | "busy" | "unavailable" | "out_of_service";
+export type ResourceAvailability =
+  | "available"
+  | "busy"
+  | "unavailable"
+  | "out_of_service"
+  | "off_hours";
+
 export type ResourceCategory =
   | "accommodation"
   | "room"
@@ -52,10 +60,12 @@ export const RESOURCE_CATEGORIES: { value: ResourceCategory; label: string }[] =
 
 export const RESOURCE_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
   { value: "available", label: "Disponible" },
-  { value: "busy", label: "Ocupado" },
+  { value: "busy", label: "En viaje / ocupado" },
   { value: "unavailable", label: "No disponible" },
+  { value: "off_hours", label: "Fuera de horario" },
   { value: "out_of_service", label: "Fuera de servicio" },
 ];
+
 
 export type AgentAvailability = "available" | "busy" | "unavailable" | "off_hours";
 
@@ -252,6 +262,27 @@ export type ResourceInput = {
   availability: ResourceAvailability;
   record_status: RecordStatus;
   notes: string;
+  // --- red de transporte (v1.1): ubicación operativa
+  base_city: string;
+  state: string;
+  country: string;
+  cities_served: string[];
+  destinations: string[];
+  max_distance_km: string;
+  requires_advance_booking: boolean;
+  advance_notice_hours: string;
+  transport_service_types: TransportServiceType[];
+  // --- datos del conductor
+  driver_first_name: string;
+  driver_last_name: string;
+  // --- datos del vehículo
+  vehicle_brand: string;
+  vehicle_model: string;
+  vehicle_year: string;
+  vehicle_plate: string;
+  vehicle_color: string;
+  vehicle_type: VehicleType | "";
+  luggage_capacity: string;
 };
 
 export const EMPTY_RESOURCE: ResourceInput = {
@@ -273,6 +304,24 @@ export const EMPTY_RESOURCE: ResourceInput = {
   availability: "available",
   record_status: "active",
   notes: "",
+  base_city: "",
+  state: "",
+  country: "",
+  cities_served: [],
+  destinations: [],
+  max_distance_km: "",
+  requires_advance_booking: false,
+  advance_notice_hours: "",
+  transport_service_types: [],
+  driver_first_name: "",
+  driver_last_name: "",
+  vehicle_brand: "",
+  vehicle_model: "",
+  vehicle_year: "",
+  vehicle_plate: "",
+  vehicle_color: "",
+  vehicle_type: "",
+  luggage_capacity: "",
 };
 
 export function resourceToInput(r: Resource): ResourceInput {
@@ -295,6 +344,24 @@ export function resourceToInput(r: Resource): ResourceInput {
     availability: r.availability as ResourceAvailability,
     record_status: r.record_status as RecordStatus,
     notes: r.notes ?? "",
+    base_city: r.base_city ?? "",
+    state: r.state ?? "",
+    country: r.country ?? "",
+    cities_served: r.cities_served ?? [],
+    destinations: r.destinations ?? [],
+    max_distance_km: r.max_distance_km != null ? String(r.max_distance_km) : "",
+    requires_advance_booking: r.requires_advance_booking ?? false,
+    advance_notice_hours: r.advance_notice_hours != null ? String(r.advance_notice_hours) : "",
+    transport_service_types: (r.transport_service_types ?? []) as TransportServiceType[],
+    driver_first_name: r.driver_first_name ?? "",
+    driver_last_name: r.driver_last_name ?? "",
+    vehicle_brand: r.vehicle_brand ?? "",
+    vehicle_model: r.vehicle_model ?? "",
+    vehicle_year: r.vehicle_year != null ? String(r.vehicle_year) : "",
+    vehicle_plate: r.vehicle_plate ?? "",
+    vehicle_color: r.vehicle_color ?? "",
+    vehicle_type: (r.vehicle_type ?? "") as VehicleType | "",
+    luggage_capacity: r.luggage_capacity != null ? String(r.luggage_capacity) : "",
   };
 }
 
@@ -319,8 +386,27 @@ function resourcePayload(input: ResourceInput) {
     availability: input.availability,
     record_status: input.record_status,
     notes: text(input.notes),
+    base_city: text(input.base_city),
+    state: text(input.state),
+    country: text(input.country),
+    cities_served: input.cities_served,
+    destinations: input.destinations,
+    max_distance_km: num(input.max_distance_km),
+    requires_advance_booking: input.requires_advance_booking,
+    advance_notice_hours: num(input.advance_notice_hours),
+    transport_service_types: input.transport_service_types,
+    driver_first_name: text(input.driver_first_name),
+    driver_last_name: text(input.driver_last_name),
+    vehicle_brand: text(input.vehicle_brand),
+    vehicle_model: text(input.vehicle_model),
+    vehicle_year: num(input.vehicle_year),
+    vehicle_plate: text(input.vehicle_plate),
+    vehicle_color: text(input.vehicle_color),
+    vehicle_type: input.vehicle_type || null,
+    luggage_capacity: num(input.luggage_capacity),
   };
 }
+
 
 export type ResourceFilters = {
   search?: string;

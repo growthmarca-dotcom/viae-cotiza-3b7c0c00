@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
   Compass,
+  Route as RouteIcon,
 
   LayoutDashboard,
   FileText,
@@ -27,6 +28,7 @@ const baseNav = [
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/resources", label: "Recursos", icon: Boxes },
+  { to: "/transport", label: "Transporte", icon: RouteIcon },
   { to: "/settings", label: "Configuración", icon: Settings },
 
 ] as const;

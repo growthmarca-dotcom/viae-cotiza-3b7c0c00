@@ -6,6 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ResourceFormDialog } from "@/components/resource-form-dialog";
 import { agentFullName, listAssignableAgents, type Agent } from "@/lib/agents";
+import {
+  coverageOf,
+  driverFullName,
+  isDriverResource,
+  isTransportResource,
+  isVehicleResource,
+  listAvailabilityLog,
+  markResourceAvailable,
+  serviceTypeLabel,
+  vehicleTypeLabel,
+  type ResourceAvailabilityEvent,
+} from "@/lib/transport";
 import { formatMoney } from "@/lib/currency";
 import { bookingStatusLabel, type Booking } from "@/lib/bookings";
 import {
@@ -61,6 +73,7 @@ function ResourceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [availabilityLog, setAvailabilityLog] = useState<ResourceAvailabilityEvent[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,6 +107,8 @@ function ResourceDetailPage() {
           })),
         );
       } else setBookings([]);
+
+      setAvailabilityLog(await listAvailabilityLog(id));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar el recurso");
     } finally {
@@ -211,6 +226,22 @@ function ResourceDetailPage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
           <span className="text-sm text-muted-foreground">Disponibilidad:</span>
+          <Button
+            size="sm"
+            disabled={saving || resource.availability === "available"}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await markResourceAvailable(resource.id);
+                toast.success("Estado actualizado: Disponible");
+                await load();
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            ESTOY DISPONIBLE
+          </Button>
           {RESOURCE_AVAILABILITIES.map((a) => (
             <Button
               key={a.value}
@@ -246,6 +277,76 @@ function ResourceDetailPage() {
             {resource.record_status === "archived" ? "Restaurar" : "Archivar"}
           </Button>
         </div>
+      </div>
+
+      {isTransportResource(resource) && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="font-display text-xl font-semibold">Red de transporte</h2>
+          <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
+            <Info label="Ciudad base">{resource.base_city ?? "—"}</Info>
+            <Info label="Provincia / País">
+              {[resource.state, resource.country].filter(Boolean).join(", ") || "—"}
+            </Info>
+            <Info label="Distancia máxima">
+              {resource.max_distance_km != null ? `${resource.max_distance_km} km` : "—"}
+            </Info>
+            <Info label="Ciudades donde opera">
+              {(resource.cities_served ?? []).join(", ") || "—"}
+            </Info>
+            <Info label="Destinos habilitados">
+              {(resource.destinations ?? []).join(", ") || "—"}
+            </Info>
+            <Info label="Reserva previa">
+              {resource.requires_advance_booking
+                ? `Sí${resource.advance_notice_hours ? ` · ${resource.advance_notice_hours} h` : ""}`
+                : "No"}
+            </Info>
+            <Info label="Servicios que presta">
+              {(resource.transport_service_types ?? []).map(serviceTypeLabel).join(", ") || "—"}
+            </Info>
+            <Info label="Cobertura total">{coverageOf(resource).join(", ") || "—"}</Info>
+            {isDriverResource(resource) && (
+              <Info label="Conductor">{driverFullName(resource)}</Info>
+            )}
+            {isVehicleResource(resource) && (
+              <>
+                <Info label="Vehículo">
+                  {[resource.vehicle_brand, resource.vehicle_model, resource.vehicle_year]
+                    .filter(Boolean)
+                    .join(" ") || "—"}
+                </Info>
+                <Info label="Patente / color">
+                  {[resource.vehicle_plate, resource.vehicle_color].filter(Boolean).join(" · ") ||
+                    "—"}
+                </Info>
+                <Info label="Tipo de vehículo">{vehicleTypeLabel(resource.vehicle_type)}</Info>
+                <Info label="Equipaje">{resource.luggage_capacity ?? "—"}</Info>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="font-display text-xl font-semibold">Historial de disponibilidad</h2>
+        {availabilityLog.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">Sin cambios registrados.</p>
+        ) : (
+          <ol className="mt-4 space-y-3">
+            {availabilityLog.map((e) => (
+              <li key={e.id} className="border-l border-border pl-4 text-sm">
+                <p className="font-medium">
+                  {e.from_availability
+                    ? `${availabilityLabel(e.from_availability)} → ${availabilityLabel(e.to_availability)}`
+                    : availabilityLabel(e.to_availability)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(e.created_at).toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
