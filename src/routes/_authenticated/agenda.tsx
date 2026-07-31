@@ -96,8 +96,20 @@ function AgendaPage() {
   }, [load]);
 
   const byId = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
-  const groups = useMemo(() => groupAgenda(services), [services]);
+  const facets = useMemo(() => agendaFacets(services), [services]);
+  const filtered = useMemo(() => applyAgendaFilters(services, filters), [services, filters]);
+  const groups = useMemo(() => groupAgenda(filtered), [filtered]);
   const week = useMemo(() => weekDays(day), [day]);
+  const zoneLoad = useMemo(() => loadByZone(filtered), [filtered]);
+  const destinationLoad = useMemo(() => loadByDestination(filtered).slice(0, 8), [filtered]);
+  const driverOptions = useMemo(
+    () => resources.filter((r) => r.category === "driver"),
+    [resources],
+  );
+  const vehicleOptions = useMemo(
+    () => resources.filter((r) => r.category === "vehicle"),
+    [resources],
+  );
 
   if (loading) {
     return (
@@ -110,6 +122,9 @@ function AgendaPage() {
   const row = (s: TransportService) => (
     <ServiceRow key={s.id} service={s} info={info.get(s.booking_id ?? "") ?? null} byId={byId} />
   );
+
+  const setFilter = (key: keyof AgendaFilters, value: string) =>
+    setFilters((f) => ({ ...f, [key]: value }));
 
   return (
     <div className="space-y-8 pb-16">
@@ -127,12 +142,59 @@ function AgendaPage() {
         <Metric label="Finalizados" value={groups.finished.length} />
       </div>
 
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Filtros operativos</h2>
+          <Button variant="ghost" size="sm" onClick={() => setFilters({})}>
+            Limpiar filtros
+          </Button>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <FilterSelect
+            label="Provincia / Región"
+            value={filters.state}
+            options={facets.states}
+            onChange={(v) => setFilter("state", v)}
+          />
+          <FilterSelect
+            label="Ciudad"
+            value={filters.city}
+            options={facets.cities}
+            onChange={(v) => setFilter("city", v)}
+          />
+          <FilterSelect
+            label="Zona turística"
+            value={filters.zone}
+            options={facets.zones}
+            onChange={(v) => setFilter("zone", v)}
+          />
+          <FilterSelect
+            label="Conductor"
+            value={filters.driverResourceId}
+            options={driverOptions.map((r) => ({ value: r.id, label: driverFullName(r) }))}
+            onChange={(v) => setFilter("driverResourceId", v)}
+          />
+          <FilterSelect
+            label="Vehículo"
+            value={filters.vehicleResourceId}
+            options={vehicleOptions.map((r) => ({ value: r.id, label: vehicleDescription(r) }))}
+            onChange={(v) => setFilter("vehicleResourceId", v)}
+          />
+        </div>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <LoadBlock title="Carga operativa por zona" buckets={zoneLoad} />
+        <LoadBlock title="Carga operativa por destino" buckets={destinationLoad} />
+      </div>
+
       <Tabs defaultValue="day">
         <TabsList>
           <TabsTrigger value="day">Día</TabsTrigger>
           <TabsTrigger value="week">Semana</TabsTrigger>
           <TabsTrigger value="lists">Por estado</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="day" className="mt-4 space-y-4">
           <div className="flex flex-wrap items-end gap-3">
