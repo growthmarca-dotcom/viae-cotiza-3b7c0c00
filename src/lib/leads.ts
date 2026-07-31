@@ -174,6 +174,15 @@ export type LeadInput = {
   notes: string;
   assigned_agent_id: string;
   status: LeadStatus;
+  /* Necesidad del viaje */
+  trip_type: TripType | "";
+  services_interest: string[];
+  nights_count: string;
+  days_count: string;
+  adults_count: string;
+  children_count: string;
+  children_ages: string;
+  commercial_notes: string;
 };
 
 export const EMPTY_LEAD: LeadInput = {
@@ -193,6 +202,14 @@ export const EMPTY_LEAD: LeadInput = {
   notes: "",
   assigned_agent_id: "",
   status: "new",
+  trip_type: "",
+  services_interest: [],
+  nights_count: "",
+  days_count: "",
+  adults_count: "",
+  children_count: "",
+  children_ages: "",
+  commercial_notes: "",
 };
 
 export function leadToInput(l: Lead): LeadInput {
@@ -213,6 +230,14 @@ export function leadToInput(l: Lead): LeadInput {
     notes: l.notes ?? "",
     assigned_agent_id: l.assigned_agent_id ?? "",
     status: l.status as LeadStatus,
+    trip_type: (l.trip_type as TripType | null) ?? "",
+    services_interest: l.services_interest ?? [],
+    nights_count: l.nights_count != null ? String(l.nights_count) : "",
+    days_count: l.days_count != null ? String(l.days_count) : "",
+    adults_count: l.adults_count != null ? String(l.adults_count) : "",
+    children_count: l.children_count != null ? String(l.children_count) : "",
+    children_ages: l.children_ages ?? "",
+    commercial_notes: l.commercial_notes ?? "",
   };
 }
 
@@ -236,6 +261,14 @@ function toPayload(input: LeadInput) {
     notes: text(input.notes),
     assigned_agent_id: input.assigned_agent_id || null,
     status: input.status,
+    trip_type: input.trip_type === "" ? null : input.trip_type,
+    services_interest: input.services_interest ?? [],
+    nights_count: num(input.nights_count),
+    days_count: num(input.days_count),
+    adults_count: num(input.adults_count),
+    children_count: num(input.children_count),
+    children_ages: text(input.children_ages),
+    commercial_notes: text(input.commercial_notes),
   };
 }
 
