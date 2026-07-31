@@ -825,16 +825,21 @@ export type Database = {
       }
       leads: {
         Row: {
+          adults_count: number | null
           assigned_agent_id: string | null
           assigned_at: string | null
           assigned_by: string | null
           budget_amount: number | null
           budget_currency: string
+          children_ages: string | null
+          children_count: number | null
           city: string | null
           client_id: string | null
+          commercial_notes: string | null
           converted_at: string | null
           country: string | null
           created_at: string
+          days_count: number | null
           destination: string | null
           email: string | null
           first_name: string
@@ -842,29 +847,37 @@ export type Database = {
           language: string | null
           last_activity_at: string
           last_name: string | null
+          nights_count: number | null
           notes: string | null
           opportunity_id: string | null
           pax_count: number | null
           quotation_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
+          services_interest: string[]
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
           travel_date: string | null
+          trip_type: Database["public"]["Enums"]["trip_type"] | null
           updated_at: string
           user_id: string
           whatsapp: string | null
         }
         Insert: {
+          adults_count?: number | null
           assigned_agent_id?: string | null
           assigned_at?: string | null
           assigned_by?: string | null
           budget_amount?: number | null
           budget_currency?: string
+          children_ages?: string | null
+          children_count?: number | null
           city?: string | null
           client_id?: string | null
+          commercial_notes?: string | null
           converted_at?: string | null
           country?: string | null
           created_at?: string
+          days_count?: number | null
           destination?: string | null
           email?: string | null
           first_name: string
@@ -872,29 +885,37 @@ export type Database = {
           language?: string | null
           last_activity_at?: string
           last_name?: string | null
+          nights_count?: number | null
           notes?: string | null
           opportunity_id?: string | null
           pax_count?: number | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          services_interest?: string[]
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           travel_date?: string | null
+          trip_type?: Database["public"]["Enums"]["trip_type"] | null
           updated_at?: string
           user_id: string
           whatsapp?: string | null
         }
         Update: {
+          adults_count?: number | null
           assigned_agent_id?: string | null
           assigned_at?: string | null
           assigned_by?: string | null
           budget_amount?: number | null
           budget_currency?: string
+          children_ages?: string | null
+          children_count?: number | null
           city?: string | null
           client_id?: string | null
+          commercial_notes?: string | null
           converted_at?: string | null
           country?: string | null
           created_at?: string
+          days_count?: number | null
           destination?: string | null
           email?: string | null
           first_name?: string
@@ -902,14 +923,17 @@ export type Database = {
           language?: string | null
           last_activity_at?: string
           last_name?: string | null
+          nights_count?: number | null
           notes?: string | null
           opportunity_id?: string | null
           pax_count?: number | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          services_interest?: string[]
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           travel_date?: string | null
+          trip_type?: Database["public"]["Enums"]["trip_type"] | null
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
@@ -1966,6 +1990,14 @@ export type Database = {
         | "driver_excursion"
         | "other"
       transport_settlement_status: "pending" | "in_review" | "settled"
+      trip_type:
+        | "vacation"
+        | "family"
+        | "adventure"
+        | "honeymoon"
+        | "corporate"
+        | "getaway"
+        | "other"
       vehicle_type:
         | "sedan"
         | "suv"
@@ -2266,6 +2298,15 @@ export const Constants = {
         "other",
       ],
       transport_settlement_status: ["pending", "in_review", "settled"],
+      trip_type: [
+        "vacation",
+        "family",
+        "adventure",
+        "honeymoon",
+        "corporate",
+        "getaway",
+        "other",
+      ],
       vehicle_type: [
         "sedan",
         "suv",
