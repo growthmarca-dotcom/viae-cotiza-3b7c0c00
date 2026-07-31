@@ -62,6 +62,9 @@ import {
 } from "@/lib/geo";
 
 
+import { useQuery } from "@tanstack/react-query";
+import { listProviders } from "@/lib/providers";
+
 const NONE_GEO = "__none_geo__";
 
 
@@ -110,6 +113,11 @@ export function ResourceFormDialog({
   onSubmit,
 }: Props) {
   const [form, setForm] = useState<ResourceInput>(initial ?? EMPTY_RESOURCE);
+  const { data: providers = [] } = useQuery({
+    queryKey: ["providers", "select"],
+    enabled: open,
+    queryFn: () => listProviders({ status: "active" }),
+  });
 
   useEffect(() => {
     if (open) setForm(initial ?? EMPTY_RESOURCE);
