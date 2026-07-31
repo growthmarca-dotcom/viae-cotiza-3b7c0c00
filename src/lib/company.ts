@@ -19,6 +19,8 @@ export type CompanyInfo = {
   footerText: string | null;
   /** Moneda en la que se expresan todas las estadísticas del sistema. */
   analysisCurrency: "ARS" | "USD";
+  /** Muestra u oculta la marca del desarrollador en pantallas internas. */
+  showDeveloperBranding: boolean;
 };
 
 export const DEFAULT_COMPANY: CompanyInfo = {
@@ -36,6 +38,7 @@ export const DEFAULT_COMPANY: CompanyInfo = {
   accentColor: "#C4A264",
   footerText: null,
   analysisCurrency: "USD",
+  showDeveloperBranding: true,
 };
 
 export function rowToCompanyInfo(row: CompanyRow | null, logoUrl: string | null): CompanyInfo {
@@ -55,6 +58,7 @@ export function rowToCompanyInfo(row: CompanyRow | null, logoUrl: string | null)
     accentColor: row.accent_color || DEFAULT_COMPANY.accentColor,
     footerText: row.footer_text,
     analysisCurrency: (row.analysis_currency === "ARS" ? "ARS" : "USD"),
+    showDeveloperBranding: row.show_developer_branding !== false,
   };
 }
 
