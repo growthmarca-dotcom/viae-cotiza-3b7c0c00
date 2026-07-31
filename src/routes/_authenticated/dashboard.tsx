@@ -171,11 +171,16 @@ function OperationsSection() {
     queryKey: ["operations-stats"],
     enabled: isOperations,
     queryFn: async () => {
-      const [bookings, services] = await Promise.all([
+      const [bookings, services, checklist, incidents] = await Promise.all([
         listBookings(),
         listAllBookingServices(),
+        listChecklistByBooking(),
+        listAllIncidents(),
       ]);
-      return computeOperationsStats(bookings, services);
+      return {
+        ...computeOperationsStats(bookings, services),
+        ...computeChecklistIncidentStats(checklist, incidents),
+      };
     },
   });
 
@@ -185,7 +190,11 @@ function OperationsSection() {
     { label: "Reservas sin operar", value: String(data?.pending ?? 0) },
     { label: "Salidas próximas (7 días)", value: String(data?.upcoming ?? 0) },
     { label: "Servicios sin proveedor", value: String(data?.unassignedServices ?? 0) },
-    { label: "Incidencias abiertas", value: String(data?.incidents ?? 0) },
+    { label: "Reservas con incidencias", value: String(data?.bookingsWithIncidents ?? 0) },
+    { label: "Incidencias abiertas", value: String(data?.openIncidents ?? 0) },
+    { label: "Incidencias urgentes", value: String(data?.urgentIncidents ?? 0) },
+    { label: "Listas para viajar", value: String(data?.readyToTravel ?? 0) },
+    { label: "Avance operativo promedio", value: `${data?.averageProgress ?? 0} %` },
   ];
 
   return (
