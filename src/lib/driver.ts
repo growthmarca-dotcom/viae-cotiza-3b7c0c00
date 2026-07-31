@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import type { Resource, ResourceAvailability } from "@/lib/resources";
 import type {
   TransportService,
