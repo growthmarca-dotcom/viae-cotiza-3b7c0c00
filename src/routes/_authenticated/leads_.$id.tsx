@@ -225,12 +225,14 @@ function LeadDetailPage() {
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <Info label="Tipo de viaje" value={tripTypeLabel(lead.trip_type)} />
           <Info label="Destino de interés" value={lead.destination || "—"} />
           <Info
             label="Fecha estimada"
             value={lead.travel_date ? new Date(lead.travel_date).toLocaleDateString() : "—"}
           />
-          <Info label="Pasajeros" value={lead.pax_count ? String(lead.pax_count) : "—"} />
+          <Info label="Duración estimada" value={leadDurationLabel(lead) || "—"} />
+          <Info label="Pasajeros" value={leadPaxLabel(lead) || "—"} />
           <Info
             label="Presupuesto estimado"
             value={
@@ -245,6 +247,35 @@ function LeadDetailPage() {
             value={lead.client_id ? "Convertido" : "Todavía no convertido"}
           />
         </div>
+
+        <div className="mt-4">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Servicios de interés
+          </p>
+          {serviceLabels(lead.services_interest).length === 0 ? (
+            <p className="text-sm">—</p>
+          ) : (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {serviceLabels(lead.services_interest).map((s) => (
+                <span
+                  key={s}
+                  className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-0.5 text-xs"
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {lead.commercial_notes && (
+          <div className="mt-4 rounded-xl border border-border bg-background p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Observaciones comerciales
+            </p>
+            <p className="whitespace-pre-line text-sm">{lead.commercial_notes}</p>
+          </div>
+        )}
 
         {lead.notes && (
           <div className="mt-4">
