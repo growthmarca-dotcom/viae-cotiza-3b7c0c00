@@ -58,10 +58,12 @@ export const RESOURCE_CATEGORIES: { value: ResourceCategory; label: string }[] =
 
 export const RESOURCE_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
   { value: "available", label: "Disponible" },
-  { value: "busy", label: "Ocupado" },
+  { value: "busy", label: "En viaje / ocupado" },
   { value: "unavailable", label: "No disponible" },
+  { value: "off_hours", label: "Fuera de horario" },
   { value: "out_of_service", label: "Fuera de servicio" },
 ];
+
 
 export type AgentAvailability = "available" | "busy" | "unavailable" | "off_hours";
 
