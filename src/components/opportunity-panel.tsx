@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { CalendarClock, Loader2, Plus, Target } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarClock, Loader2, Plus, Target, TicketCheck } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { getBookingByOpportunity, type Booking } from "@/lib/bookings";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
