@@ -114,6 +114,29 @@ function QuotationDetailPage() {
     toast.success("Enlace copiado");
   }
 
+  async function handleDuplicate() {
+    try {
+      const newId = await duplicateQuotation(id);
+      toast.success("Cotización duplicada");
+      navigate({ to: "/quotations/$id/edit", params: { id: newId } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo duplicar");
+    }
+  }
+
+  async function handleArchive() {
+    if (!q) return;
+    try {
+      await setQuotationArchived(id, !q.archived);
+      toast.success(q.archived ? "Cotización desarchivada" : "Cotización archivada");
+      setQ({ ...q, archived: !q.archived });
+      loadHistory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo archivar");
+    }
+  }
+
+
   async function handleDelete() {
     setDeleting(true);
     const { error } = await supabase.from("quotations").delete().eq("id", id);
