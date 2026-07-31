@@ -31,6 +31,7 @@ import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedResourcesIdRouteImport } from './routes/_authenticated/resources_.$id'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
+import { Route as AuthenticatedProvidersIdRouteImport } from './routes/_authenticated/providers_.$id'
 import { Route as AuthenticatedLeadsIdRouteImport } from './routes/_authenticated/leads_.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
 import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
@@ -150,6 +151,12 @@ const AuthenticatedQuotationsIdRoute =
     path: '/quotations/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProvidersIdRoute =
+  AuthenticatedProvidersIdRouteImport.update({
+    id: '/providers_/$id',
+    path: '/providers/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadsIdRoute = AuthenticatedLeadsIdRouteImport.update({
   id: '/leads_/$id',
   path: '/leads/$id',
@@ -199,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
+  '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
+  '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
   '/_authenticated/clients_/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/leads_/$id': typeof AuthenticatedLeadsIdRoute
+  '/_authenticated/providers_/$id': typeof AuthenticatedProvidersIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/_authenticated/resources_/$id': typeof AuthenticatedResourcesIdRoute
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/bookings/$id'
     | '/clients/$id'
     | '/leads/$id'
+    | '/providers/$id'
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/bookings/$id'
     | '/clients/$id'
     | '/leads/$id'
+    | '/providers/$id'
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
@@ -344,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings_/$id'
     | '/_authenticated/clients_/$id'
     | '/_authenticated/leads_/$id'
+    | '/_authenticated/providers_/$id'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
     | '/_authenticated/resources_/$id'
@@ -515,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuotationsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/providers_/$id': {
+      id: '/_authenticated/providers_/$id'
+      path: '/providers/$id'
+      fullPath: '/providers/$id'
+      preLoaderRoute: typeof AuthenticatedProvidersIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads_/$id': {
       id: '/_authenticated/leads_/$id'
       path: '/leads/$id'
@@ -571,6 +591,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedLeadsIdRoute: typeof AuthenticatedLeadsIdRoute
+  AuthenticatedProvidersIdRoute: typeof AuthenticatedProvidersIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
   AuthenticatedResourcesIdRoute: typeof AuthenticatedResourcesIdRoute
@@ -596,6 +617,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedLeadsIdRoute: AuthenticatedLeadsIdRoute,
+  AuthenticatedProvidersIdRoute: AuthenticatedProvidersIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
   AuthenticatedResourcesIdRoute: AuthenticatedResourcesIdRoute,

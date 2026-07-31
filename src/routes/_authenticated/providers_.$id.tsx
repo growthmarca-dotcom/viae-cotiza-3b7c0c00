@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Pencil, ShieldAlert, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -340,7 +339,7 @@ function ProviderResources({ providerId }: { providerId: string }) {
             <p className="font-medium">{r.name}</p>
             <p className="text-sm text-muted-foreground">
               {r.category} · {r.availability}
-              {r.city ? ` · ${r.city}` : ""}
+              {r.base_city ? ` · ${r.base_city}` : ""}
             </p>
           </div>
           <div className="flex gap-2">
@@ -469,9 +468,4 @@ function EvaluationPanel({ providerId }: { providerId: string }) {
       </div>
     </div>
   );
-}
-
-/** Reservado para futuras búsquedas rápidas dentro de la ficha. */
-export function ProviderSearchInput(props: React.ComponentProps<typeof Input>) {
-  return <Input {...props} />;
 }
