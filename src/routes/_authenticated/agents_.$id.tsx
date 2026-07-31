@@ -87,6 +87,60 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+/** Actividad comercial del agente sobre los leads asignados (v1.7). */
+function AgentLeadsSection({ agentId }: { agentId: string }) {
+  const [leads, setLeads] = useState<Lead[]>([]);
+
+  useEffect(() => {
+    listLeadsByAgent(agentId)
+      .then(setLeads)
+      .catch(() => setLeads([]));
+  }, [agentId]);
+
+  const stats = computeLeadStats(leads);
+
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 font-display text-xl font-semibold">Actividad comercial (consultas)</h2>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Leads asignados" value={stats.total} />
+        <Stat label="Contactados" value={stats.contacted} />
+        <Stat label="Cotizados" value={stats.quoted} />
+        <Stat label="Ganados" value={stats.won} />
+        <Stat label="Perdidos" value={stats.lost} />
+        <Stat label="Conversión de leads" value={`${stats.conversion}%`} />
+      </div>
+      {leads.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h3 className="mb-3 font-display text-lg font-semibold">Últimas consultas</h3>
+          <ul className="space-y-2">
+            {leads.slice(0, 6).map((l) => (
+              <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <Link
+                  to="/leads/$id"
+                  params={{ id: l.id }}
+                  className="font-medium hover:text-primary"
+                >
+                  {leadFullName(l)}
+                </Link>
+                <span className="text-xs text-muted-foreground">
+                  {l.destination || "Sin destino"} ·{" "}
+                  <span
+                    className={`rounded-full border px-2 py-0.5 ${leadStatusClasses(l.status)}`}
+                  >
+                    {leadStatusLabel(l.status)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
 function AgentDetailPage() {
   const { id } = Route.useParams();
   const { isAdmin } = useAccount();
