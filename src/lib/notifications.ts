@@ -96,8 +96,10 @@ export async function markAllNotificationsRead(ids: string[]) {
  * las filas propias (además del filtro de RLS).
  */
 export function subscribeToMyNotifications(userId: string, onChange: () => void) {
+  // Nombre único por suscripción: reutilizar un canal ya suscripto provoca
+  // "cannot add postgres_changes callbacks after subscribe()".
   const channel = supabase
-    .channel(`notifications:${userId}`)
+    .channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
