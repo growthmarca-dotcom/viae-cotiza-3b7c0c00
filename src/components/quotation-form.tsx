@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CURRENCIES, convertTotals, formatMoney, needsExchangeRate } from "@/lib/currency";
+
 
 export type QuotationFormState = {
   firstName: string;
