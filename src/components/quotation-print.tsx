@@ -1,4 +1,6 @@
 import type { CompanyInfo } from "@/lib/company";
+import { convertTotals, formatMoney } from "@/lib/currency";
+
 
 export type PrintQuotation = {
   title: string;
