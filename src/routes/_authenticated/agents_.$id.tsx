@@ -162,8 +162,14 @@ function AgentDetailPage() {
     );
   }
 
-  const stats = computeAgentStats(opportunities);
-  const currency = opportunities[0]?.currency ?? agent.commission_currency ?? "USD";
+  // Todas las estadísticas se expresan en la moneda de análisis configurada.
+  const normalized = opportunities.map((o) => ({
+    ...o,
+    estimated_value: toAnalysisCurrency(o.estimated_value, o.currency, analysisCurrency, null) ?? 0,
+    currency: analysisCurrency,
+  }));
+  const stats = computeAgentStats(normalized);
+  const currency = analysisCurrency;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
