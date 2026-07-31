@@ -529,9 +529,21 @@ function DriverServiceCard({
 
       {/* Información de cobro */}
       <div className="mt-4 rounded-xl border border-border/70 bg-secondary/30 p-4">
-        <p className="flex items-center gap-2 text-sm font-medium">
-          <BadgeDollarSign className="h-4 w-4 text-gold" /> Información de cobro
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <BadgeDollarSign className="h-4 w-4 text-gold" /> Información de cobro
+          </p>
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+              mustCollect
+                ? "border-gold/40 bg-gold/15 text-foreground"
+                : "border-border bg-secondary text-secondary-foreground"
+            }`}
+          >
+            {mustCollect ? "COBRÁS AL PASAJERO: SÍ" : "COBRÁS AL PASAJERO: NO"}
+          </span>
+        </div>
+
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Modalidad</p>
