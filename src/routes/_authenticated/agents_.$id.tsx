@@ -80,6 +80,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 function AgentDetailPage() {
   const { id } = Route.useParams();
   const { isAdmin } = useAccount();
+  const analysisCurrency = useAnalysisCurrency();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
