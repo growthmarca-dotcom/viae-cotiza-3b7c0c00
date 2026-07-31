@@ -178,12 +178,11 @@ function ResourcesPage() {
         </div>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Recursos" value={String(stats.total)} />
-        <Stat label="Internos" value={String(stats.internal)} />
-        <Stat label="Externos" value={String(stats.external)} />
         <Stat label="Disponibles" value={String(stats.available)} />
-        <Stat label="No disponibles" value={String(stats.unavailable)} />
+        <Stat label="Vehículos disponibles" value={String(stats.vehiclesAvailable)} />
+        <Stat label="Choferes disponibles" value={String(stats.driversAvailable)} />
       </section>
 
       <Tabs defaultValue="resources">
@@ -194,7 +193,11 @@ function ResourcesPage() {
           <TabsTrigger value="companies">
             <Building2 className="mr-2 h-4 w-4" /> Empresas
           </TabsTrigger>
+          <TabsTrigger value="extras">
+            <Package className="mr-2 h-4 w-4" /> Extras
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="resources" className="space-y-6">
           <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
