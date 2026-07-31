@@ -254,7 +254,70 @@ function AgendaPage() {
   );
 }
 
+type FilterOption = string | { value: string; label: string };
+
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  options: FilterOption[];
+  onChange: (value: string) => void;
+}) {
+  const items = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      <Select value={value ?? AGENDA_ALL} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={AGENDA_ALL}>Todos</SelectItem>
+          {items.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function LoadBlock({
+  title,
+  buckets,
+}: {
+  title: string;
+  buckets: { key: string; count: number; minutes: number }[];
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      {buckets.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">Sin servicios para los filtros actuales.</p>
+      ) : (
+        <ul className="mt-3 space-y-2 text-sm">
+          {buckets.map((b) => (
+            <li key={b.key} className="flex items-center justify-between gap-3">
+              <span className="truncate">{b.key}</span>
+              <span className="text-muted-foreground">
+                {b.count} servicio{b.count === 1 ? "" : "s"} · {hoursLabel(b.minutes)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: number }) {
+
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
