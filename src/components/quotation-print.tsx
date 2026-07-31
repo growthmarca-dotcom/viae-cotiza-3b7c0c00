@@ -21,7 +21,9 @@ export type PrintQuotation = {
   other_charges?: number | null;
   total_amount: number | null;
   currency: string;
+  exchange_rate?: number | null;
   notes: string | null;
+
   created_at: string;
 };
 
