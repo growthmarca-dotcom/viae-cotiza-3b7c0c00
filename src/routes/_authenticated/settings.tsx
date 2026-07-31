@@ -36,6 +36,7 @@ type FormState = {
   primary_color: string;
   accent_color: string;
   footer_text: string;
+  analysis_currency: "ARS" | "USD";
 };
 
 const EMPTY: FormState = {
@@ -51,6 +52,7 @@ const EMPTY: FormState = {
   primary_color: "#1F4636",
   accent_color: "#C4A264",
   footer_text: "",
+  analysis_currency: "USD",
 };
 
 function rowToForm(row: CompanyRow | null): FormState {
@@ -68,6 +70,7 @@ function rowToForm(row: CompanyRow | null): FormState {
     primary_color: row.primary_color ?? EMPTY.primary_color,
     accent_color: row.accent_color ?? EMPTY.accent_color,
     footer_text: row.footer_text ?? "",
+    analysis_currency: row.analysis_currency === "ARS" ? "ARS" : "USD",
   };
 }
 
