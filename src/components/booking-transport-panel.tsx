@@ -183,15 +183,19 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
         <div>
           <h2 className="font-display text-xl font-semibold">Servicios de transporte</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Traslados, transfers y taxis de la red asignados a esta reserva.
+            {isOperations
+              ? "Traslados, transfers y taxis de la red asignados a esta reserva."
+              : "Traslados de la reserva. La solicitud y asignación las gestiona la central operativa."}
           </p>
         </div>
-        <Button size="sm" variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
-          <Plus className="mr-2 h-4 w-4" /> {showForm ? "Cancelar" : "Nuevo servicio"}
-        </Button>
+        {isOperations && (
+          <Button size="sm" variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
+            <Plus className="mr-2 h-4 w-4" /> {showForm ? "Cancelar" : "Nuevo servicio"}
+          </Button>
+        )}
       </div>
 
-      {showForm && (
+      {isOperations && showForm && (
         <div className="mt-6 grid gap-4 rounded-xl border border-border/70 bg-secondary/30 p-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Servicio solicitado</Label>
