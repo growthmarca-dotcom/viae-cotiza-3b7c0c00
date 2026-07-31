@@ -186,6 +186,51 @@ export function ResourceFormDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>Clasificación</Label>
+            <Select
+              value={form.resource_class}
+              onValueChange={(v) =>
+                setForm((f) => ({ ...f, resource_class: v as ResourceClass, subtype: "" }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RESOURCE_CLASSES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {RESOURCE_CLASSES.find((c) => c.value === form.resource_class)?.hint}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Subtipo</Label>
+            <Select
+              value={form.subtype || NONE}
+              onValueChange={(v) => set("subtype", v === NONE ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin definir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Sin definir</SelectItem>
+                {subtypes.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+
+          <div className="space-y-2">
             <Label>Categoría</Label>
             <Select
               value={form.category}
