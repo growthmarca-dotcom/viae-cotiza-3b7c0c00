@@ -311,10 +311,15 @@ function BookingDetailPage() {
         </div>
       </div>
 
+      <OperationCard booking={booking} onChanged={load} />
+
       <Tabs defaultValue="timeline">
         <TabsList>
           <TabsTrigger value="timeline">
             <History className="mr-2 h-4 w-4" /> Línea de tiempo
+          </TabsTrigger>
+          <TabsTrigger value="services">
+            <Wrench className="mr-2 h-4 w-4" /> Servicios
           </TabsTrigger>
           <TabsTrigger value="documents">
             <FileText className="mr-2 h-4 w-4" /> Documentación
@@ -332,6 +337,11 @@ function BookingDetailPage() {
             <Building2 className="mr-2 h-4 w-4" /> Proveedor
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="services">
+          <BookingServicesPanel bookingId={booking.id} />
+        </TabsContent>
+
 
         <TabsContent value="timeline">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
