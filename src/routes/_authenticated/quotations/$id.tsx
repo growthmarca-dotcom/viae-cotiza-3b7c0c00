@@ -194,6 +194,23 @@ function QuotationDetailPage() {
         </Card>
       )}
 
+      <div data-print-hide className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <History className="h-4 w-4 text-gold" /> Historial de modificaciones
+        </h2>
+        <ul className="mt-4 space-y-2 text-sm">
+          {history.length === 0 && (
+            <li className="text-muted-foreground">Sin modificaciones registradas todavía.</li>
+          )}
+          {history.map((h) => (
+            <li key={h.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+              <span>{describeHistory(h.action)}</span>
+              <span className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -211,7 +228,9 @@ function QuotationDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </>
   );
+
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
