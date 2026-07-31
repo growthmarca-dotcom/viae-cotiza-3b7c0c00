@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Clock, Loader2, ShieldAlert } from "lucide-react";
 import { useAccount } from "@/hooks/use-account";
+import { AdminRecovery } from "@/components/admin-recovery";
 
 /**
  * Bloquea el acceso a la aplicación hasta que un administrador apruebe la cuenta.
@@ -37,6 +38,7 @@ export function AccountGate({ children }: { children: ReactNode }) {
         </div>
         <h1 className="mt-4 font-display text-2xl font-semibold">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+        <AdminRecovery />
       </div>
     );
   }

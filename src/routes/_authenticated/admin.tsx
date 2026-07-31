@@ -183,6 +183,7 @@ function AdminPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Solo los administradores pueden gestionar cuentas y roles.
         </p>
+        <AdminRecovery />
       </div>
     );
   }
