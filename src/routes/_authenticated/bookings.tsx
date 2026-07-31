@@ -14,6 +14,7 @@ import {
   listBookings,
   type BookingStatus,
 } from "@/lib/bookings";
+import { computeChecklistProgress, listChecklistByBooking } from "@/lib/checklist";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
