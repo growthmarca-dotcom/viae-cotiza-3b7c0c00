@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "agent" | "provider";
-export type AccountStatus = "pending" | "approved" | "rejected";
+export type AccountStatus = "pending" | "approved" | "rejected" | "suspended";
 
 export type Account = {
   userId: string | null;
