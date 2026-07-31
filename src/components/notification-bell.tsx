@@ -13,6 +13,8 @@ import {
   listMyNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  currentUserId,
+  subscribeToMyNotifications,
   notificationKindClasses,
   notificationKindLabel,
   unreadCount,
@@ -40,10 +42,21 @@ export function NotificationBell() {
     }
   }, []);
 
+  // v1.5: entrega en tiempo real (con refresco de respaldo espaciado).
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
     load();
-    const timer = setInterval(load, 60000);
-    return () => clearInterval(timer);
+    currentUserId().then((uid) => {
+      if (!uid || cancelled) return;
+      unsubscribe = subscribeToMyNotifications(uid, load);
+    });
+    const timer = setInterval(load, 300000);
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+      clearInterval(timer);
+    };
   }, [load]);
 
   const unread = unreadCount(items);

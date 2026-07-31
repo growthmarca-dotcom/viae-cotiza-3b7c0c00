@@ -89,3 +89,28 @@ export async function markAllNotificationsRead(ids: string[]) {
   if (error) throw error;
 }
 
+
+/**
+ * Suscripción en tiempo real a las notificaciones del usuario (v1.5).
+ * Reemplaza el polling: la campana se actualiza al instante y sólo recibe
+ * las filas propias (además del filtro de RLS).
+ */
+export function subscribeToMyNotifications(userId: string, onChange: () => void) {
+  const channel = supabase
+    .channel(`notifications:${userId}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+      () => onChange(),
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/** Id del usuario autenticado (helper para suscripciones). */
+export async function currentUserId(): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}

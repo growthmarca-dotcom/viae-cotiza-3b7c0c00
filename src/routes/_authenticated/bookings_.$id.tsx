@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingTransportTab } from "@/components/booking-transport-panel";
+import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { formatMoney } from "@/lib/currency";
 import { stageLabel } from "@/lib/opportunities";
 import {
@@ -270,6 +271,14 @@ function BookingDetailPage() {
             </div>
           )}
         </div>
+
+        <BookingTrackingCard
+          bookingId={booking.id}
+          status={booking.client_status}
+          token={booking.tracking_token}
+          enabled={booking.tracking_enabled}
+          onChanged={load}
+        />
 
         <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
           <span className="text-sm text-muted-foreground">Cambiar estado:</span>
