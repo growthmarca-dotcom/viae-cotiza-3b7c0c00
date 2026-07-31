@@ -84,23 +84,46 @@ export function stageClasses(value: string) {
   }
 }
 
-export async function listOpportunitiesByClient(clientId: string) {
-  const { data, error } = await supabase
+/** Estado de archivo del registro (las oportunidades nunca se eliminan). */
+export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
+
+export const OPPORTUNITY_RECORD_STATUSES: { value: RecordStatus; label: string }[] = [
+  { value: "active", label: "Activa" },
+  { value: "archived", label: "Archivada" },
+  { value: "inactive", label: "Inactiva" },
+  { value: "suspended", label: "Suspendida" },
+];
+
+export async function listOpportunitiesByClient(
+  clientId: string,
+  recordStatus: RecordStatus | "all" = "active",
+) {
+  let q = supabase
     .from("opportunities")
     .select("*")
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
+  if (recordStatus !== "all") q = q.eq("record_status", recordStatus);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Opportunity[];
 }
 
-export async function listOpportunities() {
-  const { data, error } = await supabase
-    .from("opportunities")
-    .select("*")
-    .order("created_at", { ascending: false });
+export async function listOpportunities(recordStatus: RecordStatus | "all" = "active") {
+  let q = supabase.from("opportunities").select("*").order("created_at", { ascending: false });
+  if (recordStatus !== "all") q = q.eq("record_status", recordStatus);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Opportunity[];
+}
+
+/** Las oportunidades nunca se eliminan definitivamente: sólo se archivan. */
+export async function setOpportunityRecordStatus(id: string, recordStatus: RecordStatus) {
+  const { error } = await supabase
+    .from("opportunities")
+    .update({ record_status: recordStatus })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export type OpportunityPatch = Partial<{
