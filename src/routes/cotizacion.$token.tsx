@@ -52,6 +52,8 @@ function PublicQuotationPage() {
   const urls: string[] = data.imageUrls ?? [];
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
+  const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
+
   const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
     Boolean,
   ) as string[];
