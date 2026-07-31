@@ -293,6 +293,9 @@ function AgentDetailPage() {
         </div>
       </div>
 
+      {isAdmin && <AccessSection agent={agent} onChanged={load} />}
+
+
       <h2 className="mb-3 mt-8 font-display text-xl font-semibold">Estadísticas</h2>
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
         <Stat label="Clientes asignados" value={stats.clients} />
