@@ -43,6 +43,15 @@ import {
   type VehicleType,
 } from "@/lib/transport";
 import {
+  RESOURCE_CLASSES,
+  RESOURCE_OWNER_TYPES,
+  RESOURCE_SUBTYPES,
+  VEHICLE_FUELS,
+  VEHICLE_TRANSMISSIONS,
+  type ResourceClass,
+  type ResourceOwnerType,
+} from "@/lib/resource-catalog";
+import {
   citiesOf,
   cityNamesOf,
   DEFAULT_COUNTRY,
@@ -51,6 +60,7 @@ import {
   regionsOf,
   zonesOf,
 } from "@/lib/geo";
+
 
 const NONE_GEO = "__none_geo__";
 
