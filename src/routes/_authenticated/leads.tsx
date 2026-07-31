@@ -24,6 +24,7 @@ import {
   createLead,
   LEAD_STATUSES,
   leadFullName,
+  leadNeedSummary,
   leadStatusClasses,
   leadStatusLabel,
   listLeads,
@@ -284,6 +285,9 @@ function LeadsPage() {
                       : ""}
                     {` · ${sourceLabel(l.source)}`}
                   </p>
+                  {leadNeedSummary(l) && (
+                    <p className="mt-1 text-xs text-foreground/80">{leadNeedSummary(l)}</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span

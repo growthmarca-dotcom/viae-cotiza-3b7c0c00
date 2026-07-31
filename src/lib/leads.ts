@@ -71,6 +71,89 @@ export function leadFullName(l: Pick<Lead, "first_name" | "last_name">) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Necesidad del viaje (v1.7.1)                                        */
+/* ------------------------------------------------------------------ */
+
+export type TripType =
+  | "vacation"
+  | "family"
+  | "adventure"
+  | "honeymoon"
+  | "corporate"
+  | "getaway"
+  | "other";
+
+export const TRIP_TYPES: { value: TripType; label: string }[] = [
+  { value: "vacation", label: "Vacaciones" },
+  { value: "family", label: "Familia" },
+  { value: "adventure", label: "Aventura" },
+  { value: "honeymoon", label: "Luna de miel" },
+  { value: "corporate", label: "Corporativo" },
+  { value: "getaway", label: "Escapada" },
+  { value: "other", label: "Otro" },
+];
+
+export function tripTypeLabel(value: string | null | undefined) {
+  if (!value) return "—";
+  return TRIP_TYPES.find((t) => t.value === value)?.label ?? value;
+}
+
+/** Servicios de interés (multiselección). Se guardan por clave estable. */
+export const LEAD_SERVICES: { value: string; label: string }[] = [
+  { value: "accommodation", label: "Alojamiento" },
+  { value: "transfers", label: "Traslados" },
+  { value: "excursions", label: "Excursiones" },
+  { value: "car_rental", label: "Alquiler de auto" },
+  { value: "packages", label: "Paquetes turísticos" },
+  { value: "flights", label: "Vuelos" },
+  { value: "insurance", label: "Seguro de viaje" },
+  { value: "gastronomy", label: "Gastronomía / experiencias" },
+  { value: "other", label: "Otro" },
+];
+
+export function serviceLabel(value: string) {
+  return LEAD_SERVICES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function serviceLabels(values: string[] | null | undefined) {
+  return (values ?? []).map(serviceLabel);
+}
+
+/** Resumen compacto de la necesidad comercial, para listados y avisos. */
+export function leadNeedSummary(l: Lead): string {
+  const parts: string[] = [];
+  if (l.trip_type) parts.push(tripTypeLabel(l.trip_type));
+  if (l.destination) parts.push(l.destination);
+  const duration = leadDurationLabel(l);
+  if (duration) parts.push(duration);
+  const pax = leadPaxLabel(l);
+  if (pax) parts.push(pax);
+  const services = serviceLabels(l.services_interest);
+  if (services.length) parts.push(services.slice(0, 3).join(", "));
+  return parts.join(" · ");
+}
+
+export function leadDurationLabel(
+  l: Pick<Lead, "nights_count" | "days_count">,
+): string {
+  const out: string[] = [];
+  if (l.days_count != null) out.push(`${l.days_count} días`);
+  if (l.nights_count != null) out.push(`${l.nights_count} noches`);
+  return out.join(" / ");
+}
+
+export function leadPaxLabel(
+  l: Pick<Lead, "pax_count" | "adults_count" | "children_count" | "children_ages">,
+): string {
+  const detail: string[] = [];
+  if (l.adults_count != null) detail.push(`${l.adults_count} adultos`);
+  if (l.children_count != null) detail.push(`${l.children_count} niños`);
+  if (detail.length === 0) return l.pax_count != null ? `${l.pax_count} pax` : "";
+  const base = l.pax_count != null ? `${l.pax_count} pax (${detail.join(", ")})` : detail.join(", ");
+  return l.children_ages ? `${base} · edades ${l.children_ages}` : base;
+}
+
+/* ------------------------------------------------------------------ */
 /* Alta y edición                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -91,6 +174,15 @@ export type LeadInput = {
   notes: string;
   assigned_agent_id: string;
   status: LeadStatus;
+  /* Necesidad del viaje */
+  trip_type: TripType | "";
+  services_interest: string[];
+  nights_count: string;
+  days_count: string;
+  adults_count: string;
+  children_count: string;
+  children_ages: string;
+  commercial_notes: string;
 };
 
 export const EMPTY_LEAD: LeadInput = {
@@ -110,6 +202,14 @@ export const EMPTY_LEAD: LeadInput = {
   notes: "",
   assigned_agent_id: "",
   status: "new",
+  trip_type: "",
+  services_interest: [],
+  nights_count: "",
+  days_count: "",
+  adults_count: "",
+  children_count: "",
+  children_ages: "",
+  commercial_notes: "",
 };
 
 export function leadToInput(l: Lead): LeadInput {
@@ -130,6 +230,14 @@ export function leadToInput(l: Lead): LeadInput {
     notes: l.notes ?? "",
     assigned_agent_id: l.assigned_agent_id ?? "",
     status: l.status as LeadStatus,
+    trip_type: (l.trip_type as TripType | null) ?? "",
+    services_interest: l.services_interest ?? [],
+    nights_count: l.nights_count != null ? String(l.nights_count) : "",
+    days_count: l.days_count != null ? String(l.days_count) : "",
+    adults_count: l.adults_count != null ? String(l.adults_count) : "",
+    children_count: l.children_count != null ? String(l.children_count) : "",
+    children_ages: l.children_ages ?? "",
+    commercial_notes: l.commercial_notes ?? "",
   };
 }
 
@@ -153,6 +261,14 @@ function toPayload(input: LeadInput) {
     notes: text(input.notes),
     assigned_agent_id: input.assigned_agent_id || null,
     status: input.status,
+    trip_type: input.trip_type === "" ? null : input.trip_type,
+    services_interest: input.services_interest ?? [],
+    nights_count: num(input.nights_count),
+    days_count: num(input.days_count),
+    adults_count: num(input.adults_count),
+    children_count: num(input.children_count),
+    children_ages: text(input.children_ages),
+    commercial_notes: text(input.commercial_notes),
   };
 }
 
@@ -329,6 +445,9 @@ export type LeadAssignmentRules = {
   by_availability: boolean;
   by_active_leads: boolean;
   by_workload: boolean;
+  /** Preparadas para el motor automático (todavía sin lógica de puntuación). */
+  by_trip_type: boolean;
+  by_service: boolean;
 };
 
 export const DEFAULT_ASSIGNMENT_RULES: LeadAssignmentRules = {
@@ -339,11 +458,15 @@ export const DEFAULT_ASSIGNMENT_RULES: LeadAssignmentRules = {
   by_availability: false,
   by_active_leads: false,
   by_workload: false,
+  by_trip_type: false,
+  by_service: false,
 };
 
 export const ASSIGNMENT_RULE_LABELS: { key: keyof LeadAssignmentRules; label: string }[] = [
   { key: "by_destination", label: "Destino de interés" },
   { key: "by_language", label: "Idioma del lead" },
+  { key: "by_trip_type", label: "Tipo de viaje (próximamente)" },
+  { key: "by_service", label: "Servicio requerido (próximamente)" },
   { key: "by_specialty", label: "Especialidad del agente" },
   { key: "by_zone", label: "Zona operativa" },
   { key: "by_availability", label: "Disponibilidad del agente" },
