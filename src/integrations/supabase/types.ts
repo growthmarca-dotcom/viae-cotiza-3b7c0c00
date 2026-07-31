@@ -17,31 +17,46 @@ export type Database = {
       clients: {
         Row: {
           created_at: string
+          destination: string | null
           email: string | null
           full_name: string
           id: string
           notes: string | null
+          opportunity_status: Database["public"]["Enums"]["opportunity_status"]
+          pax_count: number | null
           phone: string | null
+          travel_end: string | null
+          travel_start: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          destination?: string | null
           email?: string | null
           full_name: string
           id?: string
           notes?: string | null
+          opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
+          pax_count?: number | null
           phone?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          destination?: string | null
           email?: string | null
           full_name?: string
           id?: string
           notes?: string | null
+          opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
+          pax_count?: number | null
           phone?: string | null
+          travel_end?: string | null
+          travel_start?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -55,6 +70,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          status: Database["public"]["Enums"]["account_status"]
           updated_at: string
         }
         Insert: {
@@ -64,6 +80,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
           updated_at?: string
         }
         Update: {
@@ -73,6 +90,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
           updated_at?: string
         }
         Relationships: []
@@ -181,14 +199,51 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_approved: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      account_status: "pending" | "approved" | "rejected"
+      app_role: "admin" | "agent" | "provider"
+      opportunity_status:
+        | "new"
+        | "contacted"
+        | "quoted"
+        | "negotiating"
+        | "won"
+        | "lost"
       quotation_status:
         | "draft"
         | "sent"
@@ -323,6 +378,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: ["pending", "approved", "rejected"],
+      app_role: ["admin", "agent", "provider"],
+      opportunity_status: [
+        "new",
+        "contacted",
+        "quoted",
+        "negotiating",
+        "won",
+        "lost",
+      ],
       quotation_status: [
         "draft",
         "sent",
