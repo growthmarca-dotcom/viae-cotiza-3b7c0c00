@@ -382,6 +382,12 @@ function ServiceRow({
           {info?.client_name ? ` · ${info.client_name}` : ""}
           {info?.booking_number ? ` · ${info.booking_number}` : ""}
         </p>
+        {(s.city || s.state || s.tourist_zone) && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {[s.city, s.state, s.tourist_zone].filter(Boolean).join(" · ")}
+          </p>
+        )}
+
         <p className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <UserRound className="h-3.5 w-3.5 text-gold" />
