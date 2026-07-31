@@ -271,6 +271,16 @@ export function LeadFormDialog({
             </Select>
           </Field>
           <div className="sm:col-span-2">
+            <Field label="Observaciones comerciales">
+              <Textarea
+                rows={3}
+                value={form.commercial_notes}
+                onChange={(e) => set("commercial_notes", e.target.value)}
+                placeholder="Ej: Familia de 4 personas, busca nieve en invierno, necesita traslado aeropuerto."
+              />
+            </Field>
+          </div>
+          <div className="sm:col-span-2">
             <Field label="Comentarios">
               <Textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
             </Field>
