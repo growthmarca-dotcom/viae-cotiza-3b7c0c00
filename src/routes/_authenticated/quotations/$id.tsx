@@ -105,6 +105,7 @@ function QuotationDetailPage() {
       const { info } = await fetchCompany();
       setCompany(info);
       await loadHistory();
+      await loadBooking();
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
