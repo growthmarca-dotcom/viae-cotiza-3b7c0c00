@@ -225,13 +225,28 @@ function ClientDetailPage() {
     }
   }
 
-  async function handleDelete() {
+  /** Los clientes no se eliminan: se archivan para preservar el historial. */
+  async function handleArchive() {
     try {
-      await deleteClient(id);
-      toast.success("Cliente eliminado");
+      await setClientRecordStatus(id, "archived");
+      toast.success("Cliente archivado");
+      setConfirmDelete(false);
       navigate({ to: "/clients" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el cliente");
+      toast.error(err instanceof Error ? err.message : "No se pudo archivar el cliente");
+    }
+  }
+
+  async function handleRecordStatus(value: string) {
+    if (!client) return;
+    const prev = client.record_status;
+    setClient({ ...client, record_status: value as RecordStatus });
+    try {
+      await setClientRecordStatus(id, value as RecordStatus);
+      toast.success(`Registro: ${recordStatusLabel(value)}`);
+    } catch (err) {
+      setClient({ ...client, record_status: prev });
+      toast.error(err instanceof Error ? err.message : "No se pudo actualizar el registro");
     }
   }
 
