@@ -441,11 +441,22 @@ export function resourceToInput(r: Resource): ResourceInput {
     driver_last_name: r.driver_last_name ?? "",
     vehicle_brand: r.vehicle_brand ?? "",
     vehicle_model: r.vehicle_model ?? "",
+    vehicle_version: r.vehicle_version ?? "",
     vehicle_year: r.vehicle_year != null ? String(r.vehicle_year) : "",
     vehicle_plate: r.vehicle_plate ?? "",
     vehicle_color: r.vehicle_color ?? "",
     vehicle_type: (r.vehicle_type ?? "") as VehicleType | "",
+    vehicle_fuel: r.vehicle_fuel ?? "",
+    vehicle_transmission: r.vehicle_transmission ?? "",
     luggage_capacity: r.luggage_capacity != null ? String(r.luggage_capacity) : "",
+    large_luggage_capacity:
+      r.large_luggage_capacity != null ? String(r.large_luggage_capacity) : "",
+    cabin_luggage_capacity:
+      r.cabin_luggage_capacity != null ? String(r.cabin_luggage_capacity) : "",
+    is_accessible: r.is_accessible ?? false,
+    has_air_conditioning: r.has_air_conditioning ?? false,
+    vehicle_notes: r.vehicle_notes ?? "",
+
   };
 }
 
