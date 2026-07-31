@@ -63,6 +63,34 @@ function minutesOf(t: string | null): number | null {
   return h * 60 + (m || 0);
 }
 
+/** Duración por defecto cuando el servicio no la declara (v1.4). */
+export const FALLBACK_DURATION_MINUTES = 60;
+
+export type TimeInterval = { start: number; end: number };
+
+/** Ventana ocupada por un servicio, en minutos desde la medianoche. */
+export function serviceInterval(
+  time: string | null,
+  durationMinutes: number | null,
+): TimeInterval | null {
+  const start = minutesOf(time);
+  if (start == null) return null;
+  const duration = durationMinutes ?? FALLBACK_DURATION_MINUTES;
+  return { start, end: start + Math.max(0, duration) };
+}
+
+export function minutesToLabel(total: number) {
+  const norm = ((total % 1440) + 1440) % 1440;
+  return `${String(Math.floor(norm / 60)).padStart(2, "0")}:${String(norm % 60).padStart(2, "0")}`;
+}
+
+/** Hora estimada de finalización con formato HH:MM. */
+export function endTimeLabel(time: string | null, durationMinutes: number | null) {
+  const interval = serviceInterval(time, durationMinutes);
+  return interval ? minutesToLabel(interval.end) : "--:--";
+}
+
+
 // ------------------------------------------------------------ agenda
 
 export type AgendaGroup = "today" | "upcoming" | "running" | "finished";
@@ -139,12 +167,15 @@ export type AssignmentContext = {
   serviceId?: string | null;
   date: string | null;
   time: string | null;
+  /** Duración estimada del servicio a asignar, en minutos (v1.4). */
+  durationMinutes?: number | null;
   paxCount: number | null;
   luggageCount: number | null;
   origin?: string | null;
-  /** Ventana considerada incompatible entre dos servicios, en minutos. */
-  windowMinutes?: number;
+  /** Margen operativo entre dos servicios consecutivos, en minutos. */
+  bufferMinutes?: number;
 };
+
 
 /** Servicios futuros/activos ya asignados a un recurso. */
 export function futureServicesOf(
@@ -173,7 +204,7 @@ export function assignmentWarnings(
 ): AssignmentWarning[] {
   const out: AssignmentWarning[] = [];
   const isDriver = isDriverResource(resource);
-  const window = ctx.windowMinutes ?? 120;
+  const buffer = ctx.bufferMinutes ?? 15;
 
   if (resource.availability === "off_hours")
     out.push({ level: "warning", message: "El recurso está fuera de horario." });
@@ -224,9 +255,9 @@ export function assignmentWarnings(
       });
   }
 
-  // Conflicto horario con otros servicios del mismo recurso
+  // Conflicto horario por solapamiento de duración estimada (v1.4)
   if (ctx.date) {
-    const mine = minutesOf(ctx.time);
+    const mine = serviceInterval(ctx.time, ctx.durationMinutes ?? null);
     const conflicts = services.filter((s) => {
       if (s.id === ctx.serviceId) return false;
       if (s.record_status !== "active" || CLOSED.includes(s.status)) return false;
@@ -234,18 +265,20 @@ export function assignmentWarnings(
       const sameDriver = s.driver_resource_id === resource.id;
       const sameVehicle = s.vehicle_resource_id === resource.id;
       if (!sameDriver && !sameVehicle) return false;
-      if (mine == null) return true;
-      const other = minutesOf(s.service_time);
-      if (other == null) return true;
-      return Math.abs(other - mine) < window;
+      if (!mine) return true;
+      const other = serviceInterval(s.service_time ? String(s.service_time) : null, s.duration_minutes);
+      if (!other) return true;
+      return mine.start < other.end + buffer && other.start < mine.end + buffer;
     });
     for (const c of conflicts) {
+      const end = endTimeLabel(c.service_time ? String(c.service_time) : null, c.duration_minutes);
       out.push({
         level: "warning",
-        message: `${isDriver ? "El conductor" : "El vehículo"} ya tiene un servicio el ${c.service_date} a las ${timeLabel(c.service_time)} (${c.origin ?? "—"} → ${c.destination ?? "—"}).`,
+        message: `${isDriver ? "El conductor" : "El vehículo"} ya tiene un servicio el ${c.service_date} de ${timeLabel(c.service_time)} a ${end} (${c.origin ?? "—"} → ${c.destination ?? "—"}).`,
       });
     }
   }
+
 
   return out;
 }
@@ -303,4 +336,130 @@ export function filterDriverServices(
   return rows.filter(
     (s) => CLOSED.includes(s.status) || (s.service_date != null && s.service_date < today),
   );
+}
+
+// ------------------------------------------------- filtros de agenda (v1.4)
+
+export type AgendaFilters = {
+  state?: string;
+  city?: string;
+  zone?: string;
+  serviceType?: string;
+  driverResourceId?: string;
+  vehicleResourceId?: string;
+};
+
+export const AGENDA_ALL = "all";
+
+function matches(value: string | null | undefined, filter?: string) {
+  if (!filter || filter === AGENDA_ALL) return true;
+  return (value ?? "") === filter;
+}
+
+/** Filtra servicios por ubicación estructurada, tipo y recursos asignados. */
+export function applyAgendaFilters(
+  services: TransportService[],
+  filters: AgendaFilters,
+): TransportService[] {
+  return services.filter(
+    (s) =>
+      matches(s.state, filters.state) &&
+      matches(s.city, filters.city) &&
+      matches(s.tourist_zone, filters.zone) &&
+      matches(s.service_type, filters.serviceType) &&
+      matches(s.driver_resource_id, filters.driverResourceId) &&
+      matches(s.vehicle_resource_id, filters.vehicleResourceId),
+  );
+}
+
+export type LoadBucket = { key: string; count: number; minutes: number };
+
+function bucketBy(
+  services: TransportService[],
+  pick: (s: TransportService) => string | null,
+): LoadBucket[] {
+  const map = new Map<string, LoadBucket>();
+  for (const s of services) {
+    const key = pick(s) || "Sin definir";
+    const current = map.get(key) ?? { key, count: 0, minutes: 0 };
+    current.count += 1;
+    current.minutes += s.duration_minutes ?? FALLBACK_DURATION_MINUTES;
+    map.set(key, current);
+  }
+  return Array.from(map.values()).sort((a, b) => b.count - a.count);
+}
+
+/** Carga operativa por zona turística. */
+export function loadByZone(services: TransportService[]) {
+  return bucketBy(services, (s) => s.tourist_zone);
+}
+
+/** Carga operativa por destino. */
+export function loadByDestination(services: TransportService[]) {
+  return bucketBy(services, (s) => s.destination);
+}
+
+/** Cantidad de servicios por día. */
+export function loadByDay(services: TransportService[]) {
+  return bucketBy(services, (s) => s.service_date).sort((a, b) => a.key.localeCompare(b.key));
+}
+
+/** Valores presentes en los servicios, para alimentar los selectores. */
+export function agendaFacets(services: TransportService[]) {
+  const uniq = (values: (string | null)[]) =>
+    Array.from(new Set(values.filter((v): v is string => !!v && v.trim() !== ""))).sort();
+  return {
+    states: uniq(services.map((s) => s.state)),
+    cities: uniq(services.map((s) => s.city)),
+    zones: uniq(services.map((s) => s.tourist_zone)),
+  };
+}
+
+// ------------------------------------------- agenda personal del conductor
+
+export type DriverAgenda = {
+  today: TransportService[];
+  upcoming: TransportService[];
+  /** Minutos estimados ocupados hoy. */
+  busyMinutesToday: number;
+  /** Minutos estimados ocupados en los próximos servicios. */
+  busyMinutesUpcoming: number;
+  /** Próxima disponibilidad estimada (fin del último servicio activo de hoy). */
+  nextAvailableAt: string | null;
+  /** Próximo servicio agendado. */
+  nextService: TransportService | null;
+};
+
+export function driverAgenda(services: TransportService[], today = todayISO()): DriverAgenda {
+  const open = services.filter((s) => s.record_status === "active" && !CLOSED.includes(s.status));
+  const ofToday = sortByTime(open.filter((s) => s.service_date === today));
+  const upcoming = sortByTime(
+    open.filter((s) => s.service_date != null && s.service_date > today),
+  );
+  const minutes = (list: TransportService[]) =>
+    list.reduce((acc, s) => acc + (s.duration_minutes ?? FALLBACK_DURATION_MINUTES), 0);
+
+  let nextAvailableAt: string | null = null;
+  const ends = ofToday
+    .map((s) => serviceInterval(s.service_time ? String(s.service_time) : null, s.duration_minutes))
+    .filter((i): i is TimeInterval => i != null)
+    .map((i) => i.end);
+  if (ends.length > 0) nextAvailableAt = minutesToLabel(Math.max(...ends));
+
+  return {
+    today: ofToday,
+    upcoming,
+    busyMinutesToday: minutes(ofToday),
+    busyMinutesUpcoming: minutes(upcoming),
+    nextAvailableAt,
+    nextService: ofToday[0] ?? upcoming[0] ?? null,
+  };
+}
+
+export function hoursLabel(minutes: number) {
+  if (minutes <= 0) return "0 h";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }

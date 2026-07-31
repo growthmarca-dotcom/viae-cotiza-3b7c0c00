@@ -61,12 +61,16 @@ import {
   type DriverServiceContext,
 } from "@/lib/driver";
 import {
+  driverAgenda,
   driverDaySummary,
+  endTimeLabel,
   filterDriverServices,
+  hoursLabel,
   timeLabel,
   todayISO,
   type DriverFilter,
 } from "@/lib/transport-ops";
+
 import {
   assignmentPayload,
   listMyNotifications,
@@ -139,6 +143,8 @@ function DriverPage() {
   const driver = resources.find((r) => r.category === "driver") ?? resources[0] ?? null;
   const vehicleById = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
   const summary = useMemo(() => driverDaySummary(services), [services]);
+  const agenda = useMemo(() => driverAgenda(services), [services]);
+
   const visible = useMemo(() => filterDriverServices(services, filter), [services, filter]);
   const counts = useMemo(
     () => ({
@@ -250,6 +256,57 @@ function DriverPage() {
           />
         </div>
       </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <Clock className="h-4 w-4 text-gold" /> Mi agenda
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <SummaryCard
+            label="Tiempo estimado ocupado hoy"
+            value={hoursLabel(agenda.busyMinutesToday)}
+            hint={`${agenda.today.length} servicio(s) hoy`}
+          />
+          <SummaryCard
+            label="Próxima disponibilidad estimada"
+            value={agenda.nextAvailableAt ?? "Disponible ahora"}
+            hint="Al finalizar tu último servicio de hoy"
+          />
+          <SummaryCard
+            label="Servicios futuros"
+            value={String(agenda.upcoming.length)}
+            hint={hoursLabel(agenda.busyMinutesUpcoming)}
+          />
+        </div>
+        <div className="mt-4 space-y-2 text-sm">
+          {agenda.today.length === 0 && agenda.upcoming.length === 0 ? (
+            <p className="text-muted-foreground">No tenés servicios agendados.</p>
+          ) : (
+            [...agenda.today, ...agenda.upcoming].slice(0, 8).map((s) => (
+              <div
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-secondary/20 p-3"
+              >
+                <span className="font-medium">
+                  {s.service_date ?? "Sin fecha"} · {timeLabel(s.service_time)}
+                  {endTimeLabel(s.service_time ? String(s.service_time) : null, s.duration_minutes)
+                    ? ` → ${endTimeLabel(String(s.service_time), s.duration_minutes)}`
+                    : ""}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                  {(s.origin ?? "—") + " → " + (s.destination ?? "—")}
+                </span>
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 text-xs ${serviceStatusClasses(s.status)}`}
+                >
+                  {serviceStatusLabel(s.status)}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
 
       {unread.length > 0 && (
         <section className="rounded-2xl border border-gold/40 bg-gold/5 p-5">

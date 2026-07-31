@@ -304,6 +304,8 @@ export type ResourceInput = {
   country: string;
   cities_served: string[];
   destinations: string[];
+  /** Zonas turísticas donde opera (catálogo geográfico, v1.4). */
+  tourist_zones: string[];
   max_distance_km: string;
   requires_advance_booking: boolean;
   advance_notice_hours: string;
@@ -345,6 +347,7 @@ export const EMPTY_RESOURCE: ResourceInput = {
   country: "",
   cities_served: [],
   destinations: [],
+  tourist_zones: [],
   max_distance_km: "",
   requires_advance_booking: false,
   advance_notice_hours: "",
@@ -385,6 +388,7 @@ export function resourceToInput(r: Resource): ResourceInput {
     country: r.country ?? "",
     cities_served: r.cities_served ?? [],
     destinations: r.destinations ?? [],
+    tourist_zones: r.tourist_zones ?? [],
     max_distance_km: r.max_distance_km != null ? String(r.max_distance_km) : "",
     requires_advance_booking: r.requires_advance_booking ?? false,
     advance_notice_hours: r.advance_notice_hours != null ? String(r.advance_notice_hours) : "",
@@ -427,6 +431,7 @@ function resourcePayload(input: ResourceInput) {
     country: text(input.country),
     cities_served: input.cities_served,
     destinations: input.destinations,
+    tourist_zones: input.tourist_zones,
     max_distance_km: num(input.max_distance_km),
     requires_advance_booking: input.requires_advance_booking,
     advance_notice_hours: num(input.advance_notice_hours),
@@ -466,7 +471,12 @@ export async function listResources(filters: ResourceFilters = {}): Promise<Reso
 
   const zone = filters.zone?.trim();
   if (zone && zone !== "all") {
-    rows = rows.filter((r) => r.main_zone === zone || (r.zones ?? []).includes(zone));
+    rows = rows.filter(
+      (r) =>
+        r.main_zone === zone ||
+        (r.zones ?? []).includes(zone) ||
+        (r.tourist_zones ?? []).includes(zone),
+    );
   }
   const term = filters.search?.trim().toLowerCase();
   if (!term) return rows;

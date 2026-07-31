@@ -42,6 +42,19 @@ import {
   type TransportServiceType,
   type VehicleType,
 } from "@/lib/transport";
+import {
+  citiesOf,
+  cityNamesOf,
+  DEFAULT_COUNTRY,
+  GEO_COUNTRIES,
+  regionLabelOf,
+  regionsOf,
+  zonesOf,
+} from "@/lib/geo";
+
+const NONE_GEO = "__none_geo__";
+
+
 
 
 type Props = {
@@ -108,6 +121,24 @@ export function ResourceFormDialog({
     });
   }
 
+  function toggleGeo(key: "cities_served" | "tourist_zones" | "destinations", value: string) {
+    setForm((f) => {
+      const current = f[key];
+      return {
+        ...f,
+        [key]: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
+  }
+
+  const geoCountry = form.country || DEFAULT_COUNTRY;
+  const geoRegions = regionsOf(geoCountry);
+  const geoCities = citiesOf(geoCountry, form.state || null);
+  const geoCountryCities = cityNamesOf(geoCountry);
+  const geoZones = zonesOf(geoCountry);
+
   function toggleServiceType(value: TransportServiceType) {
     setForm((f) => ({
       ...f,
@@ -116,6 +147,7 @@ export function ResourceFormDialog({
         : [...f.transport_service_types, value],
     }));
   }
+
 
   const isDriver = form.category === "driver";
   const isVehicle = form.category === "vehicle";
@@ -315,20 +347,84 @@ export function ResourceFormDialog({
 
           <SectionTitle>Ubicación operativa</SectionTitle>
           <div className="space-y-2">
-            <Label>Ciudad base</Label>
-            <Input
-              value={form.base_city}
-              onChange={(e) => set("base_city", e.target.value)}
-              placeholder="Neuquén Capital"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Provincia</Label>
-            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
-          </div>
-          <div className="space-y-2">
             <Label>País</Label>
-            <Input value={form.country} onChange={(e) => set("country", e.target.value)} />
+            <Select
+              value={form.country || DEFAULT_COUNTRY}
+              onValueChange={(v) =>
+                setForm((f) => ({
+                  ...f,
+                  country: v,
+                  state: "",
+                  base_city: "",
+                  cities_served: [],
+                  tourist_zones: [],
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GEO_COUNTRIES.map((c) => (
+                  <SelectItem key={c.code} value={c.name}>
+                    {c.name}
+                    {c.regions.length === 0 ? " (catálogo pendiente)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{regionLabelOf(form.country || DEFAULT_COUNTRY)}</Label>
+            {geoRegions.length > 0 ? (
+              <Select
+                value={form.state || NONE_GEO}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, state: v === NONE_GEO ? "" : v, base_city: "" }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin definir" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_GEO}>Sin definir</SelectItem>
+                  {geoRegions.map((r) => (
+                    <SelectItem key={r.name} value={r.name}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Ciudad base</Label>
+            {geoCities.length > 0 ? (
+              <Select
+                value={form.base_city || NONE_GEO}
+                onValueChange={(v) => set("base_city", v === NONE_GEO ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin definir" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_GEO}>Sin definir</SelectItem>
+                  {geoCities.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={form.base_city}
+                onChange={(e) => set("base_city", e.target.value)}
+                placeholder="Neuquén Capital"
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label>Distancia máxima de operación (km)</Label>
@@ -341,12 +437,47 @@ export function ResourceFormDialog({
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Ciudades donde opera</Label>
-            <Input
-              value={form.cities_served.join(", ")}
-              onChange={(e) => set("cities_served", parseList(e.target.value))}
-              placeholder="San Martín de los Andes, Villa La Angostura, Bariloche"
-            />
-            <p className="text-xs text-muted-foreground">Separá cada ciudad con una coma.</p>
+            {geoCountryCities.length > 0 ? (
+              <div className="flex flex-wrap gap-3 rounded-lg border border-border/70 p-3">
+                {geoCountryCities.map((c) => (
+                  <label key={c} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form.cities_served.includes(c)}
+                      onCheckedChange={() => toggleGeo("cities_served", c)}
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <Input
+                value={form.cities_served.join(", ")}
+                onChange={(e) => set("cities_served", parseList(e.target.value))}
+                placeholder="San Martín de los Andes, Villa La Angostura, Bariloche"
+              />
+            )}
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Zonas turísticas donde opera</Label>
+            {geoZones.length > 0 ? (
+              <div className="flex flex-wrap gap-3 rounded-lg border border-border/70 p-3">
+                {geoZones.map((z) => (
+                  <label key={z} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form.tourist_zones.includes(z)}
+                      onCheckedChange={() => toggleGeo("tourist_zones", z)}
+                    />
+                    {z}
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <Input
+                value={form.tourist_zones.join(", ")}
+                onChange={(e) => set("tourist_zones", parseList(e.target.value))}
+                placeholder="Lagos del Sur, Aeropuertos regionales"
+              />
+            )}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label>Destinos habilitados</Label>
@@ -355,7 +486,11 @@ export function ResourceFormDialog({
               onChange={(e) => set("destinations", parseList(e.target.value))}
               placeholder="Aeropuerto Chapelco, Aeropuerto Bariloche, Cerro Catedral"
             />
+            <p className="text-xs text-muted-foreground">
+              Puntos concretos de trabajo. Separá cada destino con una coma.
+            </p>
           </div>
+
           <div className="space-y-2">
             <Label>Anticipación mínima (horas)</Label>
             <Input

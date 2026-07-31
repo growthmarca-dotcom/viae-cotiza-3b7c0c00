@@ -1078,6 +1078,7 @@ export type Database = {
           requires_advance_booking: boolean
           specialties: string[]
           state: string | null
+          tourist_zones: string[]
           transport_service_types: Database["public"]["Enums"]["transport_service_type"][]
           unit_count: number | null
           updated_at: string
@@ -1121,6 +1122,7 @@ export type Database = {
           requires_advance_booking?: boolean
           specialties?: string[]
           state?: string | null
+          tourist_zones?: string[]
           transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
           updated_at?: string
@@ -1164,6 +1166,7 @@ export type Database = {
           requires_advance_booking?: boolean
           specialties?: string[]
           state?: string | null
+          tourist_zones?: string[]
           transport_service_types?: Database["public"]["Enums"]["transport_service_type"][]
           unit_count?: number | null
           updated_at?: string
@@ -1249,6 +1252,7 @@ export type Database = {
           assigned_at: string | null
           assigned_by: string | null
           booking_id: string | null
+          city: string | null
           collected_amount: number | null
           collected_at: string | null
           collected_by: string | null
@@ -1259,11 +1263,16 @@ export type Database = {
           commission_value: number | null
           company_id: string | null
           completed_at: string | null
+          country: string | null
           created_at: string
           currency: string
           destination: string | null
           driver_resource_id: string | null
+          duration_minutes: number | null
+          estimated_end_time: string | null
           id: string
+          last_status_at: string
+          last_updated_by: string | null
           luggage_count: number | null
           notes: string | null
           onboard_at: string | null
@@ -1277,7 +1286,9 @@ export type Database = {
           service_time: string | null
           service_type: Database["public"]["Enums"]["transport_service_type"]
           started_at: string | null
+          state: string | null
           status: Database["public"]["Enums"]["transport_service_status"]
+          tourist_zone: string | null
           updated_at: string
           user_id: string
           vehicle_resource_id: string | null
@@ -1289,6 +1300,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_by?: string | null
           booking_id?: string | null
+          city?: string | null
           collected_amount?: number | null
           collected_at?: string | null
           collected_by?: string | null
@@ -1301,11 +1313,16 @@ export type Database = {
           commission_value?: number | null
           company_id?: string | null
           completed_at?: string | null
+          country?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           driver_resource_id?: string | null
+          duration_minutes?: number | null
+          estimated_end_time?: string | null
           id?: string
+          last_status_at?: string
+          last_updated_by?: string | null
           luggage_count?: number | null
           notes?: string | null
           onboard_at?: string | null
@@ -1319,7 +1336,9 @@ export type Database = {
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
           started_at?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
+          tourist_zone?: string | null
           updated_at?: string
           user_id: string
           vehicle_resource_id?: string | null
@@ -1331,6 +1350,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_by?: string | null
           booking_id?: string | null
+          city?: string | null
           collected_amount?: number | null
           collected_at?: string | null
           collected_by?: string | null
@@ -1343,11 +1363,16 @@ export type Database = {
           commission_value?: number | null
           company_id?: string | null
           completed_at?: string | null
+          country?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           driver_resource_id?: string | null
+          duration_minutes?: number | null
+          estimated_end_time?: string | null
           id?: string
+          last_status_at?: string
+          last_updated_by?: string | null
           luggage_count?: number | null
           notes?: string | null
           onboard_at?: string | null
@@ -1361,7 +1386,9 @@ export type Database = {
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
           started_at?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
+          tourist_zone?: string | null
           updated_at?: string
           user_id?: string
           vehicle_resource_id?: string | null
@@ -1445,6 +1472,7 @@ export type Database = {
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
+      mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       sync_transport_resource_state: {
         Args: { _resource_id: string }
         Returns: undefined

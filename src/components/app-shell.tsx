@@ -20,6 +20,8 @@ import {
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
+
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/hooks/use-account";
 
@@ -107,20 +109,30 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <span className="font-display font-semibold">ViaE</span>
           </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={signOut}
+              className="text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
         <main className="min-w-0">
+          <div
+            data-print-hide
+            className="hidden items-center justify-end border-b border-border bg-background/95 px-6 py-2 backdrop-blur md:flex"
+          >
+            <NotificationBell />
+          </div>
           {/* Mobile bottom nav */}
           <div data-print-hide className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
+
             {nav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
