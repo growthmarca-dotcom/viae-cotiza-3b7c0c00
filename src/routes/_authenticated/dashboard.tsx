@@ -22,6 +22,7 @@ import { computeTransportEconomics } from "@/lib/transport-economics";
 import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
 import { agentFullName, listAgents } from "@/lib/agents";
 import { listBookings } from "@/lib/bookings";
+import { computeProviderStats, listProviders, providerServiceTotals } from "@/lib/providers";
 import { computeOperationsStats, listAllBookingServices } from "@/lib/operations";
 import {
   computeChecklistIncidentStats,
@@ -143,6 +144,8 @@ function Dashboard() {
 
       <OperationsSection />
 
+      <ProvidersSection />
+
       <CatalogSection />
 
 
@@ -226,6 +229,75 @@ function OperationsSection() {
         ))}
       </div>
     </section>
+  );
+}
+
+/** Indicadores del módulo de Proveedores (v1.9). Solo Admin y Operaciones. */
+function ProvidersSection() {
+  const { isOperations } = useAccount();
+
+  const { data } = useQuery({
+    queryKey: ["provider-stats"],
+    enabled: isOperations,
+    queryFn: async () => {
+      const [providers, totals] = await Promise.all([
+        listProviders({ includeArchived: true }),
+        providerServiceTotals(),
+      ]);
+      return { stats: computeProviderStats(providers), totals };
+    },
+  });
+
+  if (!isOperations) return null;
+  const s = data?.stats;
+
+  const cards = [
+    { label: "Proveedores", value: String(s?.total ?? 0) },
+    { label: "Activos", value: String(s?.active ?? 0) },
+    { label: "Inactivos / suspendidos", value: String((s?.inactive ?? 0) + (s?.suspended ?? 0)) },
+    { label: "Servicios realizados", value: String(data?.totals.done ?? 0) },
+    { label: "Servicios pendientes", value: String(data?.totals.pending ?? 0) },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Proveedores</h2>
+        <Button asChild size="sm" variant="outline">
+          <Link to="/providers">Ver proveedores</Link>
+        </Button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <GroupList title="Por categoría" rows={s?.byType ?? []} />
+        <GroupList title="Por provincia" rows={s?.byState ?? []} />
+        <GroupList title="Por país" rows={s?.byCountry ?? []} />
+      </div>
+    </section>
+  );
+}
+
+function GroupList({ title, rows }: { title: string; rows: { label: string; count: number }[] }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h3 className="mb-3 font-display text-lg font-semibold">{title}</h3>
+      {rows.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
+      <div className="space-y-2">
+        {rows.slice(0, 6).map((r) => (
+          <div key={r.label} className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{r.label}</span>
+            <span className="font-medium">{r.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -471,23 +543,25 @@ function CatalogSection() {
   });
 
   if (!data) return null;
-  const { stats, top } = data;
+  const stats = data.stats;
+  const top = data.top ?? [];
+  const byState = stats?.byState ?? [];
 
   return (
     <section className="space-y-4">
       <h2 className="font-display text-xl font-semibold">Catálogo de recursos</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MiniStat label="Recursos activos" value={String(stats.total)} />
-        <MiniStat label="Vehículos disponibles" value={String(stats.vehiclesAvailable)} />
-        <MiniStat label="Choferes disponibles" value={String(stats.driversAvailable)} />
+        <MiniStat label="Recursos activos" value={String(stats?.total ?? 0)} />
+        <MiniStat label="Vehículos disponibles" value={String(stats?.vehiclesAvailable ?? 0)} />
+        <MiniStat label="Choferes disponibles" value={String(stats?.driversAvailable ?? 0)} />
         <MiniStat
           label="Extra más solicitado"
           value={top.length > 0 ? `${top[0].name} (${top[0].count})` : "—"}
         />
       </div>
-      {stats.byState.length > 0 && (
+      {byState.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {stats.byState.slice(0, 8).map((s) => (
+          {byState.slice(0, 8).map((s) => (
             <span key={s.state} className="rounded-full border border-border px-3 py-1 text-xs">
               {s.state}: <strong>{s.count}</strong>
             </span>
