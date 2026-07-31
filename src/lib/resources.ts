@@ -384,11 +384,20 @@ export const EMPTY_RESOURCE: ResourceInput = {
   driver_last_name: "",
   vehicle_brand: "",
   vehicle_model: "",
+  vehicle_version: "",
   vehicle_year: "",
   vehicle_plate: "",
   vehicle_color: "",
   vehicle_type: "",
+  vehicle_fuel: "",
+  vehicle_transmission: "",
   luggage_capacity: "",
+  large_luggage_capacity: "",
+  cabin_luggage_capacity: "",
+  is_accessible: false,
+  has_air_conditioning: false,
+  vehicle_notes: "",
+
 };
 
 export function resourceToInput(r: Resource): ResourceInput {
