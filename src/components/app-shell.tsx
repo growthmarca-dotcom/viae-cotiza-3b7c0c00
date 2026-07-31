@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
   CalendarDays,
+  ClipboardList,
   CarFront,
   Compass,
   Route as RouteIcon,
@@ -49,11 +50,18 @@ const baseNav = [
 
 const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
 
+/** Central operativa: sólo administración y usuarios con rol Operaciones. */
+const operationsNav = [{ to: "/operations", label: "Central operativa", icon: ClipboardList }] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { isAdmin } = useAccount();
+  const { isAdmin, isOperations } = useAccount();
   const showDeveloperBranding = useDeveloperBranding();
-  const nav = isAdmin ? [...baseNav, ...adminNav] : [...baseNav];
+  const nav = [
+    ...baseNav,
+    ...(isOperations ? operationsNav : []),
+    ...(isAdmin ? adminNav : []),
+  ];
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {

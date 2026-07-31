@@ -18,6 +18,8 @@ import { listTransportServices } from "@/lib/transport";
 import { computeTransportEconomics } from "@/lib/transport-economics";
 import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
 import { agentFullName, listAgents } from "@/lib/agents";
+import { listBookings } from "@/lib/bookings";
+import { computeOperationsStats, listAllBookingServices } from "@/lib/operations";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -131,6 +133,10 @@ function Dashboard() {
 
       <TransportEconomicsSection />
 
+      <OperationsSection />
+
+
+
 
 
 
@@ -157,6 +163,51 @@ function Dashboard() {
   );
 }
 /** Gestión comercial de leads (v1.7). */
+/** Indicadores de la central operativa (v1.8). Solo Admin y Operaciones. */
+function OperationsSection() {
+  const { isOperations } = useAccount();
+
+  const { data } = useQuery({
+    queryKey: ["operations-stats"],
+    enabled: isOperations,
+    queryFn: async () => {
+      const [bookings, services] = await Promise.all([
+        listBookings(),
+        listAllBookingServices(),
+      ]);
+      return computeOperationsStats(bookings, services);
+    },
+  });
+
+  if (!isOperations) return null;
+
+  const cards = [
+    { label: "Reservas sin operar", value: String(data?.pending ?? 0) },
+    { label: "Salidas próximas (7 días)", value: String(data?.upcoming ?? 0) },
+    { label: "Servicios sin proveedor", value: String(data?.unassignedServices ?? 0) },
+    { label: "Incidencias abiertas", value: String(data?.incidents ?? 0) },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Central operativa</h2>
+        <Button asChild size="sm" variant="outline">
+          <Link to="/operations">Ver bandeja</Link>
+        </Button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LeadsSection() {
   const { data } = useQuery({
     queryKey: ["lead-stats"],

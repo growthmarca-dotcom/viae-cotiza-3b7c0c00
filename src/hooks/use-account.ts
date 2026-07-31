@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "agent" | "provider";
+export type AppRole = "admin" | "agent" | "provider" | "operations";
 export type AccountStatus = "pending" | "approved" | "rejected" | "suspended";
 
 export type Account = {
@@ -38,6 +38,9 @@ export function useAccount() {
     ...query,
     account,
     isAdmin: account?.roles.includes("admin") ?? false,
+    /** Central operativa: administradores y usuarios con rol Operaciones. */
+    isOperations:
+      (account?.roles.includes("admin") || account?.roles.includes("operations")) ?? false,
     isApproved: account?.status === "approved" || (account?.roles.includes("admin") ?? false),
   };
 }

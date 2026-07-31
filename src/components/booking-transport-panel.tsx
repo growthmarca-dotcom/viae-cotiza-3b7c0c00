@@ -59,6 +59,7 @@ import {
 } from "@/lib/transport";
 import { citiesOf, DEFAULT_COUNTRY, regionsOf, zonesOf, zonesOfCity } from "@/lib/geo";
 import { ServiceEconomicsPanel } from "@/components/service-economics-panel";
+import { useAccount } from "@/hooks/use-account";
 
 
 const NONE = "__none__";
@@ -69,6 +70,8 @@ const NONE = "__none__";
  * Operativos: acá sólo se solicitan, asignan y siguen sus estados.
  */
 export function BookingTransportTab({ bookingId }: { bookingId: string }) {
+  // v1.8: solicitar y asignar traslados es tarea de la central operativa.
+  const { isOperations } = useAccount();
   const [services, setServices] = useState<TransportService[]>([]);
   const [allServices, setAllServices] = useState<TransportService[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
@@ -180,15 +183,19 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
         <div>
           <h2 className="font-display text-xl font-semibold">Servicios de transporte</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Traslados, transfers y taxis de la red asignados a esta reserva.
+            {isOperations
+              ? "Traslados, transfers y taxis de la red asignados a esta reserva."
+              : "Traslados de la reserva. La solicitud y asignación las gestiona la central operativa."}
           </p>
         </div>
-        <Button size="sm" variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
-          <Plus className="mr-2 h-4 w-4" /> {showForm ? "Cancelar" : "Nuevo servicio"}
-        </Button>
+        {isOperations && (
+          <Button size="sm" variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
+            <Plus className="mr-2 h-4 w-4" /> {showForm ? "Cancelar" : "Nuevo servicio"}
+          </Button>
+        )}
       </div>
 
-      {showForm && (
+      {isOperations && showForm && (
         <div className="mt-6 grid gap-4 rounded-xl border border-border/70 bg-secondary/30 p-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Servicio solicitado</Label>
