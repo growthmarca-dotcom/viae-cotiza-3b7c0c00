@@ -134,6 +134,81 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunities: {
+        Row: {
+          assigned_agent_id: string | null
+          client_id: string
+          created_at: string
+          currency: string
+          estimated_value: number
+          id: string
+          lead_source: Database["public"]["Enums"]["lead_source"]
+          next_action: string | null
+          next_contact_date: string | null
+          notes: string | null
+          owner_user_id: string
+          probability: number
+          quotation_id: string | null
+          stage: Database["public"]["Enums"]["opportunity_stage"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_agent_id?: string | null
+          client_id: string
+          created_at?: string
+          currency?: string
+          estimated_value?: number
+          id?: string
+          lead_source?: Database["public"]["Enums"]["lead_source"]
+          next_action?: string | null
+          next_contact_date?: string | null
+          notes?: string | null
+          owner_user_id: string
+          probability?: number
+          quotation_id?: string | null
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_agent_id?: string | null
+          client_id?: string
+          created_at?: string
+          currency?: string
+          estimated_value?: number
+          id?: string
+          lead_source?: Database["public"]["Enums"]["lead_source"]
+          next_action?: string | null
+          next_contact_date?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          probability?: number
+          quotation_id?: string | null
+          stage?: Database["public"]["Enums"]["opportunity_stage"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_audit_log: {
         Row: {
           action: string
@@ -388,6 +463,25 @@ export type Database = {
     Enums: {
       account_status: "pending" | "approved" | "rejected" | "suspended"
       app_role: "admin" | "agent" | "provider"
+      lead_source:
+        | "website"
+        | "whatsapp"
+        | "instagram"
+        | "facebook"
+        | "google"
+        | "referral"
+        | "existing_client"
+        | "other"
+      opportunity_stage:
+        | "new"
+        | "contacted"
+        | "quoted"
+        | "following_up"
+        | "negotiating"
+        | "booked"
+        | "completed"
+        | "lost"
+        | "cancelled"
       opportunity_status:
         | "new"
         | "contacted"
@@ -534,6 +628,27 @@ export const Constants = {
     Enums: {
       account_status: ["pending", "approved", "rejected", "suspended"],
       app_role: ["admin", "agent", "provider"],
+      lead_source: [
+        "website",
+        "whatsapp",
+        "instagram",
+        "facebook",
+        "google",
+        "referral",
+        "existing_client",
+        "other",
+      ],
+      opportunity_stage: [
+        "new",
+        "contacted",
+        "quoted",
+        "following_up",
+        "negotiating",
+        "booked",
+        "completed",
+        "lost",
+        "cancelled",
+      ],
       opportunity_status: [
         "new",
         "contacted",

@@ -37,6 +37,12 @@ import {
   type ClientStatus,
 } from "@/lib/clients";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import { OpportunityPanel } from "@/components/opportunity-panel";
+import {
+  createOpportunity,
+  listOpportunitiesByClient,
+  type Opportunity,
+} from "@/lib/opportunities";
 
 export const Route = createFileRoute("/_authenticated/clients_/$id")({
   component: ClientDetailPage,
@@ -84,6 +90,17 @@ function ClientDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [responsables, setResponsables] = useState<{ id: string; label: string }[]>([]);
+  const [creatingOpp, setCreatingOpp] = useState(false);
+
+  async function loadOpportunities() {
+    try {
+      setOpportunities(await listOpportunitiesByClient(id));
+    } catch {
+      setOpportunities([]);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -118,10 +135,46 @@ function ClientDetailPage() {
       } else {
         setHistory([]);
       }
+
+      await loadOpportunities();
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .eq("id", userData.user.id)
+          .maybeSingle();
+        setResponsables([
+          {
+            id: userData.user.id,
+            label: profile?.full_name || userData.user.email || "Yo",
+          },
+        ]);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar el cliente");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCreateOpportunity() {
+    setCreatingOpp(true);
+    try {
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (error || !userData.user) throw new Error("Sesión no válida.");
+      await createOpportunity({
+        userId: userData.user.id,
+        clientId: id,
+        title: `Oportunidad ${new Date().toLocaleDateString()}`,
+      });
+      toast.success("Oportunidad creada");
+      await loadOpportunities();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo crear la oportunidad");
+    } finally {
+      setCreatingOpp(false);
     }
   }
 
@@ -257,6 +310,16 @@ function ClientDetailPage() {
           <Row label="Observaciones" value={client.notes} multiline />
         </dl>
       </div>
+
+      <OpportunityPanel
+        opportunities={opportunities}
+        responsables={responsables}
+        creating={creatingOpp}
+        onCreate={handleCreateOpportunity}
+        onChanged={loadOpportunities}
+      />
+
+
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-4 font-display text-xl font-semibold">Cotizaciones</h2>

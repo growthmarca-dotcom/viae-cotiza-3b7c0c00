@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
+import { formatMoney } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -117,6 +119,10 @@ function Dashboard() {
         ))}
       </section>
 
+      <PipelineSection />
+
+
+
       <section className="grid gap-4 md:grid-cols-3">
         <QuickCard
           to="/quotations/new"
@@ -135,6 +141,61 @@ function Dashboard() {
         />
       </section>
     </div>
+  );
+}
+
+/** Indicadores del pipeline comercial (oportunidades). */
+function PipelineSection() {
+  const { data } = useQuery({
+    queryKey: ["opportunity-stats"],
+    queryFn: async () => {
+      const rows = await listOpportunities();
+      const byStage = OPPORTUNITY_STAGES.map((s) => ({
+        label: s.label,
+        value: rows.filter((r) => r.stage === s.value).length,
+      }));
+      return {
+        count: rows.length,
+        totalValue: rows.reduce((acc, r) => acc + Number(r.estimated_value ?? 0), 0),
+        quoted: rows.filter((r) => r.stage === "quoted").length,
+        booked: rows.filter((r) => r.stage === "booked").length,
+        lost: rows.filter((r) => r.stage === "lost" || r.stage === "cancelled").length,
+        byStage,
+      };
+    },
+  });
+
+  const cards = [
+    { label: "Oportunidades", value: String(data?.count ?? 0) },
+    { label: "Valor total estimado", value: formatMoney("USD", data?.totalValue ?? 0) },
+    { label: "Cotizaciones enviadas", value: String(data?.quoted ?? 0) },
+    { label: "Reservas confirmadas", value: String(data?.booked ?? 0) },
+    { label: "Ventas perdidas", value: String(data?.lost ?? 0) },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <h2 className="font-display text-2xl font-semibold tracking-tight">Pipeline comercial</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h3 className="mb-4 font-display text-lg font-semibold">Oportunidades por estado</h3>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {(data?.byStage ?? []).map((s) => (
+            <div key={s.label} className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{s.label}</span>
+              <span className="font-medium">{s.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
