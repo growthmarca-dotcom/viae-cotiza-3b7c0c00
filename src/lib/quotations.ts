@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { QuotationFormState } from "@/components/quotation-form";
 
 type SaveArgs = {
@@ -125,7 +126,8 @@ export async function duplicateQuotation(id: string): Promise<string> {
     ...rest,
     title: `${String(row.title ?? "Cotización")} (copia)`,
     status: "draft",
-  } as Parameters<ReturnType<typeof supabase.from<"quotations">>["insert"]>[0];
+  } as unknown as TablesInsert<"quotations">;
+
 
   const { data: inserted, error: insErr } = await supabase
     .from("quotations")
