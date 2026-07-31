@@ -58,6 +58,7 @@ import {
   listActorNames,
 } from "@/lib/transport";
 import { citiesOf, DEFAULT_COUNTRY, regionsOf, zonesOf, zonesOfCity } from "@/lib/geo";
+import { ServiceEconomicsPanel } from "@/components/service-economics-panel";
 
 
 const NONE = "__none__";
@@ -516,7 +517,10 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
                 </span>
               </div>
 
+              <ServiceEconomicsPanel service={s} onSaved={load} />
+
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">
                   Cambiar estado
                 </span>
