@@ -157,10 +157,15 @@ function ResourcesPage() {
     setSelfDrive(false);
   }
 
-  const subtypeOptions =
-    resourceClass === "all"
-      ? Object.values(RESOURCE_SUBTYPES).flat()
-      : (RESOURCE_SUBTYPES[resourceClass] ?? []);
+  /** Los subtipos se deduplican: varias clases comparten valores como "other". */
+  const subtypeOptions = useMemo(() => {
+    const list =
+      resourceClass === "all"
+        ? Object.values(RESOURCE_SUBTYPES).flat()
+        : (RESOURCE_SUBTYPES[resourceClass] ?? []);
+    const seen = new Set<string>();
+    return list.filter((s) => (seen.has(s.value) ? false : (seen.add(s.value), true)));
+  }, [resourceClass]);
 
 
   async function submitResource(input: ResourceInput) {
