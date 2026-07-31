@@ -303,7 +303,17 @@ export type TransportServiceInput = {
   collection_status: TransportCollectionStatus;
   collection_amount: string;
   collection_currency: string;
+  // --- economía del servicio (v1.6)
+  sale_amount: string;
+  sale_currency: string;
+  sale_exchange_rate: string;
+  sale_rate_date: string;
+  cost_amount: string;
+  cost_currency: string;
+  cost_exchange_rate: string;
+  cost_rate_date: string;
 };
+
 
 export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   service_type: "airport_transfer",
@@ -327,7 +337,16 @@ export const EMPTY_TRANSPORT_SERVICE: TransportServiceInput = {
   collection_status: "not_applicable",
   collection_amount: "",
   collection_currency: "ARS",
+  sale_amount: "",
+  sale_currency: "ARS",
+  sale_exchange_rate: "",
+  sale_rate_date: "",
+  cost_amount: "",
+  cost_currency: "ARS",
+  cost_exchange_rate: "",
+  cost_rate_date: "",
 };
+
 
 export function serviceToInput(s: TransportService): TransportServiceInput {
   return {
@@ -352,8 +371,17 @@ export function serviceToInput(s: TransportService): TransportServiceInput {
     collection_status: (s.collection_status ?? "not_applicable") as TransportCollectionStatus,
     collection_amount: s.collection_amount != null ? String(s.collection_amount) : "",
     collection_currency: s.collection_currency ?? "ARS",
+    sale_amount: s.sale_amount != null ? String(s.sale_amount) : "",
+    sale_currency: s.sale_currency ?? "ARS",
+    sale_exchange_rate: s.sale_exchange_rate != null ? String(s.sale_exchange_rate) : "",
+    sale_rate_date: s.sale_rate_date ?? "",
+    cost_amount: s.cost_amount != null ? String(s.cost_amount) : "",
+    cost_currency: s.cost_currency ?? "ARS",
+    cost_exchange_rate: s.cost_exchange_rate != null ? String(s.cost_exchange_rate) : "",
+    cost_rate_date: s.cost_rate_date ?? "",
   };
 }
+
 
 function servicePayload(input: TransportServiceInput) {
   const text = (v: string) => (v.trim() === "" ? null : v.trim());
@@ -380,8 +408,17 @@ function servicePayload(input: TransportServiceInput) {
     collection_status: input.collection_status,
     collection_amount: num(input.collection_amount),
     collection_currency: input.collection_currency || "ARS",
+    sale_amount: num(input.sale_amount),
+    sale_currency: input.sale_currency || "ARS",
+    sale_exchange_rate: num(input.sale_exchange_rate),
+    sale_rate_date: text(input.sale_rate_date),
+    cost_amount: num(input.cost_amount),
+    cost_currency: input.cost_currency || "ARS",
+    cost_exchange_rate: num(input.cost_exchange_rate),
+    cost_rate_date: text(input.cost_rate_date),
   };
 }
+
 
 /** Duración estimada por defecto según el tipo de servicio (minutos). */
 export const DEFAULT_DURATIONS: Record<string, number> = {

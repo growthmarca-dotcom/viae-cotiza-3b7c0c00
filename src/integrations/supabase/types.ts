@@ -725,6 +725,48 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          note: string | null
+          quote_currency: string
+          rate: number
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          note?: string | null
+          quote_currency?: string
+          rate: number
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          note?: string | null
+          quote_currency?: string
+          rate?: number
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1332,6 +1374,10 @@ export type Database = {
           commission_value: number | null
           company_id: string | null
           completed_at: string | null
+          cost_amount: number | null
+          cost_currency: string
+          cost_exchange_rate: number | null
+          cost_rate_date: string | null
           country: string | null
           created_at: string
           currency: string
@@ -1351,9 +1397,17 @@ export type Database = {
           record_status: Database["public"]["Enums"]["record_status"]
           rejected_at: string | null
           rejection_reason: string | null
+          sale_amount: number | null
+          sale_currency: string
+          sale_exchange_rate: number | null
+          sale_rate_date: string | null
           service_date: string | null
           service_time: string | null
           service_type: Database["public"]["Enums"]["transport_service_type"]
+          settled_at: string | null
+          settled_by: string | null
+          settlement_note: string | null
+          settlement_status: Database["public"]["Enums"]["transport_settlement_status"]
           started_at: string | null
           state: string | null
           status: Database["public"]["Enums"]["transport_service_status"]
@@ -1382,6 +1436,10 @@ export type Database = {
           commission_value?: number | null
           company_id?: string | null
           completed_at?: string | null
+          cost_amount?: number | null
+          cost_currency?: string
+          cost_exchange_rate?: number | null
+          cost_rate_date?: string | null
           country?: string | null
           created_at?: string
           currency?: string
@@ -1401,9 +1459,17 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           rejected_at?: string | null
           rejection_reason?: string | null
+          sale_amount?: number | null
+          sale_currency?: string
+          sale_exchange_rate?: number | null
+          sale_rate_date?: string | null
           service_date?: string | null
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_note?: string | null
+          settlement_status?: Database["public"]["Enums"]["transport_settlement_status"]
           started_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
@@ -1432,6 +1498,10 @@ export type Database = {
           commission_value?: number | null
           company_id?: string | null
           completed_at?: string | null
+          cost_amount?: number | null
+          cost_currency?: string
+          cost_exchange_rate?: number | null
+          cost_rate_date?: string | null
           country?: string | null
           created_at?: string
           currency?: string
@@ -1451,9 +1521,17 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           rejected_at?: string | null
           rejection_reason?: string | null
+          sale_amount?: number | null
+          sale_currency?: string
+          sale_exchange_rate?: number | null
+          sale_rate_date?: string | null
           service_date?: string | null
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_note?: string | null
+          settlement_status?: Database["public"]["Enums"]["transport_settlement_status"]
           started_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
@@ -1699,6 +1777,7 @@ export type Database = {
         | "group_transfer"
         | "driver_excursion"
         | "other"
+      transport_settlement_status: "pending" | "in_review" | "settled"
       vehicle_type:
         | "sedan"
         | "suv"
@@ -1987,6 +2066,7 @@ export const Constants = {
         "driver_excursion",
         "other",
       ],
+      transport_settlement_status: ["pending", "in_review", "settled"],
       vehicle_type: [
         "sedan",
         "suv",

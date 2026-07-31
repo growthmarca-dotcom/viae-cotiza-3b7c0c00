@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fetchCompany, saveCompany, uploadLogo, type CompanyRow } from "@/lib/company";
+import { ExchangeRateCard } from "@/components/exchange-rate-card";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -290,6 +291,10 @@ function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <ExchangeRateCard />
+
+
 
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">

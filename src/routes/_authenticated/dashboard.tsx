@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
+import { useAccount } from "@/hooks/use-account";
+import { listTransportServices } from "@/lib/transport";
+import { computeTransportEconomics } from "@/lib/transport-economics";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -122,6 +125,10 @@ function Dashboard() {
 
       <PipelineSection />
 
+      <TransportEconomicsSection />
+
+
+
 
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -144,6 +151,65 @@ function Dashboard() {
     </div>
   );
 }
+/** Economía del transporte (v1.6) en la moneda de análisis configurada. */
+function TransportEconomicsSection() {
+  const analysisCurrency = useAnalysisCurrency();
+  const { isAdmin } = useAccount();
+
+  const { data } = useQuery({
+    queryKey: ["transport-economics", analysisCurrency],
+    queryFn: async () => {
+      const services = await listTransportServices();
+      return computeTransportEconomics(services, analysisCurrency);
+    },
+  });
+
+  const cards = [
+    {
+      label: `Ventas de transporte (${analysisCurrency})`,
+      value: formatMoney(analysisCurrency, data?.sales ?? 0),
+    },
+    ...(isAdmin
+      ? [
+          {
+            label: `Costos operativos (${analysisCurrency})`,
+            value: formatMoney(analysisCurrency, data?.costs ?? 0),
+          },
+          {
+            label: "Margen bruto ViaE",
+            value: `${formatMoney(analysisCurrency, data?.gross ?? 0)}${
+              data?.marginPercent != null ? ` · ${data.marginPercent}%` : ""
+            }`,
+          },
+        ]
+      : []),
+    { label: "Servicios finalizados", value: String(data?.servicesDone ?? 0) },
+    {
+      label: "Cobros pendientes",
+      value: `${data?.pendingCollection ?? 0} · ${formatMoney(analysisCurrency, data?.pendingCollectionAmount ?? 0)}`,
+    },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <h2 className="font-display text-2xl font-semibold tracking-tight">Economía del transporte</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <span className="text-sm text-muted-foreground">{c.label}</span>
+            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+          </div>
+        ))}
+      </div>
+      {(data?.excluded ?? 0) > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {data?.excluded} servicio(s) sin tipo de cambio quedaron fuera de los totales.
+        </p>
+      )}
+    </section>
+  );
+}
+
 
 /** Indicadores del pipeline comercial (oportunidades). */
 function PipelineSection() {
