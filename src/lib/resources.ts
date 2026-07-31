@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TransportServiceType, VehicleType } from "@/lib/transport";
+import type { ResourceClass, ResourceOwnerType } from "@/lib/resource-catalog";
+
 
 
 /**
