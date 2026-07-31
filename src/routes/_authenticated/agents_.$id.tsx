@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
 import { useAccount } from "@/hooks/use-account";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
+import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { stageClasses, stageLabel, type Opportunity } from "@/lib/opportunities";
 import {
   AGENT_STATUSES,
@@ -23,12 +24,21 @@ import {
   agentToInput,
   computeAgentStats,
   getAgent,
+  inviteAgentUser,
+  invitationStatusClasses,
+  invitationStatusLabel,
+  isInvitationExpired,
+  linkAgentUser,
+  listLinkableProfiles,
   listOpportunitiesByAgent,
   setAgentStatus,
+  setInvitationStatus,
+  unlinkAgentUser,
   updateAgent,
   type Agent,
   type AgentInput,
   type AgentStatus,
+  type LinkableProfile,
 } from "@/lib/agents";
 
 export const Route = createFileRoute("/_authenticated/agents_/$id")({
