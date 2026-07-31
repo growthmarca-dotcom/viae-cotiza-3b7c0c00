@@ -59,6 +59,7 @@ const NONE = "__none__";
  */
 export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const [services, setServices] = useState<TransportService[]>([]);
+  const [allServices, setAllServices] = useState<TransportService[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [form, setForm] = useState<TransportServiceInput>(EMPTY_TRANSPORT_SERVICE);
@@ -69,14 +70,16 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [svcs, res, comps] = await Promise.all([
+      const [svcs, res, comps, all] = await Promise.all([
         listBookingTransportServices(bookingId),
         listResources(),
         listCompanies(true),
+        listTransportServices({}),
       ]);
       setServices(svcs);
       setResources(res);
       setCompanies(comps);
+      setAllServices(all);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar el transporte");
     } finally {
@@ -108,6 +111,7 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
   const drivers = candidates.filter(isDriverResource);
   const vehicles = candidates.filter(isVehicleResource);
   const byId = new Map(resources.map((r) => [r.id, r]));
+
   const companyById = new Map(companies.map((c) => [c.id, c]));
 
   async function create() {
