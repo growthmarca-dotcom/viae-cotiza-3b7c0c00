@@ -69,6 +69,16 @@ function QuotationDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  async function loadBooking() {
+    try {
+      setBooking(await getBookingByQuotation(id));
+    } catch {
+      setBooking(null);
+    }
+  }
 
   async function loadHistory() {
     const { data } = await supabase
