@@ -135,10 +135,46 @@ function ClientDetailPage() {
       } else {
         setHistory([]);
       }
+
+      await loadOpportunities();
+
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .eq("id", userData.user.id)
+          .maybeSingle();
+        setResponsables([
+          {
+            id: userData.user.id,
+            label: profile?.full_name || userData.user.email || "Yo",
+          },
+        ]);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar el cliente");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCreateOpportunity() {
+    setCreatingOpp(true);
+    try {
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (error || !userData.user) throw new Error("Sesión no válida.");
+      await createOpportunity({
+        userId: userData.user.id,
+        clientId: id,
+        title: `Oportunidad ${new Date().toLocaleDateString()}`,
+      });
+      toast.success("Oportunidad creada");
+      await loadOpportunities();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo crear la oportunidad");
+    } finally {
+      setCreatingOpp(false);
     }
   }
 
