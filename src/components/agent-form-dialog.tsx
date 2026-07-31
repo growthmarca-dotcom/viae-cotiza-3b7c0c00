@@ -36,6 +36,7 @@ import {
   type AgentWaStatus,
   type CommissionType,
 } from "@/lib/agents";
+import { AGENT_AVAILABILITIES, type AgentAvailability } from "@/lib/resources";
 
 type Props = {
   open: boolean;
@@ -357,6 +358,24 @@ export function AgentFormDialog({
 
           <SectionTitle>Motor de asignación (sólo registro)</SectionTitle>
           <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Disponibilidad operativa</Label>
+              <Select
+                value={form.availability}
+                onValueChange={(v) => set("availability", v as AgentAvailability)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AGENT_AVAILABILITIES.map((a) => (
+                    <SelectItem key={a.value} value={a.value}>
+                      {a.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>Zona principal</Label>
               <Input
