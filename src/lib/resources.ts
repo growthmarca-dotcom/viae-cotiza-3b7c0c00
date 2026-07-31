@@ -285,7 +285,18 @@ export type ResourceInput = {
   name: string;
   kind: CompanyKind;
   category: ResourceCategory;
+  /** Clasificación principal del catálogo (v1.8.2). */
+  resource_class: ResourceClass;
+  /** Subtipo dependiente de la clasificación. */
+  subtype: string;
+  /** Propietario del recurso (v1.8.2). */
+  owner_type: ResourceOwnerType;
+  owner_company_id: string;
+  owner_name: string;
+  /** Vehículo sin conductor (rent a car). */
+  self_drive: boolean;
   company_id: string;
+
   agent_id: string;
   description: string;
   contact_name: string;
