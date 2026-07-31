@@ -38,6 +38,7 @@ import {
 } from "@/lib/clients";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import { OpportunityPanel } from "@/components/opportunity-panel";
+import { agentFullName, listAssignableAgents } from "@/lib/agents";
 import {
   createOpportunity,
   listOpportunitiesByClient,
@@ -92,6 +93,7 @@ function ClientDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [responsables, setResponsables] = useState<{ id: string; label: string }[]>([]);
+  const [agentOptions, setAgentOptions] = useState<{ id: string; label: string }[]>([]);
   const [creatingOpp, setCreatingOpp] = useState(false);
 
   async function loadOpportunities() {
@@ -101,6 +103,13 @@ function ClientDetailPage() {
       setOpportunities([]);
     }
   }
+
+  useEffect(() => {
+    listAssignableAgents()
+      .then((rows) => setAgentOptions(rows.map((a) => ({ id: a.id, label: agentFullName(a) }))))
+      .catch(() => setAgentOptions([]));
+  }, []);
+
 
   async function load() {
     setLoading(true);
@@ -314,6 +323,7 @@ function ClientDetailPage() {
       <OpportunityPanel
         opportunities={opportunities}
         responsables={responsables}
+        agents={agentOptions}
         creating={creatingOpp}
         onCreate={handleCreateOpportunity}
         onChanged={loadOpportunities}
