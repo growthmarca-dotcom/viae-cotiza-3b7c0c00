@@ -18,6 +18,7 @@ import { Route as AuthenticatedTransportRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
+import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedResourcesIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
 import { Route as AuthenticatedProvidersIdRouteImport } from './routes/_authenticated/providers_.$id'
+import { Route as AuthenticatedOrganizationsIdRouteImport } from './routes/_authenticated/organizations_.$id'
 import { Route as AuthenticatedLeadsIdRouteImport } from './routes/_authenticated/leads_.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
 import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
@@ -82,6 +84,12 @@ const AuthenticatedProvidersRoute = AuthenticatedProvidersRouteImport.update({
   path: '/providers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrganizationsRoute =
+  AuthenticatedOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
@@ -157,6 +165,12 @@ const AuthenticatedProvidersIdRoute =
     path: '/providers/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrganizationsIdRoute =
+  AuthenticatedOrganizationsIdRouteImport.update({
+    id: '/organizations_/$id',
+    path: '/organizations/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadsIdRoute = AuthenticatedLeadsIdRouteImport.update({
   id: '/leads_/$id',
   path: '/leads/$id',
@@ -196,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/organizations': typeof AuthenticatedOrganizationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -206,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
+  '/organizations/$id': typeof AuthenticatedOrganizationsIdRoute
   '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -225,6 +241,7 @@ export interface FileRoutesByTo {
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/operations': typeof AuthenticatedOperationsRoute
+  '/organizations': typeof AuthenticatedOrganizationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -235,6 +252,7 @@ export interface FileRoutesByTo {
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
+  '/organizations/$id': typeof AuthenticatedOrganizationsIdRoute
   '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -256,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
+  '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -266,6 +285,7 @@ export interface FileRoutesById {
   '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
   '/_authenticated/clients_/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/leads_/$id': typeof AuthenticatedLeadsIdRoute
+  '/_authenticated/organizations_/$id': typeof AuthenticatedOrganizationsIdRoute
   '/_authenticated/providers_/$id': typeof AuthenticatedProvidersIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
@@ -287,6 +307,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/leads'
     | '/operations'
+    | '/organizations'
     | '/providers'
     | '/resources'
     | '/settings'
@@ -297,6 +318,7 @@ export interface FileRouteTypes {
     | '/bookings/$id'
     | '/clients/$id'
     | '/leads/$id'
+    | '/organizations/$id'
     | '/providers/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -316,6 +338,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/leads'
     | '/operations'
+    | '/organizations'
     | '/providers'
     | '/resources'
     | '/settings'
@@ -326,6 +349,7 @@ export interface FileRouteTypes {
     | '/bookings/$id'
     | '/clients/$id'
     | '/leads/$id'
+    | '/organizations/$id'
     | '/providers/$id'
     | '/quotations/$id'
     | '/quotations/new'
@@ -346,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/driver'
     | '/_authenticated/leads'
     | '/_authenticated/operations'
+    | '/_authenticated/organizations'
     | '/_authenticated/providers'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
@@ -356,6 +381,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings_/$id'
     | '/_authenticated/clients_/$id'
     | '/_authenticated/leads_/$id'
+    | '/_authenticated/organizations_/$id'
     | '/_authenticated/providers_/$id'
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
@@ -435,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/providers'
       preLoaderRoute: typeof AuthenticatedProvidersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/organizations': {
+      id: '/_authenticated/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof AuthenticatedOrganizationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/operations': {
@@ -535,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProvidersIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/organizations_/$id': {
+      id: '/_authenticated/organizations_/$id'
+      path: '/organizations/$id'
+      fullPath: '/organizations/$id'
+      preLoaderRoute: typeof AuthenticatedOrganizationsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads_/$id': {
       id: '/_authenticated/leads_/$id'
       path: '/leads/$id'
@@ -583,6 +623,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
+  AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -591,6 +632,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedLeadsIdRoute: typeof AuthenticatedLeadsIdRoute
+  AuthenticatedOrganizationsIdRoute: typeof AuthenticatedOrganizationsIdRoute
   AuthenticatedProvidersIdRoute: typeof AuthenticatedProvidersIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
@@ -609,6 +651,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
+  AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -617,6 +660,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedLeadsIdRoute: AuthenticatedLeadsIdRoute,
+  AuthenticatedOrganizationsIdRoute: AuthenticatedOrganizationsIdRoute,
   AuthenticatedProvidersIdRoute: AuthenticatedProvidersIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
@@ -638,13 +682,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

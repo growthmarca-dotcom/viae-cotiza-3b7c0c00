@@ -17,6 +17,11 @@ import {
 import { useAccount } from "@/hooks/use-account";
 import { ProviderFormDialog } from "@/components/provider-form-dialog";
 import { listResources } from "@/lib/resources";
+import {
+  ensureProviderOrganization,
+  getOrganization,
+  organizationRoleLabel,
+} from "@/lib/organizations";
 import { formatMoney } from "@/lib/currency";
 import {
   assignResourceToProvider,
@@ -73,6 +78,22 @@ function ProviderDetailPage() {
     queryKey: ["provider-panel", id],
     enabled: isOperations,
     queryFn: () => getProviderPanel(id),
+  });
+
+  const { data: organization } = useQuery({
+    queryKey: ["provider-organization", provider?.organization_id],
+    enabled: Boolean(provider?.organization_id),
+    queryFn: () => getOrganization(provider!.organization_id as string),
+  });
+
+  const linkOrganization = useMutation({
+    mutationFn: () => ensureProviderOrganization(id),
+    onSuccess: () => {
+      toast.success("Organización vinculada");
+      qc.invalidateQueries({ queryKey: ["provider", id] });
+      qc.invalidateQueries({ queryKey: ["organizations"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: evaluations = [] } = useQuery({
@@ -150,6 +171,38 @@ function ProviderDetailPage() {
           <Pencil className="mr-2 h-4 w-4" /> Editar ficha
         </Button>
       </header>
+
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div>
+          <p className="text-sm text-muted-foreground">Organización asociada</p>
+          <p className="mt-1 font-display text-lg font-semibold">
+            {organization ? organization.trade_name : "Sin organización vinculada"}
+          </p>
+          {organization && (
+            <p className="text-sm text-muted-foreground">
+              Roles: {organization.roles.map(organizationRoleLabel).join(", ") || "—"}
+            </p>
+          )}
+        </div>
+        {organization ? (
+          <Link
+            to="/organizations/$id"
+            params={{ id: organization.id }}
+            className="text-sm text-primary underline"
+          >
+            Ver organización
+          </Link>
+        ) : (
+          <Button
+            variant="outline"
+            onClick={() => linkOrganization.mutate()}
+            disabled={linkOrganization.isPending}
+          >
+            {linkOrganization.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Vincular organización
+          </Button>
+        )}
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
