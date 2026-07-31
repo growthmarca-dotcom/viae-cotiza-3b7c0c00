@@ -13,7 +13,13 @@ export type BookingResource = Tables<"booking_resources">;
 
 export type CompanyKind = "internal" | "external";
 export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
-export type ResourceAvailability = "available" | "busy" | "unavailable" | "out_of_service";
+export type ResourceAvailability =
+  | "available"
+  | "busy"
+  | "unavailable"
+  | "out_of_service"
+  | "off_hours";
+
 export type ResourceCategory =
   | "accommodation"
   | "room"
