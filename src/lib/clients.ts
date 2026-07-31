@@ -117,11 +117,41 @@ export function inputToRow(input: ClientInput, userId: string) {
   };
 }
 
-export async function listClients() {
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .order("created_at", { ascending: false });
+/**
+ * Estado de archivo del registro. Los clientes nunca se eliminan:
+ * sólo cambian entre Activo, Archivado, Inactivo o Suspendido.
+ */
+export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
+
+export const RECORD_STATUSES: { value: RecordStatus; label: string }[] = [
+  { value: "active", label: "Activo" },
+  { value: "archived", label: "Archivado" },
+  { value: "inactive", label: "Inactivo" },
+  { value: "suspended", label: "Suspendido" },
+];
+
+export function recordStatusLabel(value: string) {
+  return RECORD_STATUSES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function recordStatusClasses(value: string) {
+  switch (value) {
+    case "active":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "suspended":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    case "archived":
+    case "inactive":
+      return "bg-muted text-muted-foreground border-border";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
+
+export async function listClients(recordStatus: RecordStatus | "all" = "active") {
+  let q = supabase.from("clients").select("*").order("created_at", { ascending: false });
+  if (recordStatus !== "all") q = q.eq("record_status", recordStatus);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as Client[];
 }
@@ -155,7 +185,8 @@ export async function updateClientStatus(id: string, status: ClientStatus) {
   if (error) throw error;
 }
 
-export async function deleteClient(id: string) {
-  const { error } = await supabase.from("clients").delete().eq("id", id);
+/** Los clientes nunca se eliminan definitivamente: sólo se archivan. */
+export async function setClientRecordStatus(id: string, recordStatus: RecordStatus) {
+  const { error } = await supabase.from("clients").update({ record_status: recordStatus }).eq("id", id);
   if (error) throw error;
 }
