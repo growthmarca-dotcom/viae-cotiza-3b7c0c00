@@ -670,6 +670,14 @@ export function ResourceFormDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label>Versión</Label>
+                <Input
+                  value={form.vehicle_version}
+                  onChange={(e) => set("vehicle_version", e.target.value)}
+                  placeholder="XEI 1.8 CVT"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Año</Label>
                 <Input
                   type="number"
@@ -693,6 +701,44 @@ export function ResourceFormDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label>Combustible</Label>
+                <Select
+                  value={form.vehicle_fuel || NONE}
+                  onValueChange={(v) => set("vehicle_fuel", v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin definir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sin definir</SelectItem>
+                    {VEHICLE_FUELS.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Transmisión</Label>
+                <Select
+                  value={form.vehicle_transmission || NONE}
+                  onValueChange={(v) => set("vehicle_transmission", v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin definir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sin definir</SelectItem>
+                    {VEHICLE_TRANSMISSIONS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Tipo de vehículo</Label>
                 <Select
                   value={form.vehicle_type || NONE}
@@ -712,7 +758,7 @@ export function ResourceFormDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Capacidad de equipaje</Label>
+                <Label>Capacidad de equipaje (total)</Label>
                 <Input
                   type="number"
                   min={0}
@@ -720,7 +766,55 @@ export function ResourceFormDialog({
                   onChange={(e) => set("luggage_capacity", e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Equipaje grande</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.large_luggage_capacity}
+                  onChange={(e) => set("large_luggage_capacity", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Equipaje de mano</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.cabin_luggage_capacity}
+                  onChange={(e) => set("cabin_luggage_capacity", e.target.value)}
+                />
+              </div>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.is_accessible}
+                  onCheckedChange={(v) => set("is_accessible", v === true)}
+                />
+                Accesibilidad
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.has_air_conditioning}
+                  onCheckedChange={(v) => set("has_air_conditioning", v === true)}
+                />
+                Aire acondicionado
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <Checkbox
+                  checked={form.self_drive}
+                  onCheckedChange={(v) => set("self_drive", v === true)}
+                />
+                Sin conductor (rent a car)
+              </label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Observaciones del vehículo</Label>
+                <Textarea
+                  rows={2}
+                  value={form.vehicle_notes}
+                  onChange={(e) => set("vehicle_notes", e.target.value)}
+                />
+              </div>
             </>
+
           )}
 
           <SectionTitle>Zonas de cobertura</SectionTitle>
