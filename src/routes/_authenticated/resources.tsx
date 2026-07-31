@@ -1,14 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, Building2, Loader2, Plus, Search } from "lucide-react";
+import { Boxes, Building2, Loader2, Package, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyFormDialog } from "@/components/company-form-dialog";
 import { ResourceFormDialog } from "@/components/resource-form-dialog";
+import { ExtrasManager } from "@/components/extras-manager";
 import { listAssignableAgents } from "@/lib/agents";
+import {
+  RESOURCE_CLASSES,
+  RESOURCE_SUBTYPES,
+  resourceClassLabel,
+  subtypeLabel,
+  type ResourceClass,
+} from "@/lib/resource-catalog";
+import { allCities, allRegions } from "@/lib/geo";
 import {
   availabilityClasses,
   availabilityLabel,
@@ -29,6 +38,7 @@ import {
   type ResourceCategory,
   type ResourceInput,
 } from "@/lib/resources";
+
 
 export const Route = createFileRoute("/_authenticated/resources")({
   component: ResourcesPage,
