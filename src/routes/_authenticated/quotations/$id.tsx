@@ -238,7 +238,7 @@ function QuotationDetailPage() {
 
       <div data-print-hide className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
-          <History className="h-4 w-4 text-gold" /> Historial de modificaciones
+          <HistoryIcon className="h-4 w-4 text-gold" /> Historial de modificaciones
         </h2>
         <ul className="mt-4 space-y-2 text-sm">
           {history.length === 0 && (
