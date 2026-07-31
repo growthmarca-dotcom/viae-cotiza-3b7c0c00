@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
+import { formatMoney } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
