@@ -28,6 +28,15 @@ import {
   type InternalUser,
   type OperationStatus,
 } from "@/lib/operations";
+import {
+  computeChecklistIncidentStats,
+  computeChecklistProgress,
+  listAllIncidents,
+  listChecklistByBooking,
+  type ChecklistItem,
+  type Incident,
+} from "@/lib/checklist";
+import { ChecklistProgressBar } from "@/components/booking-checklist-panel";
 
 export const Route = createFileRoute("/_authenticated/operations")({
   component: OperationsPage,
