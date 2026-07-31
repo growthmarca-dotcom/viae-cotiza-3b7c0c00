@@ -18,6 +18,8 @@ import { listTransportServices } from "@/lib/transport";
 import { computeTransportEconomics } from "@/lib/transport-economics";
 import { computeLeadStats, countActiveLeadsByAgent, listLeads } from "@/lib/leads";
 import { agentFullName, listAgents } from "@/lib/agents";
+import { listBookings } from "@/lib/bookings";
+import { computeOperationsStats, listAllBookingServices } from "@/lib/operations";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
