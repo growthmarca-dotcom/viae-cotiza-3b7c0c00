@@ -147,8 +147,17 @@
   }
 }
 
+[data-print-only] {
+  display: none;
+}
+
 @media print {
-  [data-print-hide] {
+  @page {
+    margin: 12mm;
+  }
+  [data-print-hide],
+  body > div > div > aside,
+  .print-screen-hide {
     display: none !important;
   }
   body {
@@ -157,4 +166,145 @@
   main {
     padding: 0 !important;
   }
+  [data-print-only] {
+    display: block !important;
+  }
+  .print-doc {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  .print-header {
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 6px;
+  }
+  .print-header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .print-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .print-logo {
+    height: 46px;
+    width: auto;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 4px;
+    padding: 3px;
+  }
+  .print-brand-name {
+    font-size: 15pt;
+    font-weight: 700;
+  }
+  .print-brand-sub,
+  .print-contact {
+    font-size: 8.5pt;
+    opacity: 0.9;
+    text-align: right;
+  }
+  .print-brand-sub {
+    text-align: left;
+  }
+  .print-title {
+    margin-top: 20px;
+  }
+  .print-eyebrow {
+    font-size: 8.5pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .print-title h1 {
+    font-size: 20pt;
+    margin: 4px 0 6px;
+  }
+  .print-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 9.5pt;
+    color: #555;
+  }
+  .print-gallery {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .print-gallery img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .print-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px;
+    border: 1px solid #e4e2dc;
+    border-radius: 6px;
+  }
+  .print-block {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #e4e2dc;
+    border-radius: 6px;
+    break-inside: avoid;
+  }
+  .print-block h2 {
+    font-size: 12pt;
+    margin: 0 0 8px;
+  }
+  .print-field {
+    display: flex;
+    flex-direction: column;
+  }
+  .print-label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #777;
+  }
+  .print-value {
+    font-size: 10.5pt;
+    font-weight: 500;
+  }
+  .print-text {
+    white-space: pre-wrap;
+    font-size: 10pt;
+    margin: 6px 0 0;
+  }
+  .print-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10pt;
+    padding: 2px 0;
+  }
+  .print-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 8px;
+    padding-top: 8px;
+    font-size: 13pt;
+  }
+  .print-footer {
+    margin-top: 22px;
+    padding-top: 10px;
+    font-size: 8.5pt;
+    color: #666;
+    text-align: center;
+  }
+  .print-socials {
+    margin-top: 4px;
+  }
 }
+

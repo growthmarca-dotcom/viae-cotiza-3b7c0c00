@@ -1,10 +1,24 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Copy, Download, ExternalLink, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Archive,
+  ArchiveRestore,
+  Copy,
+  Download,
+  ExternalLink,
+  History as HistoryIcon,
+  Loader2,
+  Pencil,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { signImageUrls } from "@/lib/quotations";
+import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/quotations";
+import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
+import { QuotationPrintDocument } from "@/components/quotation-print";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   AlertDialog,
@@ -29,6 +43,17 @@ export const Route = createFileRoute("/_authenticated/quotations/$id")({
 
 type Q = Tables<"quotations">;
 
+type HistoryEntry = { id: string; action: string; created_at: string };
+
+function describeHistory(action: string) {
+  if (action === "created") return "Cotización creada";
+  if (action === "updated") return "Cotización actualizada";
+  if (action === "archived") return "Cotización archivada";
+  if (action === "unarchived") return "Cotización desarchivada";
+  if (action === "duplicated") return "Cotización duplicada";
+  return action;
+}
+
 function QuotationDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -37,6 +62,18 @@ function QuotationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  async function loadHistory() {
+    const { data } = await supabase
+      .from("quotation_history")
+      .select("id, action, created_at")
+      .eq("quotation_id", id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setHistory((data ?? []) as HistoryEntry[]);
+  }
 
   useEffect(() => {
     (async () => {
@@ -50,9 +87,14 @@ function QuotationDetailPage() {
       setQ(data as Q);
       const signed = await signImageUrls(data.images ?? []);
       setUrls(signed);
+      const { info } = await fetchCompany();
+      setCompany(info);
+      await loadHistory();
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
 
   if (loading) {
     return (
@@ -72,6 +114,29 @@ function QuotationDetailPage() {
     toast.success("Enlace copiado");
   }
 
+  async function handleDuplicate() {
+    try {
+      const newId = await duplicateQuotation(id);
+      toast.success("Cotización duplicada");
+      navigate({ to: "/quotations/$id/edit", params: { id: newId } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo duplicar");
+    }
+  }
+
+  async function handleArchive() {
+    if (!q) return;
+    try {
+      await setQuotationArchived(id, !q.archived);
+      toast.success(q.archived ? "Cotización desarchivada" : "Cotización archivada");
+      setQ({ ...q, archived: !q.archived });
+      loadHistory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo archivar");
+    }
+  }
+
+
   async function handleDelete() {
     setDeleting(true);
     const { error } = await supabase.from("quotations").delete().eq("id", id);
@@ -85,7 +150,9 @@ function QuotationDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-24">
+    <>
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
+    <div className="mx-auto max-w-4xl space-y-6 pb-24 print-screen-hide">
       <Link to="/quotations" data-print-hide className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver a cotizaciones
       </Link>
@@ -95,6 +162,7 @@ function QuotationDetailPage() {
           <h1 className="font-display text-3xl font-semibold sm:text-4xl">{q.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {q.destination ?? "Sin destino"} · Creada {new Date(q.created_at).toLocaleDateString()}
+            {q.archived ? " · Archivada" : ""}
           </p>
         </div>
         <div data-print-hide className="flex flex-wrap gap-2">
@@ -104,11 +172,26 @@ function QuotationDetailPage() {
           <Button variant="outline" onClick={() => navigate({ to: "/quotations/$id/edit", params: { id } })}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
+          <Button variant="outline" onClick={handleDuplicate}>
+            <Copy className="mr-2 h-4 w-4" /> Duplicar
+          </Button>
+          <Button variant="outline" onClick={handleArchive}>
+            {q.archived ? (
+              <>
+                <ArchiveRestore className="mr-2 h-4 w-4" /> Desarchivar
+              </>
+            ) : (
+              <>
+                <Archive className="mr-2 h-4 w-4" /> Archivar
+              </>
+            )}
+          </Button>
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
         </div>
       </header>
+
 
       {/* Share card */}
       <div data-print-hide className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
@@ -176,6 +259,23 @@ function QuotationDetailPage() {
         </Card>
       )}
 
+      <div data-print-hide className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <HistoryIcon className="h-4 w-4 text-gold" /> Historial de modificaciones
+        </h2>
+        <ul className="mt-4 space-y-2 text-sm">
+          {history.length === 0 && (
+            <li className="text-muted-foreground">Sin modificaciones registradas todavía.</li>
+          )}
+          {history.map((h) => (
+            <li key={h.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+              <span>{describeHistory(h.action)}</span>
+              <span className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -193,7 +293,9 @@ function QuotationDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </>
   );
+
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {

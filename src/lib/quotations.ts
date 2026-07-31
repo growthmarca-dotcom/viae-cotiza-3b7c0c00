@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { QuotationFormState } from "@/components/quotation-form";
 
 type SaveArgs = {
@@ -105,4 +106,41 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     currency: s(row.currency) || "USD",
     observations: s(row.notes),
   };
+}
+
+/** Duplica una cotización existente (incluye las imágenes ya cargadas). */
+export async function duplicateQuotation(id: string): Promise<string> {
+  const { data: row, error } = await supabase.from("quotations").select("*").eq("id", id).single();
+  if (error) throw error;
+
+  const {
+    id: _id,
+    created_at: _c,
+    updated_at: _u,
+    share_token: _t,
+    archived: _a,
+    ...rest
+  } = row as unknown as Record<string, unknown>;
+
+  const payload = {
+    ...rest,
+    title: `${String(row.title ?? "Cotización")} (copia)`,
+    status: "draft",
+  } as unknown as TablesInsert<"quotations">;
+
+
+  const { data: inserted, error: insErr } = await supabase
+    .from("quotations")
+    .insert(payload)
+
+    .select("id")
+    .single();
+  if (insErr) throw insErr;
+  return inserted.id;
+}
+
+/** Archiva o desarchiva una cotización. */
+export async function setQuotationArchived(id: string, archived: boolean) {
+  const { error } = await supabase.from("quotations").update({ archived }).eq("id", id);
+  if (error) throw error;
 }
