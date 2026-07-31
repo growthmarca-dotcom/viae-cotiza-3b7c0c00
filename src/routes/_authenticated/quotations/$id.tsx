@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, ExternalLink, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/quotations/$id")({
   component: QuotationDetailPage,
   head: () => ({
     meta: [
-      { title: "Detalle de cotización — ViaE" },
+      { title: "Detalle de cotización — ViaE Sales Hub" },
       { name: "description", content: "Detalle completo de la cotización." },
     ],
   }),
@@ -86,7 +86,7 @@ function QuotationDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-24">
-      <Link to="/quotations" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link to="/quotations" data-print-hide className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver a cotizaciones
       </Link>
 
@@ -97,7 +97,10 @@ function QuotationDetailPage() {
             {q.destination ?? "Sin destino"} · Creada {new Date(q.created_at).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div data-print-hide className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => window.print()}>
+            <Download className="mr-2 h-4 w-4" /> Descargar PDF
+          </Button>
           <Button variant="outline" onClick={() => navigate({ to: "/quotations/$id/edit", params: { id } })}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
@@ -108,7 +111,7 @@ function QuotationDetailPage() {
       </header>
 
       {/* Share card */}
-      <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+      <div data-print-hide className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2 font-display text-lg font-semibold">
