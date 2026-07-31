@@ -66,6 +66,15 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 const NONE = "__none__";
 
+/** Convierte "Bariloche, Neuquén" en un listado limpio. */
+function parseList(value: string): string[] {
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
+
 export function ResourceFormDialog({
   open,
   onOpenChange,
