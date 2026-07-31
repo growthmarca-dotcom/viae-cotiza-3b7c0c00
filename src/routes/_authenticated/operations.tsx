@@ -62,6 +62,10 @@ function OperationsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [users, setUsers] = useState<InternalUser[]>([]);
   const [clients, setClients] = useState<ClientRow[]>([]);
+  const [checklistByBooking, setChecklistByBooking] = useState<Map<string, ChecklistItem[]>>(
+    new Map(),
+  );
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [query, setQuery] = useState("");
