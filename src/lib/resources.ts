@@ -1,0 +1,472 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+/**
+ * Módulo de Recursos Operativos (v1.0).
+ * Empresas (internas / externas) y los recursos que ofrecen: alojamientos,
+ * vehículos, guías, excursiones, seguros y agentes como recurso humano.
+ */
+
+export type Company = Tables<"companies">;
+export type Resource = Tables<"resources">;
+export type BookingResource = Tables<"booking_resources">;
+
+export type CompanyKind = "internal" | "external";
+export type RecordStatus = "active" | "archived" | "inactive" | "suspended";
+export type ResourceAvailability = "available" | "busy" | "unavailable" | "out_of_service";
+export type ResourceCategory =
+  | "accommodation"
+  | "room"
+  | "vehicle"
+  | "driver"
+  | "taxi"
+  | "transfer"
+  | "excursion"
+  | "guide"
+  | "insurance"
+  | "rental"
+  | "tourism_service"
+  | "agent"
+  | "other";
+
+export const COMPANY_KINDS: { value: CompanyKind; label: string }[] = [
+  { value: "internal", label: "Interna" },
+  { value: "external", label: "Externa" },
+];
+
+export const RESOURCE_CATEGORIES: { value: ResourceCategory; label: string }[] = [
+  { value: "accommodation", label: "Alojamiento" },
+  { value: "room", label: "Habitación / unidad" },
+  { value: "vehicle", label: "Vehículo" },
+  { value: "driver", label: "Chofer" },
+  { value: "taxi", label: "Taxi / remis" },
+  { value: "transfer", label: "Traslado" },
+  { value: "excursion", label: "Excursión" },
+  { value: "guide", label: "Guía" },
+  { value: "insurance", label: "Seguro" },
+  { value: "rental", label: "Alquiler" },
+  { value: "tourism_service", label: "Servicio turístico" },
+  { value: "agent", label: "Agente (recurso humano)" },
+  { value: "other", label: "Otro" },
+];
+
+export const RESOURCE_AVAILABILITIES: { value: ResourceAvailability; label: string }[] = [
+  { value: "available", label: "Disponible" },
+  { value: "busy", label: "Ocupado" },
+  { value: "unavailable", label: "No disponible" },
+  { value: "out_of_service", label: "Fuera de servicio" },
+];
+
+export type AgentAvailability = "available" | "busy" | "unavailable" | "off_hours";
+
+export const AGENT_AVAILABILITIES: { value: AgentAvailability; label: string }[] = [
+  { value: "available", label: "Disponible" },
+  { value: "busy", label: "Ocupado" },
+  { value: "unavailable", label: "No disponible" },
+  { value: "off_hours", label: "Fuera de horario" },
+];
+
+export const RECORD_STATUSES: { value: RecordStatus; label: string }[] = [
+  { value: "active", label: "Activo" },
+  { value: "archived", label: "Archivado" },
+  { value: "inactive", label: "Inactivo" },
+  { value: "suspended", label: "Suspendido" },
+];
+
+export const RESOURCE_ZONES = [
+  "Bariloche",
+  "Patagonia",
+  "Cuyo",
+  "Litoral",
+  "Norte argentino",
+  "Buenos Aires",
+  "Chile",
+  "Brasil",
+  "Internacional",
+  "Otra",
+] as const;
+
+export const RESOURCE_SPECIALTIES = [
+  "Ski",
+  "Aventura",
+  "Familias",
+  "Grupos",
+  "Corporativo",
+  "Lujo",
+  "Accesible",
+  "Idiomas",
+  "Alta montaña",
+  "Otro",
+] as const;
+
+export function companyKindLabel(value: string) {
+  return COMPANY_KINDS.find((k) => k.value === value)?.label ?? value;
+}
+
+export function categoryLabel(value: string) {
+  return RESOURCE_CATEGORIES.find((c) => c.value === value)?.label ?? value;
+}
+
+export function availabilityLabel(value: string) {
+  return RESOURCE_AVAILABILITIES.find((a) => a.value === value)?.label ?? value;
+}
+
+export function agentAvailabilityLabel(value: string) {
+  return AGENT_AVAILABILITIES.find((a) => a.value === value)?.label ?? value;
+}
+
+export function recordStatusLabel(value: string) {
+  return RECORD_STATUSES.find((s) => s.value === value)?.label ?? value;
+}
+
+export function availabilityClasses(value: string) {
+  switch (value) {
+    case "available":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "busy":
+      return "bg-gold/15 text-foreground border-gold/40";
+    case "unavailable":
+    case "out_of_service":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
+
+// ------------------------------------------------------------------ empresas
+
+export type CompanyInput = {
+  name: string;
+  kind: CompanyKind;
+  contact_name: string;
+  email: string;
+  whatsapp: string;
+  city: string;
+  state: string;
+  country: string;
+  notes: string;
+  record_status: RecordStatus;
+};
+
+export const EMPTY_COMPANY: CompanyInput = {
+  name: "",
+  kind: "external",
+  contact_name: "",
+  email: "",
+  whatsapp: "",
+  city: "",
+  state: "",
+  country: "",
+  notes: "",
+  record_status: "active",
+};
+
+export function companyToInput(c: Company): CompanyInput {
+  return {
+    name: c.name ?? "",
+    kind: c.kind as CompanyKind,
+    contact_name: c.contact_name ?? "",
+    email: c.email ?? "",
+    whatsapp: c.whatsapp ?? "",
+    city: c.city ?? "",
+    state: c.state ?? "",
+    country: c.country ?? "",
+    notes: c.notes ?? "",
+    record_status: c.record_status as RecordStatus,
+  };
+}
+
+const text = (v: string) => (v.trim() === "" ? null : v.trim());
+
+function companyPayload(input: CompanyInput) {
+  return {
+    name: input.name.trim(),
+    kind: input.kind,
+    contact_name: text(input.contact_name),
+    email: text(input.email),
+    whatsapp: text(input.whatsapp),
+    city: text(input.city),
+    state: text(input.state),
+    country: text(input.country),
+    notes: text(input.notes),
+    record_status: input.record_status,
+  };
+}
+
+export async function listCompanies(includeArchived = false): Promise<Company[]> {
+  let q = supabase.from("companies").select("*").order("name", { ascending: true });
+  if (!includeArchived) q = q.eq("record_status", "active");
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Company[];
+}
+
+export async function getCompany(id: string): Promise<Company | null> {
+  const { data, error } = await supabase.from("companies").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data as Company) ?? null;
+}
+
+export async function createCompany(input: CompanyInput): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("Sesión no válida");
+  const { data, error } = await supabase
+    .from("companies")
+    .insert({ ...companyPayload(input), user_id: uid })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+export async function updateCompany(id: string, input: CompanyInput) {
+  const { error } = await supabase.from("companies").update(companyPayload(input)).eq("id", id);
+  if (error) throw error;
+}
+
+/** Las empresas nunca se eliminan: cambian de estado. */
+export async function setCompanyStatus(id: string, record_status: RecordStatus) {
+  const { error } = await supabase.from("companies").update({ record_status }).eq("id", id);
+  if (error) throw error;
+}
+
+// ------------------------------------------------------------------ recursos
+
+export type ResourceInput = {
+  name: string;
+  kind: CompanyKind;
+  category: ResourceCategory;
+  company_id: string;
+  agent_id: string;
+  description: string;
+  contact_name: string;
+  email: string;
+  whatsapp: string;
+  main_zone: string;
+  zones: string[];
+  specialties: string[];
+  pax_capacity: string;
+  unit_count: string;
+  operating_limit: string;
+  availability: ResourceAvailability;
+  record_status: RecordStatus;
+  notes: string;
+};
+
+export const EMPTY_RESOURCE: ResourceInput = {
+  name: "",
+  kind: "external",
+  category: "accommodation",
+  company_id: "",
+  agent_id: "",
+  description: "",
+  contact_name: "",
+  email: "",
+  whatsapp: "",
+  main_zone: "",
+  zones: [],
+  specialties: [],
+  pax_capacity: "",
+  unit_count: "",
+  operating_limit: "",
+  availability: "available",
+  record_status: "active",
+  notes: "",
+};
+
+export function resourceToInput(r: Resource): ResourceInput {
+  return {
+    name: r.name ?? "",
+    kind: r.kind as CompanyKind,
+    category: r.category as ResourceCategory,
+    company_id: r.company_id ?? "",
+    agent_id: r.agent_id ?? "",
+    description: r.description ?? "",
+    contact_name: r.contact_name ?? "",
+    email: r.email ?? "",
+    whatsapp: r.whatsapp ?? "",
+    main_zone: r.main_zone ?? "",
+    zones: r.zones ?? [],
+    specialties: r.specialties ?? [],
+    pax_capacity: r.pax_capacity != null ? String(r.pax_capacity) : "",
+    unit_count: r.unit_count != null ? String(r.unit_count) : "",
+    operating_limit: r.operating_limit != null ? String(r.operating_limit) : "",
+    availability: r.availability as ResourceAvailability,
+    record_status: r.record_status as RecordStatus,
+    notes: r.notes ?? "",
+  };
+}
+
+function resourcePayload(input: ResourceInput) {
+  const num = (v: string) => (v.trim() === "" ? null : Number(v));
+  return {
+    name: input.name.trim(),
+    kind: input.kind,
+    category: input.category,
+    company_id: input.company_id || null,
+    agent_id: input.agent_id || null,
+    description: text(input.description),
+    contact_name: text(input.contact_name),
+    email: text(input.email),
+    whatsapp: text(input.whatsapp),
+    main_zone: text(input.main_zone),
+    zones: input.zones,
+    specialties: input.specialties,
+    pax_capacity: num(input.pax_capacity),
+    unit_count: num(input.unit_count),
+    operating_limit: num(input.operating_limit),
+    availability: input.availability,
+    record_status: input.record_status,
+    notes: text(input.notes),
+  };
+}
+
+export type ResourceFilters = {
+  search?: string;
+  kind?: CompanyKind | "all";
+  category?: ResourceCategory | "all";
+  availability?: ResourceAvailability | "all";
+  zone?: string;
+  includeArchived?: boolean;
+};
+
+export async function listResources(filters: ResourceFilters = {}): Promise<Resource[]> {
+  let q = supabase.from("resources").select("*").order("name", { ascending: true });
+  if (!filters.includeArchived) q = q.eq("record_status", "active");
+  if (filters.kind && filters.kind !== "all") q = q.eq("kind", filters.kind);
+  if (filters.category && filters.category !== "all") q = q.eq("category", filters.category);
+  if (filters.availability && filters.availability !== "all")
+    q = q.eq("availability", filters.availability);
+  const { data, error } = await q;
+  if (error) throw error;
+  let rows = (data ?? []) as Resource[];
+
+  const zone = filters.zone?.trim();
+  if (zone && zone !== "all") {
+    rows = rows.filter((r) => r.main_zone === zone || (r.zones ?? []).includes(zone));
+  }
+  const term = filters.search?.trim().toLowerCase();
+  if (!term) return rows;
+  return rows.filter((r) =>
+    [r.name, r.description, r.contact_name, r.main_zone, ...(r.zones ?? []), ...(r.specialties ?? [])]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(term)),
+  );
+}
+
+export async function getResource(id: string): Promise<Resource | null> {
+  const { data, error } = await supabase.from("resources").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data as Resource) ?? null;
+}
+
+export async function createResource(input: ResourceInput): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("Sesión no válida");
+  const { data, error } = await supabase
+    .from("resources")
+    .insert({ ...resourcePayload(input), user_id: uid })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+export async function updateResource(id: string, input: ResourceInput) {
+  const { error } = await supabase.from("resources").update(resourcePayload(input)).eq("id", id);
+  if (error) throw error;
+}
+
+/** Los recursos nunca se eliminan: cambian de estado. */
+export async function setResourceStatus(id: string, record_status: RecordStatus) {
+  const { error } = await supabase.from("resources").update({ record_status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function setResourceAvailability(id: string, availability: ResourceAvailability) {
+  const { error } = await supabase.from("resources").update({ availability }).eq("id", id);
+  if (error) throw error;
+}
+
+// -------------------------------------------------- relación con las reservas
+
+export async function listBookingResources(bookingId: string): Promise<BookingResource[]> {
+  const { data, error } = await supabase
+    .from("booking_resources")
+    .select("*")
+    .eq("booking_id", bookingId)
+    .eq("record_status", "active")
+    .order("assigned_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as BookingResource[];
+}
+
+export async function listResourceBookings(resourceId: string): Promise<BookingResource[]> {
+  const { data, error } = await supabase
+    .from("booking_resources")
+    .select("*")
+    .eq("resource_id", resourceId)
+    .eq("record_status", "active")
+    .order("assigned_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as BookingResource[];
+}
+
+export async function assignResourceToBooking(
+  bookingId: string,
+  resourceId: string,
+  notes?: string,
+) {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("Sesión no válida");
+  const { error } = await supabase.from("booking_resources").insert({
+    booking_id: bookingId,
+    resource_id: resourceId,
+    user_id: uid,
+    assigned_by: uid,
+    notes: notes?.trim() || null,
+  });
+  if (error) throw error;
+}
+
+/** La asignación no se elimina: se archiva para conservar el historial. */
+export async function unassignResource(id: string) {
+  const { error } = await supabase
+    .from("booking_resources")
+    .update({ record_status: "archived" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// ----------------------------------------------------------- estadísticas
+
+export type ResourceStats = {
+  total: number;
+  internal: number;
+  external: number;
+  available: number;
+  unavailable: number;
+  byCategory: { category: ResourceCategory; label: string; count: number }[];
+};
+
+export function computeResourceStats(resources: Resource[]): ResourceStats {
+  const byCategory = RESOURCE_CATEGORIES.map((c) => ({
+    category: c.value,
+    label: c.label,
+    count: resources.filter((r) => r.category === c.value).length,
+  })).filter((c) => c.count > 0);
+
+  return {
+    total: resources.length,
+    internal: resources.filter((r) => r.kind === "internal").length,
+    external: resources.filter((r) => r.kind === "external").length,
+    available: resources.filter((r) => r.availability === "available").length,
+    unavailable: resources.filter(
+      (r) => r.availability === "unavailable" || r.availability === "out_of_service",
+    ).length,
+    byCategory,
+  };
+}
