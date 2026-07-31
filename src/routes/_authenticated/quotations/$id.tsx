@@ -204,11 +204,47 @@ function QuotationDetailPage() {
               </>
             )}
           </Button>
+          {booking ? (
+            <Button variant="outline" onClick={() => navigate({ to: "/bookings/$id", params: { id: booking.id } })}>
+              <TicketCheck className="mr-2 h-4 w-4" /> Ver reserva {booking.booking_number}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                if (!q.client_id) {
+                  toast.error("Asociá un cliente a la cotización antes de generar la reserva.");
+                  return;
+                }
+                setBookingOpen(true);
+              }}
+            >
+              <TicketCheck className="mr-2 h-4 w-4" /> Generar reserva
+            </Button>
+          )}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
         </div>
       </header>
+
+      {q.client_id && (
+        <BookingCreateDialog
+          open={bookingOpen}
+          onOpenChange={setBookingOpen}
+          origin={{ quotationId: q.id }}
+          defaults={{
+            clientId: q.client_id,
+            destination: q.destination,
+            travelStart: q.travel_start,
+            travelEnd: q.travel_end,
+            amount: Number(q.total_amount ?? 0),
+            currency: q.currency,
+            exchangeRate: q.exchange_rate,
+          }}
+          onCreated={(bookingId) => navigate({ to: "/bookings/$id", params: { id: bookingId } })}
+        />
+      )}
+
 
 
       {/* Share card */}
