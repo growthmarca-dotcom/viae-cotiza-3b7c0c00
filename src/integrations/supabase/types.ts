@@ -381,6 +381,7 @@ export type Database = {
           assigned_agent_id: string | null
           booking_number: string | null
           client_id: string
+          client_status: Database["public"]["Enums"]["client_trip_status"]
           created_at: string
           currency: string
           destination: string | null
@@ -395,6 +396,8 @@ export type Database = {
           quotation_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           status: Database["public"]["Enums"]["booking_status"]
+          tracking_enabled: boolean
+          tracking_token: string
           travel_end: string | null
           travel_start: string | null
           updated_at: string
@@ -405,6 +408,7 @@ export type Database = {
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id: string
+          client_status?: Database["public"]["Enums"]["client_trip_status"]
           created_at?: string
           currency?: string
           destination?: string | null
@@ -419,6 +423,8 @@ export type Database = {
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           status?: Database["public"]["Enums"]["booking_status"]
+          tracking_enabled?: boolean
+          tracking_token?: string
           travel_end?: string | null
           travel_start?: string | null
           updated_at?: string
@@ -429,6 +435,7 @@ export type Database = {
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id?: string
+          client_status?: Database["public"]["Enums"]["client_trip_status"]
           created_at?: string
           currency?: string
           destination?: string | null
@@ -443,6 +450,8 @@ export type Database = {
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           status?: Database["public"]["Enums"]["booking_status"]
+          tracking_enabled?: boolean
+          tracking_token?: string
           travel_end?: string | null
           travel_start?: string | null
           updated_at?: string
@@ -542,6 +551,63 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_events: {
+        Row: {
+          created_at: string
+          data: Json
+          entity: string | null
+          entity_id: string | null
+          error_message: string | null
+          event_type: Database["public"]["Enums"]["communication_event_type"]
+          id: string
+          message: string
+          owner_id: string | null
+          phone: string | null
+          recipient_name: string | null
+          recipient_user_id: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["communication_event_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          entity?: string | null
+          entity_id?: string | null
+          error_message?: string | null
+          event_type: Database["public"]["Enums"]["communication_event_type"]
+          id?: string
+          message: string
+          owner_id?: string | null
+          phone?: string | null
+          recipient_name?: string | null
+          recipient_user_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["communication_event_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          entity?: string | null
+          entity_id?: string | null
+          error_message?: string | null
+          event_type?: Database["public"]["Enums"]["communication_event_type"]
+          id?: string
+          message?: string
+          owner_id?: string | null
+          phone?: string | null
+          recipient_name?: string | null
+          recipient_user_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["communication_event_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           city: string | null
@@ -608,6 +674,7 @@ export type Database = {
           linkedin: string | null
           logo_path: string | null
           primary_color: string
+          show_developer_branding: boolean
           tiktok: string | null
           updated_at: string
           user_id: string
@@ -628,6 +695,7 @@ export type Database = {
           linkedin?: string | null
           logo_path?: string | null
           primary_color?: string
+          show_developer_branding?: boolean
           tiktok?: string | null
           updated_at?: string
           user_id: string
@@ -648,6 +716,7 @@ export type Database = {
           linkedin?: string | null
           logo_path?: string | null
           primary_color?: string
+          show_developer_branding?: boolean
           tiktok?: string | null
           updated_at?: string
           user_id?: string
@@ -1451,6 +1520,17 @@ export type Database = {
     }
     Functions: {
       admins_exist: { Args: never; Returns: boolean }
+      booking_public_tracking: {
+        Args: { _token: string }
+        Returns: {
+          booking_number: string
+          client_status: Database["public"]["Enums"]["client_trip_status"]
+          destination: string
+          travel_end: string
+          travel_start: string
+          updated_at: string
+        }[]
+      }
       claim_admin_if_none: { Args: never; Returns: boolean }
       current_agent_id: { Args: never; Returns: string }
       current_driver_resource_ids: { Args: never; Returns: string[] }
@@ -1473,6 +1553,10 @@ export type Database = {
       is_approved: { Args: { _user_id: string }; Returns: boolean }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
+      sync_booking_client_status: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
       sync_transport_resource_state: {
         Args: { _resource_id: string }
         Returns: undefined
@@ -1507,7 +1591,21 @@ export type Database = {
         | "voucher_issued"
         | "completed"
         | "cancelled"
+      client_trip_status:
+        | "confirmed"
+        | "driver_assigned"
+        | "preparing"
+        | "on_the_way"
+        | "finished"
+        | "cancelled"
       commission_type: "percentage" | "fixed"
+      communication_event_status: "pending" | "sent" | "error"
+      communication_event_type:
+        | "trip_assigned"
+        | "trip_reminder"
+        | "schedule_changed"
+        | "service_confirmed"
+        | "trip_completed"
       company_kind: "internal" | "external"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
       lead_source:
@@ -1769,7 +1867,23 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      client_trip_status: [
+        "confirmed",
+        "driver_assigned",
+        "preparing",
+        "on_the_way",
+        "finished",
+        "cancelled",
+      ],
       commission_type: ["percentage", "fixed"],
+      communication_event_status: ["pending", "sent", "error"],
+      communication_event_type: [
+        "trip_assigned",
+        "trip_reminder",
+        "schedule_changed",
+        "service_confirmed",
+        "trip_completed",
+      ],
       company_kind: ["internal", "external"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
       lead_source: [
