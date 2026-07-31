@@ -11,9 +11,9 @@ export const Route = createFileRoute("/cotizacion/$token")({
   component: PublicQuotationPage,
   head: () => ({
     meta: [
-      { title: "Cotización de viaje — ViaE Sales Hub" },
+      { title: "Tu cotización de viaje" },
       { name: "description", content: "Detalle de tu propuesta de viaje." },
-      { property: "og:title", content: "Cotización de viaje — ViaE Sales Hub" },
+      { property: "og:title", content: "Tu cotización de viaje" },
       { property: "og:description", content: "Detalle de tu propuesta de viaje." },
     ],
   }),
@@ -50,21 +50,62 @@ function PublicQuotationPage() {
   const urls: string[] = data.imageUrls ?? [];
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
+  const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
+    Boolean,
+  ) as string[];
+  const socialLines = [
+    company.instagram && `Instagram: ${company.instagram}`,
+    company.facebook && `Facebook: ${company.facebook}`,
+    company.tiktok && `TikTok: ${company.tiktok}`,
+    company.linkedin && `LinkedIn: ${company.linkedin}`,
+  ].filter(Boolean) as string[];
 
   return (
     <>
     <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
-    <div className="min-h-screen bg-background print-screen-hide">
-      <header data-print-hide className="border-b border-border/60 bg-card">
-
+    <div
+      className="min-h-screen bg-background print-screen-hide"
+      style={
+        {
+          "--brand-primary": company.primaryColor,
+          "--brand-accent": company.accentColor,
+        } as React.CSSProperties
+      }
+    >
+      <header
+        data-print-hide
+        className="border-b bg-card"
+        style={{ borderBottomColor: company.accentColor }}
+      >
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-6 py-4">
-          <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Compass className="h-5 w-5" />
-          </div>
-            <span className="font-display text-lg font-semibold tracking-tight">
-              ViaE <span className="text-gold">Sales Hub</span>
-            </span>
+          <div className="flex items-center gap-3">
+            {company.logoUrl ? (
+              <img
+                src={company.logoUrl}
+                alt={company.companyName ?? "Logo"}
+                className="h-10 w-auto max-w-[160px] object-contain"
+              />
+            ) : (
+              <div
+                className="grid h-9 w-9 place-items-center rounded-lg text-white"
+                style={{ background: company.primaryColor }}
+              >
+                <Compass className="h-5 w-5" />
+              </div>
+            )}
+            <div className="min-w-0">
+              {company.companyName ? (
+                <span
+                  className="block truncate font-display text-lg font-semibold tracking-tight"
+                  style={{ color: company.primaryColor }}
+                >
+                  {company.companyName}
+                </span>
+              ) : null}
+              {company.address ? (
+                <span className="block truncate text-xs text-muted-foreground">{company.address}</span>
+              ) : null}
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Download className="mr-2 h-4 w-4" /> Descargar PDF
@@ -120,8 +161,13 @@ function PublicQuotationPage() {
           </section>
         )}
 
-        <section className="rounded-2xl border border-primary/30 bg-primary/5 p-6">
-          <h2 className="font-display text-2xl font-semibold">Inversión</h2>
+        <section
+          className="rounded-2xl border p-6"
+          style={{ borderColor: `${company.accentColor}66`, background: `${company.primaryColor}0D` }}
+        >
+          <h2 className="font-display text-2xl font-semibold" style={{ color: company.primaryColor }}>
+            Inversión
+          </h2>
           <dl className="mt-4 space-y-2 text-sm">
             {q.price_per_night != null && (
               <Line label="Precio por noche" value={`${q.currency} ${Number(q.price_per_night).toLocaleString()}`} />
@@ -129,9 +175,15 @@ function PublicQuotationPage() {
             {q.taxes != null && (
               <Line label="Impuestos" value={`${q.currency} ${Number(q.taxes).toLocaleString()}`} />
             )}
-            <div className="mt-3 flex items-baseline justify-between border-t border-primary/20 pt-3">
+            {q.other_charges != null && (
+              <Line label="Otros cargos" value={`${q.currency} ${Number(q.other_charges).toLocaleString()}`} />
+            )}
+            <div
+              className="mt-3 flex items-baseline justify-between border-t pt-3"
+              style={{ borderTopColor: `${company.accentColor}66` }}
+            >
               <span className="font-display text-lg font-semibold">Total</span>
-              <span className="font-display text-2xl font-semibold text-primary">
+              <span className="font-display text-2xl font-semibold" style={{ color: company.primaryColor }}>
                 {q.currency} {Number(q.total_amount ?? 0).toLocaleString()}
               </span>
             </div>
@@ -154,9 +206,21 @@ function PublicQuotationPage() {
           </section>
         )}
 
-        <footer className="pt-6 text-center text-xs text-muted-foreground">
-          {company.footerText ?? `Cotización generada con ${company.companyName ?? "ViaE Sales Hub"}`} ·{" "}
-          {new Date(q.created_at).toLocaleDateString()}
+        <footer
+          className="mt-4 space-y-2 border-t pt-6 text-center text-xs text-muted-foreground"
+          style={{ borderTopColor: `${company.accentColor}66` }}
+        >
+          {company.companyName ? (
+            <div className="font-medium" style={{ color: company.primaryColor }}>
+              {company.companyName}
+            </div>
+          ) : null}
+          {contactLines.length > 0 && <div>{contactLines.join(" · ")}</div>}
+          {socialLines.length > 0 && <div>{socialLines.join(" · ")}</div>}
+          <div>
+            {company.footerText ?? "Cotización sin valor contractual."} ·{" "}
+            {new Date(q.created_at).toLocaleDateString()}
+          </div>
         </footer>
       </main>
     </div>

@@ -29,6 +29,7 @@ export type QuotationFormState = {
   cancellationPolicy: string;
   pricePerNight: string;
   taxes: string;
+  otherCharges: string;
   totalAmount: string;
   currency: string;
   observations: string;
@@ -51,6 +52,7 @@ export const EMPTY_QUOTATION: QuotationFormState = {
   cancellationPolicy: "",
   pricePerNight: "",
   taxes: "",
+  otherCharges: "",
   totalAmount: "",
   currency: "USD",
   observations: "",
@@ -114,9 +116,10 @@ export function QuotationForm({
     const pn = Number(form.pricePerNight) || 0;
     const n = Number(form.nights) || 0;
     const t = Number(form.taxes) || 0;
-    if (pn === 0 && n === 0 && t === 0) return "";
-    return String(pn * n + t);
-  }, [form.pricePerNight, form.nights, form.taxes]);
+    const oc = Number(form.otherCharges) || 0;
+    if (pn === 0 && n === 0 && t === 0 && oc === 0) return "";
+    return String(pn * n + t + oc);
+  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges]);
 
   const totalCount = kept.length + files.length;
 
@@ -253,6 +256,9 @@ export function QuotationForm({
         </Field>
         <Field label="Impuestos">
           <Input type="number" min={0} step="0.01" value={form.taxes} onChange={(e) => set("taxes", e.target.value)} />
+        </Field>
+        <Field label="Otros cargos">
+          <Input type="number" min={0} step="0.01" value={form.otherCharges} onChange={(e) => set("otherCharges", e.target.value)} placeholder="0.00" />
         </Field>
         <Field label="Precio total">
           <Input type="number" min={0} step="0.01" value={form.totalAmount || autoTotal} onChange={(e) => set("totalAmount", e.target.value)} placeholder={autoTotal || "0.00"} />

@@ -244,6 +244,7 @@ export type Database = {
           images: string[]
           nights: number | null
           notes: string | null
+          other_charges: number | null
           pax_count: number | null
           price_per_night: number | null
           share_token: string
@@ -276,6 +277,7 @@ export type Database = {
           images?: string[]
           nights?: number | null
           notes?: string | null
+          other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
           share_token?: string
@@ -308,6 +310,7 @@ export type Database = {
           images?: string[]
           nights?: number | null
           notes?: string | null
+          other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
           share_token?: string
@@ -356,6 +359,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admins_exist: { Args: never; Returns: boolean }
+      claim_admin_if_none: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

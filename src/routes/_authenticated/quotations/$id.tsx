@@ -250,6 +250,7 @@ function QuotationDetailPage() {
       <Card title="Precios">
         <Row label="Precio por noche" value={q.price_per_night != null ? `${q.currency} ${q.price_per_night}` : null} />
         <Row label="Impuestos" value={q.taxes != null ? `${q.currency} ${q.taxes}` : null} />
+        <Row label="Otros cargos" value={q.other_charges != null ? `${q.currency} ${q.other_charges}` : null} />
         <Row label="Total" value={`${q.currency} ${Number(q.total_amount ?? 0).toLocaleString()}`} />
       </Card>
 
