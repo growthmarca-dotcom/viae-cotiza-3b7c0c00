@@ -1,6 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Boxes,
   Compass,
+
   LayoutDashboard,
   FileText,
   PlusCircle,
