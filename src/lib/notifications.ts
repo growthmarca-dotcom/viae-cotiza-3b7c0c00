@@ -36,7 +36,11 @@ const KIND_LABEL: Record<string, string> = {
   transport_status: "Estado del servicio",
   transport_schedule: "Cambio de horario",
   transport_collection: "Cobro informado",
+  lead_assigned: "Lead asignado",
+  lead_new: "Nueva consulta",
+  lead_status: "Estado del lead",
 };
+
 
 export function notificationKindLabel(kind: string) {
   return KIND_LABEL[kind] ?? "Aviso";
