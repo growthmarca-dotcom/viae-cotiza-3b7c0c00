@@ -118,8 +118,14 @@ export function QuotationForm({
     const t = Number(form.taxes) || 0;
     const oc = Number(form.otherCharges) || 0;
     if (pn === 0 && n === 0 && t === 0 && oc === 0) return "";
-    return String(pn * n + t + oc);
+    return String(Math.round((pn * n + t + oc) * 100) / 100);
   }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges]);
+
+  // El total se mantiene sincronizado con precio por noche, noches, impuestos y otros cargos.
+  useEffect(() => {
+    if (autoTotal === "") return;
+    setForm((p) => (p.totalAmount === autoTotal ? p : { ...p, totalAmount: autoTotal }));
+  }, [autoTotal]);
 
   const totalCount = kept.length + files.length;
 
