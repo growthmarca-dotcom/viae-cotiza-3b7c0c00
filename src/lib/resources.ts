@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import type { TransportServiceType, VehicleType } from "@/lib/transport";
+
 
 /**
  * Módulo de Recursos Operativos (v1.0).
