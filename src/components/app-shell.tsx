@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
   CalendarDays,
+  ClipboardList,
   CarFront,
   Compass,
   Route as RouteIcon,
