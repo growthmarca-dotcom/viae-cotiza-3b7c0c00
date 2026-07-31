@@ -213,6 +213,12 @@ function PipelineSection() {
           </div>
         ))}
       </div>
+      {(data?.excluded ?? 0) > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {data?.excluded} oportunidad(es) quedaron fuera del total porque su moneda no es
+          convertible a {analysisCurrency}.
+        </p>
+      )}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 font-display text-lg font-semibold">Oportunidades por estado</h3>
         <div className="grid gap-3 sm:grid-cols-3">
