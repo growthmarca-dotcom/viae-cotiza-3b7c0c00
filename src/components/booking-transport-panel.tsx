@@ -281,6 +281,26 @@ export function BookingTransportTab({ bookingId }: { bookingId: string }) {
               </SelectContent>
             </Select>
           </div>
+
+          {(selectedDriver || selectedVehicle) && (
+            <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+              {selectedDriver && (
+                <AssignmentCheck
+                  resource={selectedDriver}
+                  warnings={driverWarnings}
+                  services={allServices}
+                />
+              )}
+              {selectedVehicle && (
+                <AssignmentCheck
+                  resource={selectedVehicle}
+                  warnings={vehicleWarnings}
+                  services={allServices}
+                />
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Empresa asignada</Label>
             <Select
