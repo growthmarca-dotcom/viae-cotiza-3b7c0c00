@@ -1024,6 +1024,7 @@ export type Database = {
           destinations: string[]
           driver_first_name: string | null
           driver_last_name: string | null
+          driver_user_id: string | null
           email: string | null
           id: string
           kind: Database["public"]["Enums"]["company_kind"]
@@ -1066,6 +1067,7 @@ export type Database = {
           destinations?: string[]
           driver_first_name?: string | null
           driver_last_name?: string | null
+          driver_user_id?: string | null
           email?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["company_kind"]
@@ -1108,6 +1110,7 @@ export type Database = {
           destinations?: string[]
           driver_first_name?: string | null
           driver_last_name?: string | null
+          driver_user_id?: string | null
           email?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["company_kind"]
@@ -1201,13 +1204,22 @@ export type Database = {
       }
       transport_services: {
         Row: {
+          accepted_at: string | null
           amount: number | null
+          arrived_at: string | null
           assigned_at: string | null
           assigned_by: string | null
           booking_id: string | null
+          collected_amount: number | null
+          collected_at: string | null
+          collected_by: string | null
+          collection_amount: number | null
+          collection_currency: string
+          collection_status: Database["public"]["Enums"]["transport_collection_status"]
           commission_type: Database["public"]["Enums"]["commission_type"] | null
           commission_value: number | null
           company_id: string | null
+          completed_at: string | null
           created_at: string
           currency: string
           destination: string | null
@@ -1215,27 +1227,41 @@ export type Database = {
           id: string
           luggage_count: number | null
           notes: string | null
+          onboard_at: string | null
           origin: string | null
           pax_count: number | null
+          payment_mode: Database["public"]["Enums"]["transport_payment_mode"]
           record_status: Database["public"]["Enums"]["record_status"]
+          rejected_at: string | null
+          rejection_reason: string | null
           service_date: string | null
           service_time: string | null
           service_type: Database["public"]["Enums"]["transport_service_type"]
+          started_at: string | null
           status: Database["public"]["Enums"]["transport_service_status"]
           updated_at: string
           user_id: string
           vehicle_resource_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
           amount?: number | null
+          arrived_at?: string | null
           assigned_at?: string | null
           assigned_by?: string | null
           booking_id?: string | null
+          collected_amount?: number | null
+          collected_at?: string | null
+          collected_by?: string | null
+          collection_amount?: number | null
+          collection_currency?: string
+          collection_status?: Database["public"]["Enums"]["transport_collection_status"]
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           company_id?: string | null
+          completed_at?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
@@ -1243,27 +1269,41 @@ export type Database = {
           id?: string
           luggage_count?: number | null
           notes?: string | null
+          onboard_at?: string | null
           origin?: string | null
           pax_count?: number | null
+          payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
           record_status?: Database["public"]["Enums"]["record_status"]
+          rejected_at?: string | null
+          rejection_reason?: string | null
           service_date?: string | null
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
+          started_at?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
           updated_at?: string
           user_id: string
           vehicle_resource_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
           amount?: number | null
+          arrived_at?: string | null
           assigned_at?: string | null
           assigned_by?: string | null
           booking_id?: string | null
+          collected_amount?: number | null
+          collected_at?: string | null
+          collected_by?: string | null
+          collection_amount?: number | null
+          collection_currency?: string
+          collection_status?: Database["public"]["Enums"]["transport_collection_status"]
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           company_id?: string | null
+          completed_at?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
@@ -1271,12 +1311,17 @@ export type Database = {
           id?: string
           luggage_count?: number | null
           notes?: string | null
+          onboard_at?: string | null
           origin?: string | null
           pax_count?: number | null
+          payment_mode?: Database["public"]["Enums"]["transport_payment_mode"]
           record_status?: Database["public"]["Enums"]["record_status"]
+          rejected_at?: string | null
+          rejection_reason?: string | null
           service_date?: string | null
           service_time?: string | null
           service_type?: Database["public"]["Enums"]["transport_service_type"]
+          started_at?: string | null
           status?: Database["public"]["Enums"]["transport_service_status"]
           updated_at?: string
           user_id?: string
@@ -1342,6 +1387,15 @@ export type Database = {
       admins_exist: { Args: never; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       current_agent_id: { Args: never; Returns: string }
+      current_driver_resource_ids: { Args: never; Returns: string[] }
+      driver_service_context: {
+        Args: never
+        Returns: {
+          booking_number: string
+          client_name: string
+          service_id: string
+        }[]
+      }
       expire_stale_invitations: { Args: never; Returns: number }
       has_role: {
         Args: {
@@ -1351,6 +1405,7 @@ export type Database = {
         Returns: boolean
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_driver: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       account_status: "pending" | "approved" | "rejected" | "suspended"
@@ -1441,6 +1496,16 @@ export type Database = {
         | "tourism_service"
         | "agent"
         | "other"
+      transport_collection_status:
+        | "not_applicable"
+        | "pending"
+        | "collected"
+        | "reported"
+      transport_payment_mode:
+        | "prepaid_viae"
+        | "direct_to_driver"
+        | "partial"
+        | "pending"
       transport_service_status:
         | "pending"
         | "requested"
@@ -1449,6 +1514,9 @@ export type Database = {
         | "in_transit"
         | "completed"
         | "cancelled"
+        | "rejected"
+        | "en_route"
+        | "at_origin"
       transport_service_type:
         | "taxi"
         | "airport_transfer"
@@ -1693,6 +1761,18 @@ export const Constants = {
         "agent",
         "other",
       ],
+      transport_collection_status: [
+        "not_applicable",
+        "pending",
+        "collected",
+        "reported",
+      ],
+      transport_payment_mode: [
+        "prepaid_viae",
+        "direct_to_driver",
+        "partial",
+        "pending",
+      ],
       transport_service_status: [
         "pending",
         "requested",
@@ -1701,6 +1781,9 @@ export const Constants = {
         "in_transit",
         "completed",
         "cancelled",
+        "rejected",
+        "en_route",
+        "at_origin",
       ],
       transport_service_type: [
         "taxi",
