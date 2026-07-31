@@ -103,7 +103,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       }
 
       const company: PublicCompany = {
-        companyName: settings?.company_name ?? "ViaE Sales Hub",
+        companyName: settings?.company_name ?? null,
         logoUrl,
         address: settings?.address ?? null,
         whatsapp: settings?.whatsapp ?? null,
