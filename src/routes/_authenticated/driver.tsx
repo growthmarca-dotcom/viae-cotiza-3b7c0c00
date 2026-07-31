@@ -46,7 +46,6 @@ import {
   arriveAtOrigin,
   completeService,
   confirmCollection,
-  groupServices,
   lastUpdateOf,
   listMyDriverResources,
   listMyDriverServices,
@@ -60,6 +59,21 @@ import {
   startService,
   type DriverServiceContext,
 } from "@/lib/driver";
+import {
+  driverDaySummary,
+  filterDriverServices,
+  timeLabel,
+  todayISO,
+  type DriverFilter,
+} from "@/lib/transport-ops";
+import {
+  assignmentPayload,
+  listMyNotifications,
+  markAllNotificationsRead,
+  unreadCount,
+  type Notification,
+} from "@/lib/notifications";
+
 
 export const Route = createFileRoute("/_authenticated/driver")({
   component: DriverPage,
