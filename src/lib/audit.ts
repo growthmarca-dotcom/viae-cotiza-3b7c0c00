@@ -10,6 +10,9 @@ export const AUDIT_ENTITIES = [
   { value: "opportunities", label: "Oportunidades" },
   { value: "quotations", label: "Cotizaciones" },
   { value: "bookings", label: "Reservas" },
+  { value: "companies", label: "Empresas" },
+  { value: "resources", label: "Recursos" },
+  { value: "booking_resources", label: "Recursos asignados" },
   { value: "company_settings", label: "Configuración" },
 ] as const;
 
@@ -19,8 +22,12 @@ const ENTITY_LABEL: Record<string, string> = {
   opportunities: "Oportunidad",
   quotations: "Cotización",
   bookings: "Reserva",
+  companies: "Empresa",
+  resources: "Recurso",
+  booking_resources: "Recurso asignado",
   company_settings: "Configuración",
 };
+
 
 const ACTION_LABEL: Record<string, string> = {
   created: "creó",

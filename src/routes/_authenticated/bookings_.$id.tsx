@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Archive,
+  Boxes,
   Building2,
   CreditCard,
   FileText,
@@ -39,6 +40,16 @@ import {
   type BookingStatus,
   type BookingStatusEvent,
 } from "@/lib/bookings";
+import {
+  assignResourceToBooking,
+  availabilityLabel,
+  categoryLabel,
+  listBookingResources,
+  listResources,
+  unassignResource,
+  type BookingResource,
+  type Resource,
+} from "@/lib/resources";
 
 export const Route = createFileRoute("/_authenticated/bookings_/$id")({
   component: BookingDetailPage,
@@ -300,6 +311,9 @@ function BookingDetailPage() {
           <TabsTrigger value="payments">
             <CreditCard className="mr-2 h-4 w-4" /> Pagos
           </TabsTrigger>
+          <TabsTrigger value="resources">
+            <Boxes className="mr-2 h-4 w-4" /> Recursos
+          </TabsTrigger>
           <TabsTrigger value="provider">
             <Building2 className="mr-2 h-4 w-4" /> Proveedor
           </TabsTrigger>
@@ -400,6 +414,10 @@ function BookingDetailPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="resources">
+          <ResourcesTab bookingId={booking.id} />
+        </TabsContent>
+
         <TabsContent value="provider">
           <ProviderTab booking={booking} onSaved={load} />
         </TabsContent>
@@ -468,6 +486,154 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
     <div>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="text-sm">{children}</p>
+    </div>
+  );
+}
+
+/** Recursos operativos asignados a la reserva (alojamientos, vehículos, guías...). */
+function ResourcesTab({ bookingId }: { bookingId: string }) {
+  const [links, setLinks] = useState<BookingResource[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [selected, setSelected] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ls, rs] = await Promise.all([listBookingResources(bookingId), listResources()]);
+      setLinks(ls);
+      setResources(rs);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudieron cargar los recursos");
+    } finally {
+      setLoading(false);
+    }
+  }, [bookingId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const byId = new Map(resources.map((r) => [r.id, r]));
+  const available = resources.filter((r) => !links.some((l) => l.resource_id === r.id));
+
+  async function assign() {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await assignResourceToBooking(bookingId, selected, notes);
+      toast.success("Recurso asignado a la reserva");
+      setSelected("");
+      setNotes("");
+      await load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo asignar el recurso");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h2 className="font-display text-xl font-semibold">Recursos asignados</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Alojamientos, vehículos, guías, excursiones o servicios que forman parte de esta operación.
+      </p>
+
+      {loading ? (
+        <div className="flex items-center py-8 text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cargando recursos...
+        </div>
+      ) : (
+        <>
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <div className="min-w-[220px] flex-1 space-y-2">
+              <Label>Recurso</Label>
+              <select
+                value={selected}
+                onChange={(e) => setSelected(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Seleccioná un recurso...</option>
+                {available.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} · {categoryLabel(r.category)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="min-w-[200px] flex-1 space-y-2">
+              <Label>Nota de la asignación</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
+            <Button onClick={assign} disabled={saving || !selected}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Asignar
+            </Button>
+          </div>
+
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-4">Recurso</th>
+                  <th className="py-2 pr-4">Categoría</th>
+                  <th className="py-2 pr-4">Disponibilidad</th>
+                  <th className="py-2 pr-4">Nota</th>
+                  <th className="py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {links.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-4 text-sm text-muted-foreground">
+                      Sin recursos asignados todavía.
+                    </td>
+                  </tr>
+                )}
+                {links.map((l) => {
+                  const r = byId.get(l.resource_id);
+                  return (
+                    <tr key={l.id} className="border-t border-border/60">
+                      <td className="py-2 pr-4 font-medium">
+                        {r ? (
+                          <Link
+                            to="/resources/$id"
+                            params={{ id: r.id }}
+                            className="hover:text-primary"
+                          >
+                            {r.name}
+                          </Link>
+                        ) : (
+                          "Recurso"
+                        )}
+                      </td>
+                      <td className="py-2 pr-4">{r ? categoryLabel(r.category) : "—"}</td>
+                      <td className="py-2 pr-4">{r ? availabilityLabel(r.availability) : "—"}</td>
+                      <td className="py-2 pr-4 text-muted-foreground">{l.notes ?? "—"}</td>
+                      <td className="py-2 text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            await unassignResource(l.id);
+                            toast.success("Recurso desasignado");
+                            load();
+                          }}
+                        >
+                          Quitar
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
