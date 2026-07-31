@@ -37,6 +37,12 @@ import {
   type ClientStatus,
 } from "@/lib/clients";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import { OpportunityPanel } from "@/components/opportunity-panel";
+import {
+  createOpportunity,
+  listOpportunitiesByClient,
+  type Opportunity,
+} from "@/lib/opportunities";
 
 export const Route = createFileRoute("/_authenticated/clients_/$id")({
   component: ClientDetailPage,
