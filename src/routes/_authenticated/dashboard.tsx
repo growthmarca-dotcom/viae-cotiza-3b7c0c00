@@ -11,7 +11,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
+import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
