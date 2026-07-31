@@ -37,8 +37,10 @@ export function formToRow(form: QuotationFormState, autoTotal?: string) {
     other_charges: form.otherCharges ? Number(form.otherCharges) : null,
     total_amount: totalAmountNum,
     currency: form.currency || "USD",
+    exchange_rate: form.exchangeRate ? Number(form.exchangeRate) : null,
     notes: form.observations || null,
   };
+
 }
 
 export async function uploadImages(
