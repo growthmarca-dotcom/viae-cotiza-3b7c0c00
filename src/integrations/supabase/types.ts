@@ -497,6 +497,74 @@ export type Database = {
           },
         ]
       }
+      booking_passengers: {
+        Row: {
+          birth_date: string | null
+          booking_id: string
+          created_at: string
+          document_number: string | null
+          document_type: string | null
+          email: string | null
+          first_name: string
+          id: string
+          is_lead_passenger: boolean
+          last_name: string
+          nationality: string | null
+          notes: string | null
+          phone: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          relationship_to_lead_passenger: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          booking_id: string
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          is_lead_passenger?: boolean
+          last_name: string
+          nationality?: string | null
+          notes?: string | null
+          phone?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          relationship_to_lead_passenger?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          birth_date?: string | null
+          booking_id?: string
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_lead_passenger?: boolean
+          last_name?: string
+          nationality?: string | null
+          notes?: string | null
+          phone?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          relationship_to_lead_passenger?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_passengers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_payments: {
         Row: {
           amount: number
@@ -866,6 +934,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "booking_status_history_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_timeline: {
+        Row: {
+          actor: string | null
+          actor_role: string | null
+          booking_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          event_type: Database["public"]["Enums"]["booking_timeline_event"]
+          id: string
+          metadata: Json
+          visibility: Database["public"]["Enums"]["timeline_visibility"]
+        }
+        Insert: {
+          actor?: string | null
+          actor_role?: string | null
+          booking_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: Database["public"]["Enums"]["booking_timeline_event"]
+          id?: string
+          metadata?: Json
+          visibility?: Database["public"]["Enums"]["timeline_visibility"]
+        }
+        Update: {
+          actor?: string | null
+          actor_role?: string | null
+          booking_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: Database["public"]["Enums"]["booking_timeline_event"]
+          id?: string
+          metadata?: Json
+          visibility?: Database["public"]["Enums"]["timeline_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_timeline_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
@@ -3428,6 +3543,20 @@ export type Database = {
         | "voucher_issued"
         | "completed"
         | "cancelled"
+      booking_timeline_event:
+        | "created"
+        | "updated"
+        | "status_changed"
+        | "payment_received"
+        | "service_confirmed"
+        | "provider_confirmed"
+        | "resource_assigned"
+        | "document_added"
+        | "checklist_completed"
+        | "incident_opened"
+        | "incident_resolved"
+        | "communication_sent"
+        | "communication_read"
       checklist_item_status:
         | "pending"
         | "in_progress"
@@ -3575,6 +3704,7 @@ export type Database = {
         | "partner_company"
         | "private"
         | "other"
+      timeline_visibility: "internal" | "client"
       transport_collection_status:
         | "not_applicable"
         | "pending"
@@ -3820,6 +3950,21 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      booking_timeline_event: [
+        "created",
+        "updated",
+        "status_changed",
+        "payment_received",
+        "service_confirmed",
+        "provider_confirmed",
+        "resource_assigned",
+        "document_added",
+        "checklist_completed",
+        "incident_opened",
+        "incident_resolved",
+        "communication_sent",
+        "communication_read",
+      ],
       checklist_item_status: [
         "pending",
         "in_progress",
@@ -3983,6 +4128,7 @@ export const Constants = {
         "private",
         "other",
       ],
+      timeline_visibility: ["internal", "client"],
       transport_collection_status: [
         "not_applicable",
         "pending",
