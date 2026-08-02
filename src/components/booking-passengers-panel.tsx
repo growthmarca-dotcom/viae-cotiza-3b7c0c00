@@ -184,13 +184,42 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
             />
           </div>
           <div>
-            <Label htmlFor="pax-birth">Fecha de nacimiento</Label>
+            <Label>Tipo de pasajero</Label>
+            <Select
+              value={form.passenger_type}
+              onValueChange={(v) => set("passenger_type", v as PassengerType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PASSENGER_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {PASSENGER_TYPES.find((t) => t.value === form.passenger_type)?.hint}
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="pax-birth">
+              Fecha de nacimiento
+              {birthDateRecommended(form.passenger_type) ? " (recomendada)" : ""}
+            </Label>
             <Input
               id="pax-birth"
               type="date"
               value={form.birth_date ?? ""}
               onChange={(e) => set("birth_date", e.target.value)}
             />
+            {birthDateRecommended(form.passenger_type) && !form.birth_date && (
+              <p className="mt-1 text-xs text-gold">
+                Sin fecha de nacimiento no se podrá calcular la edad para tarifas diferenciadas.
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="pax-nat">Nacionalidad</Label>
