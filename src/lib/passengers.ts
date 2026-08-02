@@ -14,6 +14,108 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type BookingPassenger = Tables<"booking_passengers">;
 
+/** Tipo tarifario del pasajero (v1.9.5.1). Estructural: no calcula precios. */
+export type PassengerType = Enums<"passenger_type">;
+
+export const PASSENGER_TYPES: { value: PassengerType; label: string; hint: string }[] = [
+  { value: "adult", label: "Adulto", hint: "Fecha de nacimiento opcional" },
+  { value: "child", label: "Niño", hint: "Fecha de nacimiento recomendada" },
+  { value: "infant", label: "Infante", hint: "Fecha de nacimiento recomendada" },
+  { value: "senior", label: "Adulto mayor", hint: "Fecha de nacimiento opcional" },
+  { value: "other", label: "Otro", hint: "Fecha de nacimiento opcional" },
+];
+
+export function passengerTypeLabel(value: PassengerType | null) {
+  if (!value) return "—";
+  return PASSENGER_TYPES.find((t) => t.value === value)?.label ?? value;
+}
+
+/** Tipos donde la fecha de nacimiento es recomendada para tarifas futuras. */
+export const BIRTH_DATE_RECOMMENDED: PassengerType[] = ["child", "infant"];
+
+export function birthDateRecommended(type: PassengerType) {
+  return BIRTH_DATE_RECOMMENDED.includes(type);
+}
+
+/**
+ * Composición del grupo — contrato de lectura para el futuro motor tarifario.
+ * No calcula precios: solo describe el grupo.
+ */
+export type GroupComposition = {
+  total: number;
+  adults: number;
+  children: number;
+  infants: number;
+  seniors: number;
+  others: number;
+  /** Edades de niños a la fecha de viaje (o de hoy si no se informa). */
+  childAges: number[];
+  /** Edades de infantes a la fecha de viaje. */
+  infantAges: number[];
+  /** Pasajeros de child/infant sin fecha de nacimiento cargada. */
+  missingBirthDates: number;
+};
+
+/**
+ * Helper de solo lectura: edad completa a la fecha de viaje.
+ * La edad nunca se persiste porque cambia con el tiempo.
+ */
+export function calculatePassengerAge(
+  birthDate: string | null,
+  travelDate?: string | null,
+): number | null {
+  if (!birthDate) return null;
+  const b = new Date(`${birthDate}T00:00:00`);
+  if (Number.isNaN(b.getTime())) return null;
+  const ref = travelDate ? new Date(`${travelDate}T00:00:00`) : new Date();
+  if (Number.isNaN(ref.getTime())) return null;
+  let age = ref.getFullYear() - b.getFullYear();
+  const m = ref.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && ref.getDate() < b.getDate())) age -= 1;
+  return age >= 0 ? age : null;
+}
+
+export function groupComposition(
+  passengers: BookingPassenger[],
+  travelDate?: string | null,
+): GroupComposition {
+  const comp: GroupComposition = {
+    total: passengers.length,
+    adults: 0,
+    children: 0,
+    infants: 0,
+    seniors: 0,
+    others: 0,
+    childAges: [],
+    infantAges: [],
+    missingBirthDates: 0,
+  };
+  for (const p of passengers) {
+    const age = calculatePassengerAge(p.birth_date, travelDate);
+    switch (p.passenger_type) {
+      case "child":
+        comp.children += 1;
+        if (age != null) comp.childAges.push(age);
+        else comp.missingBirthDates += 1;
+        break;
+      case "infant":
+        comp.infants += 1;
+        if (age != null) comp.infantAges.push(age);
+        else comp.missingBirthDates += 1;
+        break;
+      case "senior":
+        comp.seniors += 1;
+        break;
+      case "other":
+        comp.others += 1;
+        break;
+      default:
+        comp.adults += 1;
+    }
+  }
+  return comp;
+}
+
 export const DOCUMENT_TYPES = [
   { value: "dni", label: "DNI" },
   { value: "passport", label: "Pasaporte" },
