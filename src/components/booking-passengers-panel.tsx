@@ -69,6 +69,7 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
       document_type: p.document_type,
       document_number: p.document_number,
       birth_date: p.birth_date,
+      passenger_type: p.passenger_type ?? "adult",
       nationality: p.nationality,
       email: p.email,
       phone: p.phone,
