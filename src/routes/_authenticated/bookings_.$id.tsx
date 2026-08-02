@@ -181,6 +181,24 @@ function BookingDetailPage() {
           data ? [data.first_name, data.last_name].filter(Boolean).join(" ") : null,
         );
       } else setAgentName(null);
+
+      if (b.organization_id) {
+        const { data } = await supabase
+          .from("organizations")
+          .select("legal_name, trade_name")
+          .eq("id", b.organization_id)
+          .maybeSingle();
+        setOrganizationName(
+          data ? (data.trade_name?.trim() || data.legal_name?.trim() || null) : null,
+        );
+      } else setOrganizationName(null);
+
+      // Estado operativo derivado (v1.9.5.3): solo lectura, no persiste nada.
+      try {
+        setTripState(await getTripState(id));
+      } catch {
+        setTripState(null);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar la reserva");
     } finally {
