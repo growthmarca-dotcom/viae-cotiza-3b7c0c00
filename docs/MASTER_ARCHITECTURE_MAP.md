@@ -282,3 +282,143 @@ El sistema es hoy **single-tenant, una agencia**. Brechas, en orden de dependenc
    `audit_log`): sin índices de rendimiento ni política de retención.
 6. **`commissions` vacía con trigger de inmutabilidad**: la fase de devengo deberá escribir
    respetando ese trigger; conviene definir el orden de escritura antes de activarla.
+
+---
+
+# Motores del Core
+
+Esta sección documenta la arquitectura **funcional** del sistema, diferenciando con claridad
+los motores que ya existen en el proyecto de los que están en construcción o planificados.
+La marca de cada motor refleja su estado real (no el de su dominio contenedor):
+
+- ✅ implementado · 🟡 en construcción · 🔵 planificado
+
+## ✅ Motores implementados
+
+Motores con código y/o tablas activas en el sistema.
+
+### Motor Comercial (CRM, Leads, Clientes, Cotizaciones, Reservas)
+Núcleo del ciclo de negocio. Cubre la captación de `leads`, su conversión a `clients`, la
+gestión de `opportunities`, la creación y versionado de `quotations` con enlace público y
+PDF con branding, y la materialización en `bookings`. Incluye la red de `agents` con
+estadísticas automáticas y la sincronización lead→cliente→oportunidad→cotización.
+
+### Motor Operativo (Expediente 360°, Operaciones, Transporte)
+Ejecuta la reserva: `booking_services`, `booking_resources`, `booking_checklist_items`,
+`booking_incidents`, `booking_documents` y la bandeja `/operations`. Transporte con
+asignación manual y sugerencia geográfica, agenda `/agenda` y panel del conductor `/driver`.
+El Expediente 360° (`/bookings/$id`) integra el doble estado (comercial manual + operativo
+derivado `booking_trip_state`), timeline inmutable y comunicación por token.
+
+### Motor Tarifario (estructura)
+Tablas base creadas en la **Fase 0**: `tariff_plans`, `tariff_seasons`, `tariff_rules`,
+`tariff_rule_conditions` y `passenger_categories`. Define temporadas, categorías de
+pasajero con edades y reglas, con RLS por rol. **Sin cálculo de precios todavía.**
+
+### Motor de Disponibilidad (estructura)
+Infraestructura base de la **Fase 0**: `availability_sources`, `service_availability`,
+`availability_cache`, `availability_requests` y `availability_policies`. Describe orígenes
+(manual/api/caché/externo), estados y políticas de fallback. **Sin búsquedas ni conectores.**
+
+### Motor de Itinerarios (estructura)
+Infraestructura base: `itinerary_templates`, `itinerary_template_items`,
+`itinerary_rules`, `itinerary_versions` e `itinerary_requests`. Plantillas reutilizables
+con reglas y versionado. **Sin generación automática, combinación ni cálculo de precios.**
+
+### Motor de Comisiones (simulación)
+`resolve_agreement` + `compute_commission` + `simulate_commission*` calculan el importe
+al vuelo sobre `commercial_agreements` y `agreement_rules`. La tabla `commissions`
+existe pero está **vacía por diseño** (inmutable): no hay devengo real ni liquidaciones.
+
+### Motor de Recursos
+Catálogo operativo de `resources` (77 columnas): clase y subtipo, propietario, datos
+técnicos de vehículo, cobertura geográfica completa de Argentina, `resource_extras`,
+rent a car y disponibilidad auditada (`resource_availability_log`).
+
+### Motor de Organizaciones y Acuerdos Comerciales
+`organizations` + `organization_roles` como modelo objetivo de entidad comercial, con
+`commercial_agreements` y `agreement_rules` versionados con historial inmutable
+(`agreement_history`). `companies`/`providers` conviven como legado pendiente de retirar.
+
+## 🟡 Motores en construcción
+
+Motores cuya responsabilidad está definida pero sin implementación activa.
+
+### Motor de Orquestación
+Coordina el flujo entre motores durante la creación de una reserva: recibiría la
+intención de viaje, invocaría Búsqueda, Disponibilidad, Tarifario e Itinerarios, y
+ensamblaría la reserva con su economía. Hoy no existe; el flujo es manual.
+
+### Motor de Búsqueda
+Recibe criterios (destino, fechas, grupo) y consulta los orígenes de disponibilidad +
+tarifas para devolver opciones ordenadas. Depende del Motor de Disponibilidad y del
+Tarifario. Hoy inexistente; las cotizaciones se arman a mano.
+
+### Motor de Inventario
+Administra el cupo real por servicio y fecha (`service_availability`), reservando y
+liberando unidades a partir de las reservas confirmadas. La estructura existe pero
+no hay lógica que ajuste cupos ante cambios de estado.
+
+### Motor de Recomendaciones
+Sugiere servicios, extras e itinerarios afines a partir del historial del cliente y el
+destino. No existe código ni tablas dedicadas.
+
+### Motor de Empaquetado Dinámico
+Combina servicios sueltos (vuelo + hotel + traslado + tours) en paquetes con precio
+conjunto y descuentos. Requiere Búsqueda, Tarifario e Itinerarios; hoy no existe.
+
+## 🔵 Motores planificados
+
+Motores necesarios para la fase SaaS multiproveedor (v2.0).
+
+### Motor White Label
+Branding por tenant: logo, colores, datos de contacto y dominio propio. Hoy
+`company_settings` es una fila global única.
+
+### API Gateway
+Punto de entrada público y autenticado para integraciones externas (GDS, mayoristas,
+OTAs). Hoy no existen rutas `api/public/*`.
+
+### Motor de Integraciones
+Conectores con proveedores externos (GDS, pasarelas de pago, WhatsApp/email). Gestión
+de credenciales, reintentos y normalización de respuestas. No existe.
+
+### Motor de Automatización
+Reglas disparadas por eventos del timeline (recordatorios, cambios de estado,
+reasignaciones) con acciones encadenadas. No existe.
+
+### Motor de Analítica y BI
+Agregación de métricas comerciales y operativas por tenant, agente, destino y período;
+tableros e informes. Hoy solo hay métricas básicas en el Dashboard.
+
+## Diagrama de relación entre motores
+
+```
+                Cliente
+                   │
+                   ▼
+            Motor de Búsqueda 🟡
+                   │
+                   ▼
+         Motor de Orquestación 🟡
+            ├────────► Disponibilidad ✅
+            ├────────► Tarifario ✅
+            ├────────► Itinerarios ✅
+            ├────────► Comercial ✅
+            ├────────► Operaciones ✅
+            ▼
+              Reserva ✅
+                ▼
+          Expediente 360° ✅
+                ▼
+          Comisiones ✅ (simulación)
+                ▼
+          Liquidaciones 🔵
+```
+
+Lectura del diagrama: el cliente inicia en el **Motor de Búsqueda** (hoy manual), que
+entrega opciones a un **Motor de Orquestación** que orquesta los motores estructurales
+ya implementados (Disponibilidad, Tarifario, Itinerarios, Comercial, Operaciones). El
+resultado se materializa en la **Reserva** y su **Expediente 360°**, desde donde se
+simulan **Comisiones**; las **Liquidaciones** reales siguen planificadas.
+
