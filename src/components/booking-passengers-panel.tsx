@@ -311,7 +311,23 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
           Todavía no hay pasajeros cargados en esta reserva.
         </p>
       ) : (
-        <ul className="mt-5 divide-y divide-border">
+        <>
+          {(() => {
+            const c = groupComposition(items);
+            return (
+              <p className="mt-5 rounded-xl border border-border bg-secondary/30 px-4 py-2 text-xs text-muted-foreground">
+                Composición del grupo: {c.total} pasajeros · {c.adults} adultos · {c.children} niños
+                · {c.infants} infantes
+                {c.seniors ? ` · ${c.seniors} adultos mayores` : ""}
+                {c.others ? ` · ${c.others} otros` : ""}
+                {c.childAges.length ? ` · edades de niños: ${c.childAges.join(", ")}` : ""}
+                {c.missingBirthDates
+                  ? ` · ${c.missingBirthDates} sin fecha de nacimiento`
+                  : ""}
+              </p>
+            );
+          })()}
+          <ul className="mt-3 divide-y divide-border">
           {items.map((p) => {
             const age = passengerAge(p.birth_date);
             return (
@@ -324,6 +340,9 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
                         Titular
                       </span>
                     )}
+                    <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {passengerTypeLabel(p.passenger_type)}
+                    </span>
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {documentTypeLabel(p.document_type)}
