@@ -2728,6 +2728,56 @@ export type Database = {
           },
         ]
       }
+      passenger_pricing_groups: {
+        Row: {
+          adult_max: number | null
+          adult_min: number | null
+          child_max: number | null
+          child_min: number | null
+          created_at: string
+          description: string | null
+          id: string
+          infant_max: number | null
+          infant_min: number | null
+          name: string
+          pricing_profile_id: string
+        }
+        Insert: {
+          adult_max?: number | null
+          adult_min?: number | null
+          child_max?: number | null
+          child_min?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          infant_max?: number | null
+          infant_min?: number | null
+          name: string
+          pricing_profile_id: string
+        }
+        Update: {
+          adult_max?: number | null
+          adult_min?: number | null
+          child_max?: number | null
+          child_min?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          infant_max?: number | null
+          infant_min?: number | null
+          name?: string
+          pricing_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_pricing_groups_pricing_profile_id_fkey"
+            columns: ["pricing_profile_id"]
+            isOneToOne: false
+            referencedRelation: "product_pricing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_audit_log: {
         Row: {
           action: string
@@ -2757,6 +2807,109 @@ export type Database = {
           target_user_id?: string
         }
         Relationships: []
+      }
+      pricing_conditions: {
+        Row: {
+          condition_type: Database["public"]["Enums"]["pricing_condition_type"]
+          created_at: string
+          id: string
+          operator: Database["public"]["Enums"]["pricing_condition_operator"]
+          pricing_profile_id: string
+          value: Json
+        }
+        Insert: {
+          condition_type: Database["public"]["Enums"]["pricing_condition_type"]
+          created_at?: string
+          id?: string
+          operator?: Database["public"]["Enums"]["pricing_condition_operator"]
+          pricing_profile_id: string
+          value?: Json
+        }
+        Update: {
+          condition_type?: Database["public"]["Enums"]["pricing_condition_type"]
+          created_at?: string
+          id?: string
+          operator?: Database["public"]["Enums"]["pricing_condition_operator"]
+          pricing_profile_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_conditions_pricing_profile_id_fkey"
+            columns: ["pricing_profile_id"]
+            isOneToOne: false
+            referencedRelation: "product_pricing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_rules: {
+        Row: {
+          active: boolean
+          calculation_type: Database["public"]["Enums"]["pricing_calculation_type"]
+          created_at: string
+          currency: string | null
+          id: string
+          max_age: number | null
+          max_quantity: number | null
+          min_age: number | null
+          min_quantity: number | null
+          notes: string | null
+          passenger_type: Database["public"]["Enums"]["pricing_passenger_type"]
+          pricing_profile_id: string
+          priority: number
+          rule_type: Database["public"]["Enums"]["pricing_rule_type"]
+          season_code: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          calculation_type: Database["public"]["Enums"]["pricing_calculation_type"]
+          created_at?: string
+          currency?: string | null
+          id?: string
+          max_age?: number | null
+          max_quantity?: number | null
+          min_age?: number | null
+          min_quantity?: number | null
+          notes?: string | null
+          passenger_type?: Database["public"]["Enums"]["pricing_passenger_type"]
+          pricing_profile_id: string
+          priority?: number
+          rule_type: Database["public"]["Enums"]["pricing_rule_type"]
+          season_code?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          calculation_type?: Database["public"]["Enums"]["pricing_calculation_type"]
+          created_at?: string
+          currency?: string | null
+          id?: string
+          max_age?: number | null
+          max_quantity?: number | null
+          min_age?: number | null
+          min_quantity?: number | null
+          notes?: string | null
+          passenger_type?: Database["public"]["Enums"]["pricing_passenger_type"]
+          pricing_profile_id?: string
+          priority?: number
+          rule_type?: Database["public"]["Enums"]["pricing_rule_type"]
+          season_code?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_rules_pricing_profile_id_fkey"
+            columns: ["pricing_profile_id"]
+            isOneToOne: false
+            referencedRelation: "product_pricing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_attributes: {
         Row: {
@@ -2857,6 +3010,69 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_pricing_profiles: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          name: string
+          priority: number
+          product_id: string
+          product_variant_id: string | null
+          status: Database["public"]["Enums"]["pricing_profile_status"]
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          name: string
+          priority?: number
+          product_id: string
+          product_variant_id?: string | null
+          status?: Database["public"]["Enums"]["pricing_profile_status"]
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          priority?: number
+          product_id?: string
+          product_variant_id?: string | null
+          status?: Database["public"]["Enums"]["pricing_profile_status"]
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_pricing_profiles_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_pricing_profiles_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -4498,6 +4714,10 @@ export type Database = {
         Args: { _birth_date: string; _travel_date?: string }
         Returns: number
       }
+      can_manage_pricing_profile: {
+        Args: { _profile_id: string }
+        Returns: boolean
+      }
       can_manage_product: { Args: { _product_id: string }; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       compute_commission: {
@@ -4840,6 +5060,29 @@ export type Database = {
         | "corporate_client"
         | "partner"
       passenger_type: "adult" | "child" | "infant" | "senior" | "other"
+      pricing_calculation_type: "fixed_amount" | "percentage" | "per_unit"
+      pricing_condition_operator:
+        | "equals"
+        | "between"
+        | "greater_than"
+        | "less_than"
+      pricing_condition_type:
+        | "day_of_week"
+        | "destination"
+        | "booking_window"
+        | "nationality"
+        | "partner"
+        | "organization"
+      pricing_passenger_type: "adult" | "child" | "infant" | "senior" | "any"
+      pricing_profile_status: "draft" | "active" | "inactive" | "archived"
+      pricing_rule_type:
+        | "passenger"
+        | "group"
+        | "seasonal"
+        | "fixed"
+        | "percentage"
+        | "supplement"
+        | "discount"
       product_category:
         | "accommodation"
         | "activity"
@@ -5324,6 +5567,32 @@ export const Constants = {
         "partner",
       ],
       passenger_type: ["adult", "child", "infant", "senior", "other"],
+      pricing_calculation_type: ["fixed_amount", "percentage", "per_unit"],
+      pricing_condition_operator: [
+        "equals",
+        "between",
+        "greater_than",
+        "less_than",
+      ],
+      pricing_condition_type: [
+        "day_of_week",
+        "destination",
+        "booking_window",
+        "nationality",
+        "partner",
+        "organization",
+      ],
+      pricing_passenger_type: ["adult", "child", "infant", "senior", "any"],
+      pricing_profile_status: ["draft", "active", "inactive", "archived"],
+      pricing_rule_type: [
+        "passenger",
+        "group",
+        "seasonal",
+        "fixed",
+        "percentage",
+        "supplement",
+        "discount",
+      ],
       product_category: [
         "accommodation",
         "activity",
