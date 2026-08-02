@@ -265,6 +265,8 @@ function OrganizationDetailPage() {
         </section>
       )}
 
+      <AgreementsPanel organizationId={id} canManage={isAdmin} />
+
       {org.notes && isOperations && (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="font-display text-lg font-semibold">Notas internas</h2>
