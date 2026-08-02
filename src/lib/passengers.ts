@@ -204,6 +204,9 @@ function normalize(input: PassengerInput) {
     const t = v?.trim();
     return t ? t : null;
   };
+  if (!PASSENGER_TYPES.some((t) => t.value === input.passenger_type)) {
+    throw new Error("Tipo de pasajero no válido");
+  }
   return {
     first_name: input.first_name.trim(),
     last_name: input.last_name.trim(),
