@@ -161,6 +161,7 @@ export function emptyPassenger(): PassengerInput {
     document_type: null,
     document_number: null,
     birth_date: null,
+    passenger_type: "adult",
     nationality: null,
     email: null,
     phone: null,
