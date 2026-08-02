@@ -8,13 +8,14 @@ import {
   Building2,
   Calculator,
   CheckSquare,
-  CreditCard,
+  Coins,
   FileText,
   History,
+  LayoutDashboard,
   Loader2,
+  MessageSquare,
   Route as RouteIcon,
   Save,
-  TicketCheck,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +39,11 @@ import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
 import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
 import { BookingPassengersPanel } from "@/components/booking-passengers-panel";
+import { BookingDossierHeader } from "@/components/booking-dossier-header";
+import { BookingTimelinePanel } from "@/components/booking-timeline-panel";
+import { BookingEconomyPanel } from "@/components/booking-economy-panel";
+import { BookingCommunicationsPanel } from "@/components/booking-communications-panel";
+import { getTripState, type TripStateResult } from "@/lib/trip-state";
 
 import { useAccount } from "@/hooks/use-account";
 import {
@@ -55,10 +61,9 @@ import { formatMoney } from "@/lib/currency";
 import { stageLabel } from "@/lib/opportunities";
 import {
   BOOKING_DOCUMENT_KINDS,
-  BOOKING_PAYMENT_KINDS,
   BOOKING_STATUSES,
-  bookingStatusClasses,
   bookingStatusLabel,
+  documentKindLabel,
   getBooking,
   listBookingDocuments,
   listBookingPayments,
@@ -87,22 +92,23 @@ export const Route = createFileRoute("/_authenticated/bookings_/$id")({
   component: BookingDetailPage,
   head: () => ({
     meta: [
-      { title: "Detalle de reserva — ViaE Sales Hub" },
+      { title: "Expediente de viaje — ViaE Sales Hub" },
       {
         name: "description",
         content:
-          "Línea de tiempo de estados, documentación, pagos y proveedor de una reserva de viaje.",
+          "Expediente 360° del viaje: estado comercial y operativo, pasajeros, servicios, economía, documentos, comunicaciones y timeline.",
       },
-      { property: "og:title", content: "Detalle de reserva — ViaE Sales Hub" },
+      { property: "og:title", content: "Expediente de viaje — ViaE Sales Hub" },
       {
         property: "og:description",
-        content: "Seguimiento completo de la operación: estados, pagos, documentos y proveedor.",
+        content: "Centro operativo del viaje: servicios, economía, documentos y cronología.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
 });
+
 
 type ClientRow = { id: string; full_name: string; last_name: string | null; email: string | null };
 type OpportunityRow = { id: string; title: string; stage: string };
