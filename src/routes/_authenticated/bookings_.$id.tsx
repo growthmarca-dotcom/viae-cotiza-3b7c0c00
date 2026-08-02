@@ -497,7 +497,7 @@ function BookingDetailPage() {
                         })}
                       </td>
                       <td className="py-2 pr-4 text-muted-foreground">
-                        {internalUserName(d.user_id, agentName, clientName)}
+                        {d.user_id ? "Usuario interno" : "—"}
                       </td>
                       <td className="py-2">{d.file_path ? "Archivo cargado" : "Sin archivo"}</td>
                     </tr>
@@ -544,12 +544,6 @@ function BookingDetailPage() {
       </Tabs>
     </div>
   );
-}
-
-/** Identificación básica del usuario que cargó un documento. */
-function internalUserName(userId: string, agentName: string | null, clientName: string) {
-  if (!userId) return "—";
-  return agentName ?? clientName ?? "Usuario interno";
 }
 
 
