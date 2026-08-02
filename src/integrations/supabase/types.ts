@@ -784,6 +784,79 @@ export type Database = {
         }
         Relationships: []
       }
+      commercial_agreements: {
+        Row: {
+          agent_id: string | null
+          agreement_type: Database["public"]["Enums"]["agreement_type"]
+          commission_type: Database["public"]["Enums"]["commission_type"] | null
+          commission_value: number | null
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          organization_id: string | null
+          status: Database["public"]["Enums"]["agreement_status"]
+          title: string | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          status?: Database["public"]["Enums"]["agreement_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          commission_type?:
+            | Database["public"]["Enums"]["commission_type"]
+            | null
+          commission_value?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          status?: Database["public"]["Enums"]["agreement_status"]
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_agreements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_events: {
         Row: {
           created_at: string
@@ -2669,6 +2742,18 @@ export type Database = {
         | "inactive"
         | "archived"
       agent_wa_status: "available" | "busy" | "offline"
+      agreement_status:
+        | "draft"
+        | "active"
+        | "expired"
+        | "suspended"
+        | "archived"
+      agreement_type:
+        | "commission_percentage"
+        | "fixed_commission"
+        | "net_rate"
+        | "service_fee"
+        | "custom"
       app_role: "admin" | "agent" | "provider" | "operations"
       booking_document_kind: "voucher" | "receipt" | "invoice" | "other"
       booking_operation_status:
@@ -3033,6 +3118,14 @@ export const Constants = {
         "archived",
       ],
       agent_wa_status: ["available", "busy", "offline"],
+      agreement_status: ["draft", "active", "expired", "suspended", "archived"],
+      agreement_type: [
+        "commission_percentage",
+        "fixed_commission",
+        "net_rate",
+        "service_fee",
+        "custom",
+      ],
       app_role: ["admin", "agent", "provider", "operations"],
       booking_document_kind: ["voucher", "receipt", "invoice", "other"],
       booking_operation_status: [

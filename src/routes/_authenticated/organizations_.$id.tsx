@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useAccount } from "@/hooks/use-account";
 import { OrganizationFormDialog } from "@/components/organization-form-dialog";
+import { AgreementsPanel } from "@/components/agreements-panel";
 import {
   ORGANIZATION_STATUSES,
   getOrganization,
@@ -264,6 +265,8 @@ function OrganizationDetailPage() {
           </div>
         </section>
       )}
+
+      <AgreementsPanel organizationId={id} canManage={isAdmin} />
 
       {org.notes && isOperations && (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
