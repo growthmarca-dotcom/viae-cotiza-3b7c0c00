@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.booking_trip_state(uuid) TO postgres;
