@@ -610,10 +610,116 @@ export type Database = {
           },
         ]
       }
-      booking_services: {
+      booking_service_economics: {
         Row: {
           booking_id: string
+          booking_service_id: string
+          cost_amount: number | null
+          cost_currency: string
+          created_at: string
+          discount_amount: number
+          exchange_rate: number | null
+          exchange_rate_date: string | null
+          exchange_rate_source: Database["public"]["Enums"]["rate_source"]
+          extras_amount: number
+          gross_sale_amount: number | null
+          id: string
+          margin_amount: number | null
+          net_sale_amount: number | null
+          notes: string | null
+          organization_id: string | null
+          provider_id: string | null
+          sale_currency: string
+          taxes_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          booking_service_id: string
+          cost_amount?: number | null
+          cost_currency?: string
+          created_at?: string
+          discount_amount?: number
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          extras_amount?: number
+          gross_sale_amount?: number | null
+          id?: string
+          margin_amount?: number | null
+          net_sale_amount?: number | null
+          notes?: string | null
+          organization_id?: string | null
+          provider_id?: string | null
+          sale_currency?: string
+          taxes_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          booking_service_id?: string
+          cost_amount?: number | null
+          cost_currency?: string
+          created_at?: string
+          discount_amount?: number
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          extras_amount?: number
+          gross_sale_amount?: number | null
+          id?: string
+          margin_amount?: number | null
+          net_sale_amount?: number | null
+          notes?: string | null
+          organization_id?: string | null
+          provider_id?: string | null
+          sale_currency?: string
+          taxes_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_service_economics_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_booking_service_id_fkey"
+            columns: ["booking_service_id"]
+            isOneToOne: true
+            referencedRelation: "booking_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_services: {
+        Row: {
+          applied_exchange_rate: number | null
+          applied_rate_date: string | null
+          applied_rate_source: Database["public"]["Enums"]["rate_source"] | null
+          booking_id: string
           company_id: string | null
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           id: string
           kind: Database["public"]["Enums"]["booking_service_kind"]
@@ -624,6 +730,8 @@ export type Database = {
           record_status: Database["public"]["Enums"]["record_status"]
           resource_id: string | null
           responsible_user_id: string | null
+          sale_amount: number | null
+          sale_currency: string | null
           service_date: string | null
           status: Database["public"]["Enums"]["booking_operation_status"]
           title: string
@@ -631,8 +739,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           booking_id: string
           company_id?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
@@ -643,6 +758,8 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
           responsible_user_id?: string | null
+          sale_amount?: number | null
+          sale_currency?: string | null
           service_date?: string | null
           status?: Database["public"]["Enums"]["booking_operation_status"]
           title?: string
@@ -650,8 +767,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           booking_id?: string
           company_id?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
@@ -662,6 +786,8 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
           responsible_user_id?: string | null
+          sale_amount?: number | null
+          sale_currency?: string | null
           service_date?: string | null
           status?: Database["public"]["Enums"]["booking_operation_status"]
           title?: string
@@ -750,14 +876,20 @@ export type Database = {
       bookings: {
         Row: {
           amount: number
+          applied_exchange_rate: number | null
+          applied_rate_date: string | null
+          applied_rate_source: Database["public"]["Enums"]["rate_source"] | null
           assigned_agent_id: string | null
           booking_number: string | null
           client_id: string
           client_status: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           currency: string
           destination: string | null
           exchange_rate: number | null
+          extras_amount: number | null
           id: string
           notes: string | null
           operation_status: Database["public"]["Enums"]["booking_operation_status"]
@@ -773,7 +905,10 @@ export type Database = {
           provider_reference: string | null
           quotation_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
+          sale_amount: number | null
+          sale_currency: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          taxes_amount: number | null
           tracking_enabled: boolean
           tracking_token: string
           travel_end: string | null
@@ -783,14 +918,22 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id: string
           client_status?: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          extras_amount?: number | null
           id?: string
           notes?: string | null
           operation_status?: Database["public"]["Enums"]["booking_operation_status"]
@@ -806,7 +949,10 @@ export type Database = {
           provider_reference?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          sale_amount?: number | null
+          sale_currency?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          taxes_amount?: number | null
           tracking_enabled?: boolean
           tracking_token?: string
           travel_end?: string | null
@@ -816,14 +962,22 @@ export type Database = {
         }
         Update: {
           amount?: number
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id?: string
           client_status?: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          extras_amount?: number | null
           id?: string
           notes?: string | null
           operation_status?: Database["public"]["Enums"]["booking_operation_status"]
@@ -839,7 +993,10 @@ export type Database = {
           provider_reference?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          sale_amount?: number | null
+          sale_currency?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          taxes_amount?: number | null
           tracking_enabled?: boolean
           tracking_token?: string
           travel_end?: string | null
@@ -3094,6 +3251,7 @@ export type Database = {
         | "accepted"
         | "rejected"
         | "expired"
+      rate_source: "manual" | "snapshot" | "api" | "inherited"
       record_status: "active" | "archived" | "inactive" | "suspended"
       resource_availability:
         | "available"
@@ -3491,6 +3649,7 @@ export const Constants = {
         "rejected",
         "expired",
       ],
+      rate_source: ["manual", "snapshot", "api", "inherited"],
       record_status: ["active", "archived", "inactive", "suspended"],
       resource_availability: [
         "available",
