@@ -147,6 +147,170 @@ export type Database = {
         }
         Relationships: []
       }
+      agreement_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          agreement_id: string
+          changes: Json
+          comment: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["agreement_status"] | null
+          id: string
+          owner_id: string
+          rule_id: string | null
+          to_status: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          agreement_id: string
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["agreement_status"] | null
+          id?: string
+          owner_id: string
+          rule_id?: string | null
+          to_status?: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          agreement_id?: string
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["agreement_status"] | null
+          id?: string
+          owner_id?: string
+          rule_id?: string | null
+          to_status?: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_history_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_rules: {
+        Row: {
+          agreement_id: string
+          base: Database["public"]["Enums"]["agreement_base"]
+          calc_type: Database["public"]["Enums"]["commission_type"]
+          city: string | null
+          country: string | null
+          created_at: string
+          currency: string
+          excludes_extras: boolean
+          excludes_taxes: boolean
+          id: string
+          label: string | null
+          max_amount: number | null
+          min_amount: number | null
+          notes: string | null
+          priority: number
+          provider_type: Database["public"]["Enums"]["provider_type"] | null
+          scope: Database["public"]["Enums"]["agreement_scope"]
+          service_kind:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state: string | null
+          status: Database["public"]["Enums"]["record_status"]
+          transport_service_type:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          agreement_id: string
+          base?: Database["public"]["Enums"]["agreement_base"]
+          calc_type?: Database["public"]["Enums"]["commission_type"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
+          id?: string
+          label?: string | null
+          max_amount?: number | null
+          min_amount?: number | null
+          notes?: string | null
+          priority?: number
+          provider_type?: Database["public"]["Enums"]["provider_type"] | null
+          scope?: Database["public"]["Enums"]["agreement_scope"]
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Update: {
+          agreement_id?: string
+          base?: Database["public"]["Enums"]["agreement_base"]
+          calc_type?: Database["public"]["Enums"]["commission_type"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
+          id?: string
+          label?: string | null
+          max_amount?: number | null
+          min_amount?: number | null
+          notes?: string | null
+          priority?: number
+          provider_type?: Database["public"]["Enums"]["provider_type"] | null
+          scope?: Database["public"]["Enums"]["agreement_scope"]
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_rules_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -446,10 +610,116 @@ export type Database = {
           },
         ]
       }
-      booking_services: {
+      booking_service_economics: {
         Row: {
           booking_id: string
+          booking_service_id: string
+          cost_amount: number | null
+          cost_currency: string
+          created_at: string
+          discount_amount: number
+          exchange_rate: number | null
+          exchange_rate_date: string | null
+          exchange_rate_source: Database["public"]["Enums"]["rate_source"]
+          extras_amount: number
+          gross_sale_amount: number | null
+          id: string
+          margin_amount: number | null
+          net_sale_amount: number | null
+          notes: string | null
+          organization_id: string | null
+          provider_id: string | null
+          sale_currency: string
+          taxes_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          booking_service_id: string
+          cost_amount?: number | null
+          cost_currency?: string
+          created_at?: string
+          discount_amount?: number
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          extras_amount?: number
+          gross_sale_amount?: number | null
+          id?: string
+          margin_amount?: number | null
+          net_sale_amount?: number | null
+          notes?: string | null
+          organization_id?: string | null
+          provider_id?: string | null
+          sale_currency?: string
+          taxes_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          booking_service_id?: string
+          cost_amount?: number | null
+          cost_currency?: string
+          created_at?: string
+          discount_amount?: number
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          extras_amount?: number
+          gross_sale_amount?: number | null
+          id?: string
+          margin_amount?: number | null
+          net_sale_amount?: number | null
+          notes?: string | null
+          organization_id?: string | null
+          provider_id?: string | null
+          sale_currency?: string
+          taxes_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_service_economics_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_booking_service_id_fkey"
+            columns: ["booking_service_id"]
+            isOneToOne: true
+            referencedRelation: "booking_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_service_economics_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_services: {
+        Row: {
+          applied_exchange_rate: number | null
+          applied_rate_date: string | null
+          applied_rate_source: Database["public"]["Enums"]["rate_source"] | null
+          booking_id: string
           company_id: string | null
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           id: string
           kind: Database["public"]["Enums"]["booking_service_kind"]
@@ -460,6 +730,8 @@ export type Database = {
           record_status: Database["public"]["Enums"]["record_status"]
           resource_id: string | null
           responsible_user_id: string | null
+          sale_amount: number | null
+          sale_currency: string | null
           service_date: string | null
           status: Database["public"]["Enums"]["booking_operation_status"]
           title: string
@@ -467,8 +739,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           booking_id: string
           company_id?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
@@ -479,6 +758,8 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
           responsible_user_id?: string | null
+          sale_amount?: number | null
+          sale_currency?: string | null
           service_date?: string | null
           status?: Database["public"]["Enums"]["booking_operation_status"]
           title?: string
@@ -486,8 +767,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           booking_id?: string
           company_id?: string | null
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["booking_service_kind"]
@@ -498,6 +786,8 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           resource_id?: string | null
           responsible_user_id?: string | null
+          sale_amount?: number | null
+          sale_currency?: string | null
           service_date?: string | null
           status?: Database["public"]["Enums"]["booking_operation_status"]
           title?: string
@@ -586,14 +876,20 @@ export type Database = {
       bookings: {
         Row: {
           amount: number
+          applied_exchange_rate: number | null
+          applied_rate_date: string | null
+          applied_rate_source: Database["public"]["Enums"]["rate_source"] | null
           assigned_agent_id: string | null
           booking_number: string | null
           client_id: string
           client_status: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount: number | null
+          cost_currency: string | null
           created_at: string
           currency: string
           destination: string | null
           exchange_rate: number | null
+          extras_amount: number | null
           id: string
           notes: string | null
           operation_status: Database["public"]["Enums"]["booking_operation_status"]
@@ -609,7 +905,10 @@ export type Database = {
           provider_reference: string | null
           quotation_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
+          sale_amount: number | null
+          sale_currency: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          taxes_amount: number | null
           tracking_enabled: boolean
           tracking_token: string
           travel_end: string | null
@@ -619,14 +918,22 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id: string
           client_status?: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          extras_amount?: number | null
           id?: string
           notes?: string | null
           operation_status?: Database["public"]["Enums"]["booking_operation_status"]
@@ -642,7 +949,10 @@ export type Database = {
           provider_reference?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          sale_amount?: number | null
+          sale_currency?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          taxes_amount?: number | null
           tracking_enabled?: boolean
           tracking_token?: string
           travel_end?: string | null
@@ -652,14 +962,22 @@ export type Database = {
         }
         Update: {
           amount?: number
+          applied_exchange_rate?: number | null
+          applied_rate_date?: string | null
+          applied_rate_source?:
+            | Database["public"]["Enums"]["rate_source"]
+            | null
           assigned_agent_id?: string | null
           booking_number?: string | null
           client_id?: string
           client_status?: Database["public"]["Enums"]["client_trip_status"]
+          cost_amount?: number | null
+          cost_currency?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          extras_amount?: number | null
           id?: string
           notes?: string | null
           operation_status?: Database["public"]["Enums"]["booking_operation_status"]
@@ -675,7 +993,10 @@ export type Database = {
           provider_reference?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
+          sale_amount?: number | null
+          sale_currency?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          taxes_amount?: number | null
           tracking_enabled?: boolean
           tracking_token?: string
           travel_end?: string | null
@@ -788,57 +1109,81 @@ export type Database = {
         Row: {
           agent_id: string | null
           agreement_type: Database["public"]["Enums"]["agreement_type"]
+          auto_apply: boolean
+          code: string | null
           commission_type: Database["public"]["Enums"]["commission_type"] | null
           commission_value: number | null
           created_at: string
           currency: string
+          default_base: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras: boolean
+          excludes_taxes: boolean
           id: string
           notes: string | null
           organization_id: string | null
+          party_type: Database["public"]["Enums"]["agreement_party"] | null
+          priority: number
           status: Database["public"]["Enums"]["agreement_status"]
           title: string | null
           updated_at: string
           user_id: string
           valid_from: string | null
           valid_until: string | null
+          version: number
         }
         Insert: {
           agent_id?: string | null
           agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          auto_apply?: boolean
+          code?: string | null
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           created_at?: string
           currency?: string
+          default_base?: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
           id?: string
           notes?: string | null
           organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          priority?: number
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
           user_id?: string
           valid_from?: string | null
           valid_until?: string | null
+          version?: number
         }
         Update: {
           agent_id?: string | null
           agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          auto_apply?: boolean
+          code?: string | null
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           created_at?: string
           currency?: string
+          default_base?: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
           id?: string
           notes?: string | null
           organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          priority?: number
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
           user_id?: string
           valid_from?: string | null
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -1058,9 +1403,11 @@ export type Database = {
           created_by: string | null
           effective_date: string
           id: string
+          is_snapshot: boolean
           note: string | null
           quote_currency: string
           rate: number
+          snapshot_of: string | null
           source: string
           updated_at: string
           user_id: string
@@ -1071,9 +1418,11 @@ export type Database = {
           created_by?: string | null
           effective_date?: string
           id?: string
+          is_snapshot?: boolean
           note?: string | null
           quote_currency?: string
           rate: number
+          snapshot_of?: string | null
           source?: string
           updated_at?: string
           user_id: string
@@ -1084,14 +1433,24 @@ export type Database = {
           created_by?: string | null
           effective_date?: string
           id?: string
+          is_snapshot?: boolean
           note?: string | null
           quote_currency?: string
           rate?: number
+          snapshot_of?: string | null
           source?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_snapshot_of_fkey"
+            columns: ["snapshot_of"]
+            isOneToOne: false
+            referencedRelation: "exchange_rates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_history: {
         Row: {
@@ -2721,6 +3080,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      rate_at: {
+        Args: { _base: string; _date?: string; _owner: string; _quote: string }
+        Returns: number
+      }
       sync_booking_client_status: {
         Args: { _booking_id: string }
         Returns: undefined
@@ -2742,6 +3105,14 @@ export type Database = {
         | "inactive"
         | "archived"
       agent_wa_status: "available" | "busy" | "offline"
+      agreement_base: "gross" | "net" | "cost" | "margin"
+      agreement_party: "organization" | "agent" | "viae"
+      agreement_scope:
+        | "all"
+        | "booking"
+        | "booking_service"
+        | "transport_service"
+        | "quotation"
       agreement_status:
         | "draft"
         | "active"
@@ -2898,6 +3269,7 @@ export type Database = {
         | "accepted"
         | "rejected"
         | "expired"
+      rate_source: "manual" | "snapshot" | "api" | "inherited"
       record_status: "active" | "archived" | "inactive" | "suspended"
       resource_availability:
         | "available"
@@ -3118,6 +3490,15 @@ export const Constants = {
         "archived",
       ],
       agent_wa_status: ["available", "busy", "offline"],
+      agreement_base: ["gross", "net", "cost", "margin"],
+      agreement_party: ["organization", "agent", "viae"],
+      agreement_scope: [
+        "all",
+        "booking",
+        "booking_service",
+        "transport_service",
+        "quotation",
+      ],
       agreement_status: ["draft", "active", "expired", "suspended", "archived"],
       agreement_type: [
         "commission_percentage",
@@ -3286,6 +3667,7 @@ export const Constants = {
         "rejected",
         "expired",
       ],
+      rate_source: ["manual", "snapshot", "api", "inherited"],
       record_status: ["active", "archived", "inactive", "suspended"],
       resource_availability: [
         "available",
