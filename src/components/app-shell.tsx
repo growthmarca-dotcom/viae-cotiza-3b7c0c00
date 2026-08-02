@@ -56,6 +56,7 @@ const operationsNav = [
   { to: "/operations", label: "Central operativa", icon: ClipboardList },
   { to: "/organizations", label: "Organizaciones", icon: Building2 },
   { to: "/providers", label: "Proveedores", icon: Building2 },
+  { to: "/agreements", label: "Acuerdos comerciales", icon: Handshake },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
