@@ -3359,6 +3359,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      booking_trip_state: { Args: { _booking_id: string }; Returns: Json }
       calculate_passenger_age: {
         Args: { _birth_date: string; _travel_date?: string }
         Returns: number
