@@ -37,6 +37,8 @@ import { CommissionSimulationPanel } from "@/components/commission-simulation-pa
 import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
 import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
+import { BookingPassengersPanel } from "@/components/booking-passengers-panel";
+
 import { useAccount } from "@/hooks/use-account";
 import {
   listInternalUsers,
@@ -338,7 +340,10 @@ function BookingDetailPage() {
         </div>
       </div>
 
+      <BookingPassengersPanel bookingId={booking.id} />
+
       <OperationCard booking={booking} onChanged={load} />
+
 
       <Tabs defaultValue="timeline">
         <TabsList>
