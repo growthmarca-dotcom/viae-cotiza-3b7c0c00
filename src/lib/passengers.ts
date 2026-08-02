@@ -145,6 +145,7 @@ export type PassengerInput = {
   document_type: string | null;
   document_number: string | null;
   birth_date: string | null;
+  passenger_type: PassengerType;
   nationality: string | null;
   email: string | null;
   phone: string | null;
