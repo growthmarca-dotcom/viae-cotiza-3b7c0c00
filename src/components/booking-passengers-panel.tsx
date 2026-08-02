@@ -371,7 +371,8 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
     </section>
   );
