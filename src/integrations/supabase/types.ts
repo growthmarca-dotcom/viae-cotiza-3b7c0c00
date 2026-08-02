@@ -341,6 +341,201 @@ export type Database = {
         }
         Relationships: []
       }
+      availability_cache: {
+        Row: {
+          availability_result: Json
+          created_at: string
+          expires_at: string | null
+          id: string
+          query_hash: string
+          service_id: string | null
+          source_id: string | null
+        }
+        Insert: {
+          availability_result?: Json
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          query_hash: string
+          service_id?: string | null
+          source_id?: string | null
+        }
+        Update: {
+          availability_result?: Json
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          query_hash?: string
+          service_id?: string | null
+          source_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_cache_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "availability_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_policies: {
+        Row: {
+          cache_minutes: number
+          created_at: string
+          enabled: boolean
+          fallback_manual: boolean
+          id: string
+          organization_id: string | null
+          owner_id: string
+          policy_name: string
+          priority_order: Json
+          service_kind:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          cache_minutes?: number
+          created_at?: string
+          enabled?: boolean
+          fallback_manual?: boolean
+          id?: string
+          organization_id?: string | null
+          owner_id: string
+          policy_name: string
+          priority_order?: Json
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          cache_minutes?: number
+          created_at?: string
+          enabled?: boolean
+          fallback_manual?: boolean
+          id?: string
+          organization_id?: string | null
+          owner_id?: string
+          policy_name?: string
+          priority_order?: Json
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_policies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_requests: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          owner_id: string | null
+          request_type: Database["public"]["Enums"]["availability_request_type"]
+          response_time: number | null
+          service_id: string | null
+          source_id: string | null
+          status: Database["public"]["Enums"]["availability_request_status"]
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          owner_id?: string | null
+          request_type?: Database["public"]["Enums"]["availability_request_type"]
+          response_time?: number | null
+          service_id?: string | null
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["availability_request_status"]
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          owner_id?: string | null
+          request_type?: Database["public"]["Enums"]["availability_request_type"]
+          response_time?: number | null
+          service_id?: string | null
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["availability_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_requests_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "availability_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availability_sources: {
+        Row: {
+          configuration: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          organization_id: string | null
+          owner_id: string
+          priority: number
+          provider_id: string | null
+          source_name: string
+          source_type: Database["public"]["Enums"]["availability_source_type"]
+          updated_at: string
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          organization_id?: string | null
+          owner_id: string
+          priority?: number
+          provider_id?: string | null
+          source_name: string
+          source_type?: Database["public"]["Enums"]["availability_source_type"]
+          updated_at?: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          organization_id?: string | null
+          owner_id?: string
+          priority?: number
+          provider_id?: string | null
+          source_name?: string
+          source_type?: Database["public"]["Enums"]["availability_source_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_sources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_sources_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_checklist_items: {
         Row: {
           booking_id: string
@@ -3055,6 +3250,62 @@ export type Database = {
           },
         ]
       }
+      service_availability: {
+        Row: {
+          availability_date: string
+          available_units: number
+          created_at: string
+          end_time: string | null
+          id: string
+          notes: string | null
+          organization_id: string | null
+          owner_id: string
+          reserved_units: number
+          service_id: string
+          start_time: string | null
+          status: Database["public"]["Enums"]["availability_status"]
+          updated_at: string
+        }
+        Insert: {
+          availability_date: string
+          available_units?: number
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          owner_id: string
+          reserved_units?: number
+          service_id: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["availability_status"]
+          updated_at?: string
+        }
+        Update: {
+          availability_date?: string
+          available_units?: number
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          owner_id?: string
+          reserved_units?: number
+          service_id?: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["availability_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_availability_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tariff_plans: {
         Row: {
           created_at: string
@@ -3942,6 +4193,19 @@ export type Database = {
         | "service_fee"
         | "custom"
       app_role: "admin" | "agent" | "provider" | "operations"
+      availability_request_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+      availability_request_type: "manual" | "api" | "cache" | "fallback"
+      availability_source_type: "manual" | "api" | "cache" | "external"
+      availability_status:
+        | "available"
+        | "limited"
+        | "full"
+        | "closed"
+        | "blocked"
       booking_document_kind: "voucher" | "receipt" | "invoice" | "other"
       booking_operation_status:
         | "pending_operation"
@@ -4356,6 +4620,21 @@ export const Constants = {
         "custom",
       ],
       app_role: ["admin", "agent", "provider", "operations"],
+      availability_request_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+      ],
+      availability_request_type: ["manual", "api", "cache", "fallback"],
+      availability_source_type: ["manual", "api", "cache", "external"],
+      availability_status: [
+        "available",
+        "limited",
+        "full",
+        "closed",
+        "blocked",
+      ],
       booking_document_kind: ["voucher", "receipt", "invoice", "other"],
       booking_operation_status: [
         "pending_operation",
