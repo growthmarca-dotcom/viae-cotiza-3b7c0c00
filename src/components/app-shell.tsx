@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { AppFooter } from "@/components/app-footer";
-import { Building2 } from "lucide-react";
+import { Building2, Handshake } from "lucide-react";
 import { useDeveloperBranding } from "@/hooks/use-developer-branding";
 
 import { cn } from "@/lib/utils";
