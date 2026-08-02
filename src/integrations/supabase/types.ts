@@ -1202,6 +1202,215 @@ export type Database = {
           },
         ]
       }
+      commission_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          comment: string | null
+          commission_id: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["commission_status"] | null
+          id: string
+          owner_id: string
+          to_status: Database["public"]["Enums"]["commission_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          comment?: string | null
+          commission_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["commission_status"] | null
+          id?: string
+          owner_id: string
+          to_status?: Database["public"]["Enums"]["commission_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          comment?: string | null
+          commission_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["commission_status"] | null
+          id?: string
+          owner_id?: string
+          to_status?: Database["public"]["Enums"]["commission_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_history_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commissions: {
+        Row: {
+          agent_id: string | null
+          agreement_id: string | null
+          agreement_snapshot: Json
+          agreement_version: number | null
+          base: Database["public"]["Enums"]["agreement_base"]
+          base_amount: number | null
+          booking_id: string | null
+          booking_service_id: string | null
+          calc_type: Database["public"]["Enums"]["commission_type"]
+          calc_value: number
+          commission_amount: number | null
+          computed_at: string
+          computed_by: string | null
+          created_at: string
+          currency: string
+          entity: string
+          entity_id: string
+          exchange_rate: number | null
+          exchange_rate_date: string | null
+          exchange_rate_source: Database["public"]["Enums"]["rate_source"]
+          id: string
+          notes: string | null
+          organization_id: string | null
+          party_type: Database["public"]["Enums"]["agreement_party"] | null
+          quotation_id: string | null
+          rule_id: string | null
+          rule_snapshot: Json
+          status: Database["public"]["Enums"]["commission_status"]
+          transport_service_id: string | null
+          updated_at: string
+          user_id: string
+          warnings: Json
+        }
+        Insert: {
+          agent_id?: string | null
+          agreement_id?: string | null
+          agreement_snapshot?: Json
+          agreement_version?: number | null
+          base: Database["public"]["Enums"]["agreement_base"]
+          base_amount?: number | null
+          booking_id?: string | null
+          booking_service_id?: string | null
+          calc_type: Database["public"]["Enums"]["commission_type"]
+          calc_value: number
+          commission_amount?: number | null
+          computed_at?: string
+          computed_by?: string | null
+          created_at?: string
+          currency?: string
+          entity: string
+          entity_id: string
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          quotation_id?: string | null
+          rule_id?: string | null
+          rule_snapshot?: Json
+          status?: Database["public"]["Enums"]["commission_status"]
+          transport_service_id?: string | null
+          updated_at?: string
+          user_id: string
+          warnings?: Json
+        }
+        Update: {
+          agent_id?: string | null
+          agreement_id?: string | null
+          agreement_snapshot?: Json
+          agreement_version?: number | null
+          base?: Database["public"]["Enums"]["agreement_base"]
+          base_amount?: number | null
+          booking_id?: string | null
+          booking_service_id?: string | null
+          calc_type?: Database["public"]["Enums"]["commission_type"]
+          calc_value?: number
+          commission_amount?: number | null
+          computed_at?: string
+          computed_by?: string | null
+          created_at?: string
+          currency?: string
+          entity?: string
+          entity_id?: string
+          exchange_rate?: number | null
+          exchange_rate_date?: string | null
+          exchange_rate_source?: Database["public"]["Enums"]["rate_source"]
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          quotation_id?: string | null
+          rule_id?: string | null
+          rule_snapshot?: Json
+          status?: Database["public"]["Enums"]["commission_status"]
+          transport_service_id?: string | null
+          updated_at?: string
+          user_id?: string
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_booking_service_id_fkey"
+            columns: ["booking_service_id"]
+            isOneToOne: false
+            referencedRelation: "booking_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_transport_service_id_fkey"
+            columns: ["transport_service_id"]
+            isOneToOne: false
+            referencedRelation: "transport_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_events: {
         Row: {
           created_at: string
@@ -3033,6 +3242,27 @@ export type Database = {
         }[]
       }
       claim_admin_if_none: { Args: never; Returns: boolean }
+      compute_commission: {
+        Args: {
+          _base: Database["public"]["Enums"]["agreement_base"]
+          _calc_type: Database["public"]["Enums"]["commission_type"]
+          _cost: number
+          _discount: number
+          _excludes_extras?: boolean
+          _excludes_taxes?: boolean
+          _extras: number
+          _gross: number
+          _max_amount?: number
+          _min_amount?: number
+          _taxes: number
+          _value: number
+        }
+        Returns: {
+          base_amount: number
+          commission_amount: number
+          warnings: Json
+        }[]
+      }
       current_agent_id: { Args: never; Returns: string }
       current_driver_resource_ids: { Args: never; Returns: string[] }
       default_checklist_items: {
@@ -3083,6 +3313,44 @@ export type Database = {
       rate_at: {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
+      }
+      resolve_agreement: {
+        Args: {
+          _agent_id?: string
+          _city?: string
+          _country?: string
+          _date?: string
+          _organization_id?: string
+          _owner: string
+          _scope?: Database["public"]["Enums"]["agreement_scope"]
+          _service_kind?: Database["public"]["Enums"]["booking_service_kind"]
+          _state?: string
+          _transport_type?: Database["public"]["Enums"]["transport_service_type"]
+        }
+        Returns: {
+          agreement_id: string
+          agreement_snapshot: Json
+          agreement_version: number
+          base: Database["public"]["Enums"]["agreement_base"]
+          calc_type: Database["public"]["Enums"]["commission_type"]
+          calc_value: number
+          currency: string
+          excludes_extras: boolean
+          excludes_taxes: boolean
+          max_amount: number
+          min_amount: number
+          rule_id: string
+          rule_snapshot: Json
+          score: number
+        }[]
+      }
+      simulate_commission: {
+        Args: { _booking_service_id: string }
+        Returns: Json
+      }
+      simulate_commission_transport: {
+        Args: { _transport_service_id: string }
+        Returns: Json
       }
       sync_booking_client_status: {
         Args: { _booking_id: string }
@@ -3171,6 +3439,12 @@ export type Database = {
         | "preparing"
         | "on_the_way"
         | "finished"
+        | "cancelled"
+      commission_status:
+        | "simulated"
+        | "accrued"
+        | "approved"
+        | "settled"
         | "cancelled"
       commission_type: "percentage" | "fixed"
       communication_event_status: "pending" | "sent" | "error"
@@ -3558,6 +3832,13 @@ export const Constants = {
         "preparing",
         "on_the_way",
         "finished",
+        "cancelled",
+      ],
+      commission_status: [
+        "simulated",
+        "accrued",
+        "approved",
+        "settled",
         "cancelled",
       ],
       commission_type: ["percentage", "fixed"],
