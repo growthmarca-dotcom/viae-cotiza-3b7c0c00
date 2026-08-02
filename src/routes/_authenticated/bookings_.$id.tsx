@@ -8,13 +8,14 @@ import {
   Building2,
   Calculator,
   CheckSquare,
-  CreditCard,
+  Coins,
   FileText,
   History,
+  LayoutDashboard,
   Loader2,
+  MessageSquare,
   Route as RouteIcon,
   Save,
-  TicketCheck,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +39,11 @@ import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
 import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
 import { BookingPassengersPanel } from "@/components/booking-passengers-panel";
+import { BookingDossierHeader } from "@/components/booking-dossier-header";
+import { BookingTimelinePanel } from "@/components/booking-timeline-panel";
+import { BookingEconomyPanel } from "@/components/booking-economy-panel";
+import { BookingCommunicationsPanel } from "@/components/booking-communications-panel";
+import { getTripState, type TripStateResult } from "@/lib/trip-state";
 
 import { useAccount } from "@/hooks/use-account";
 import {
@@ -55,10 +61,9 @@ import { formatMoney } from "@/lib/currency";
 import { stageLabel } from "@/lib/opportunities";
 import {
   BOOKING_DOCUMENT_KINDS,
-  BOOKING_PAYMENT_KINDS,
   BOOKING_STATUSES,
-  bookingStatusClasses,
   bookingStatusLabel,
+  documentKindLabel,
   getBooking,
   listBookingDocuments,
   listBookingPayments,
@@ -87,22 +92,23 @@ export const Route = createFileRoute("/_authenticated/bookings_/$id")({
   component: BookingDetailPage,
   head: () => ({
     meta: [
-      { title: "Detalle de reserva — ViaE Sales Hub" },
+      { title: "Expediente de viaje — ViaE Sales Hub" },
       {
         name: "description",
         content:
-          "Línea de tiempo de estados, documentación, pagos y proveedor de una reserva de viaje.",
+          "Expediente 360° del viaje: estado comercial y operativo, pasajeros, servicios, economía, documentos, comunicaciones y timeline.",
       },
-      { property: "og:title", content: "Detalle de reserva — ViaE Sales Hub" },
+      { property: "og:title", content: "Expediente de viaje — ViaE Sales Hub" },
       {
         property: "og:description",
-        content: "Seguimiento completo de la operación: estados, pagos, documentos y proveedor.",
+        content: "Centro operativo del viaje: servicios, economía, documentos y cronología.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
 });
+
 
 type ClientRow = { id: string; full_name: string; last_name: string | null; email: string | null };
 type OpportunityRow = { id: string; title: string; stage: string };
@@ -120,6 +126,8 @@ function BookingDetailPage() {
   const [history, setHistory] = useState<BookingStatusEvent[]>([]);
   const [documents, setDocuments] = useState<BookingDocument[]>([]);
   const [payments, setPayments] = useState<BookingPayment[]>([]);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [tripState, setTripState] = useState<TripStateResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -173,6 +181,24 @@ function BookingDetailPage() {
           data ? [data.first_name, data.last_name].filter(Boolean).join(" ") : null,
         );
       } else setAgentName(null);
+
+      if (b.organization_id) {
+        const { data } = await supabase
+          .from("organizations")
+          .select("legal_name, trade_name")
+          .eq("id", b.organization_id)
+          .maybeSingle();
+        setOrganizationName(
+          data ? (data.trade_name?.trim() || data.legal_name?.trim() || null) : null,
+        );
+      } else setOrganizationName(null);
+
+      // Estado operativo derivado (v1.9.5.3): solo lectura, no persiste nada.
+      try {
+        setTripState(await getTripState(id));
+      } catch {
+        setTripState(null);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo cargar la reserva");
     } finally {
@@ -217,6 +243,10 @@ function BookingDetailPage() {
     );
   }
 
+  const clientName = client
+    ? [client.full_name, client.last_name].filter(Boolean).join(" ")
+    : "Cliente";
+
   return (
     <div className="space-y-6 pb-20">
       <button
@@ -226,179 +256,142 @@ function BookingDetailPage() {
         <ArrowLeft className="h-4 w-4" /> Reservas
       </button>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-medium">
-              <TicketCheck className="h-3.5 w-3.5 text-gold" /> {booking.booking_number}
-            </span>
-            <h1 className="mt-3 font-display text-3xl font-semibold">
-              {client ? [client.full_name, client.last_name].filter(Boolean).join(" ") : "Cliente"}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {booking.destination ?? "Sin destino"} ·{" "}
-              {booking.travel_start ?? "sin fecha"}
-              {booking.travel_end ? ` → ${booking.travel_end}` : ""}
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${bookingStatusClasses(booking.status)}`}
-            >
-              {bookingStatusLabel(booking.status)}
-            </span>
-            <p className="font-display text-2xl font-semibold">
-              {formatMoney(booking.currency, Number(booking.amount ?? 0))}
-            </p>
-            {booking.exchange_rate != null && (
-              <p className="text-xs text-muted-foreground">TC {booking.exchange_rate}</p>
-            )}
-          </div>
-        </div>
+      <BookingDossierHeader
+        booking={booking}
+        clientName={clientName}
+        agentName={agentName}
+        organizationName={organizationName}
+        tripState={tripState}
+      />
 
-        <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
-          <Info label="Cliente">
-            {client ? (
-              <Link
-                to="/clients/$id"
-                params={{ id: client.id }}
-                className="text-primary hover:underline"
-              >
-                {[client.full_name, client.last_name].filter(Boolean).join(" ")}
-              </Link>
-            ) : (
-              "—"
-            )}
-          </Info>
-          <Info label="Oportunidad">
-            {opportunity ? `${opportunity.title} · ${stageLabel(opportunity.stage)}` : "—"}
-          </Info>
-          <Info label="Cotización origen">
-            {quotation ? (
-              <Link
-                to="/quotations/$id"
-                params={{ id: quotation.id }}
-                className="text-primary hover:underline"
-              >
-                {quotation.title}
-              </Link>
-            ) : (
-              "—"
-            )}
-          </Info>
-          <Info label="Agente responsable">{agentName ?? "Sin asignar"}</Info>
-          <Info label="Fecha de creación">
-            {new Date(booking.created_at).toLocaleDateString()}
-          </Info>
-          <Info label="Registro">
-            {booking.record_status === "archived" ? "Archivada" : "Activa"}
-          </Info>
-          {booking.notes && (
-            <div className="sm:col-span-3">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Observaciones</p>
-              <p className="whitespace-pre-line">{booking.notes}</p>
-            </div>
-          )}
-        </div>
-
-        <BookingTrackingCard
-          bookingId={booking.id}
-          status={booking.client_status}
-          token={booking.tracking_token}
-          enabled={booking.tracking_enabled}
-          onChanged={load}
-        />
-
-        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          <span className="text-sm text-muted-foreground">Cambiar estado:</span>
-          {BOOKING_STATUSES.map((s) => (
-            <Button
-              key={s.value}
-              size="sm"
-              variant={s.value === booking.status ? "default" : "outline"}
-              disabled={saving || s.value === booking.status}
-              onClick={() => changeStatus(s.value)}
-            >
-              {s.label}
-            </Button>
-          ))}
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={saving}
-            onClick={async () => {
-              await archiveBooking(booking.id, booking.record_status !== "archived");
-              toast.success(
-                booking.record_status === "archived" ? "Reserva restaurada" : "Reserva archivada",
-              );
-              load();
-            }}
-          >
-            <Archive className="mr-2 h-4 w-4" />
-            {booking.record_status === "archived" ? "Restaurar" : "Archivar"}
-          </Button>
-        </div>
-      </div>
-
-      <BookingPassengersPanel bookingId={booking.id} />
-
-      <OperationCard booking={booking} onChanged={load} />
-
-
-      <Tabs defaultValue="timeline">
-        <TabsList>
-          <TabsTrigger value="timeline">
-            <History className="mr-2 h-4 w-4" /> Línea de tiempo
+      <Tabs defaultValue="summary">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="summary">
+            <LayoutDashboard className="mr-2 h-4 w-4" /> Resumen
           </TabsTrigger>
-          <TabsTrigger value="services">
-            <Wrench className="mr-2 h-4 w-4" /> Servicios
+          <TabsTrigger value="operation">
+            <Wrench className="mr-2 h-4 w-4" /> Servicios y operación
+          </TabsTrigger>
+          <TabsTrigger value="economy">
+            <Coins className="mr-2 h-4 w-4" /> Economía
           </TabsTrigger>
           <TabsTrigger value="documents">
-            <FileText className="mr-2 h-4 w-4" /> Documentación
+            <FileText className="mr-2 h-4 w-4" /> Documentos
           </TabsTrigger>
-          <TabsTrigger value="payments">
-            <CreditCard className="mr-2 h-4 w-4" /> Pagos
-          </TabsTrigger>
-          <TabsTrigger value="resources">
-            <Boxes className="mr-2 h-4 w-4" /> Recursos
-          </TabsTrigger>
-          <TabsTrigger value="transport">
-            <RouteIcon className="mr-2 h-4 w-4" /> Transporte
-          </TabsTrigger>
-          <TabsTrigger value="checklist">
-            <CheckSquare className="mr-2 h-4 w-4" /> Checklist
-          </TabsTrigger>
-          <TabsTrigger value="incidents">
-            <AlertCircle className="mr-2 h-4 w-4" /> Incidencias
+          <TabsTrigger value="communications">
+            <MessageSquare className="mr-2 h-4 w-4" /> Comunicaciones
           </TabsTrigger>
           <TabsTrigger value="commissions">
             <Calculator className="mr-2 h-4 w-4" /> Comisiones
           </TabsTrigger>
-          <TabsTrigger value="provider">
-            <Building2 className="mr-2 h-4 w-4" /> Proveedor
+          <TabsTrigger value="timeline">
+            <History className="mr-2 h-4 w-4" /> Timeline
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="checklist">
-          <BookingChecklistPanel bookingId={booking.id} />
-        </TabsContent>
-
-        <TabsContent value="incidents">
-          <BookingIncidentsPanel bookingId={booking.id} />
-        </TabsContent>
-
-        <TabsContent value="services">
-          <BookingServicesPanel bookingId={booking.id} />
-        </TabsContent>
-
-        <TabsContent value="commissions">
-          <CommissionSimulationPanel bookingId={booking.id} />
-        </TabsContent>
-
-
-        <TabsContent value="timeline">
+        {/* ------------------------------------------------------------ Resumen */}
+        <TabsContent value="summary" className="space-y-6">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="font-display text-xl font-semibold">Historial de estados</h2>
+            <h2 className="font-display text-xl font-semibold">Datos del viaje</h2>
+            <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
+              <Info label="Cliente">
+                {client ? (
+                  <Link
+                    to="/clients/$id"
+                    params={{ id: client.id }}
+                    className="text-primary hover:underline"
+                  >
+                    {clientName}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+              </Info>
+              <Info label="Destino">{booking.destination ?? "—"}</Info>
+              <Info label="Fechas de viaje">
+                {booking.travel_start ?? "—"}
+                {booking.travel_end ? ` → ${booking.travel_end}` : ""}
+              </Info>
+              <Info label="Oportunidad">
+                {opportunity ? `${opportunity.title} · ${stageLabel(opportunity.stage)}` : "—"}
+              </Info>
+              <Info label="Cotización origen">
+                {quotation ? (
+                  <Link
+                    to="/quotations/$id"
+                    params={{ id: quotation.id }}
+                    className="text-primary hover:underline"
+                  >
+                    {quotation.title}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+              </Info>
+              <Info label="Importe">
+                {formatMoney(booking.currency, Number(booking.amount ?? 0))}
+                {booking.exchange_rate != null ? ` · TC ${booking.exchange_rate}` : ""}
+              </Info>
+              <Info label="Agente responsable">{agentName ?? "Sin asignar"}</Info>
+              <Info label="Organización">{organizationName ?? "—"}</Info>
+              <Info label="Registro">
+                {booking.record_status === "archived" ? "Archivada" : "Activa"}
+              </Info>
+              {booking.notes && (
+                <div className="sm:col-span-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Observaciones
+                  </p>
+                  <p className="whitespace-pre-line">{booking.notes}</p>
+                </div>
+              )}
+            </div>
+
+            <BookingTrackingCard
+              bookingId={booking.id}
+              status={booking.client_status}
+              token={booking.tracking_token}
+              enabled={booking.tracking_enabled}
+              onChanged={load}
+            />
+
+            <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground">Estado comercial:</span>
+              {BOOKING_STATUSES.map((s) => (
+                <Button
+                  key={s.value}
+                  size="sm"
+                  variant={s.value === booking.status ? "default" : "outline"}
+                  disabled={saving || s.value === booking.status}
+                  onClick={() => changeStatus(s.value)}
+                >
+                  {s.label}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={saving}
+                onClick={async () => {
+                  await archiveBooking(booking.id, booking.record_status !== "archived");
+                  toast.success(
+                    booking.record_status === "archived"
+                      ? "Reserva restaurada"
+                      : "Reserva archivada",
+                  );
+                  load();
+                }}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                {booking.record_status === "archived" ? "Restaurar" : "Archivar"}
+              </Button>
+            </div>
+          </div>
+
+          <BookingPassengersPanel bookingId={booking.id} />
+
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold">Historial de estados comerciales</h2>
             <ol className="mt-6 space-y-4">
               {history.length === 0 && (
                 <li className="text-sm text-muted-foreground">Sin movimientos registrados.</li>
@@ -421,13 +414,97 @@ function BookingDetailPage() {
           </div>
         </TabsContent>
 
+        {/* -------------------------------------------- Servicios y operación */}
+        <TabsContent value="operation" className="space-y-6">
+          <OperationCard booking={booking} onChanged={load} />
+          <BookingServicesPanel bookingId={booking.id} />
+
+          <Tabs defaultValue="resources">
+            <TabsList className="flex-wrap">
+              <TabsTrigger value="resources">
+                <Boxes className="mr-2 h-4 w-4" /> Recursos
+              </TabsTrigger>
+              <TabsTrigger value="transport">
+                <RouteIcon className="mr-2 h-4 w-4" /> Transporte
+              </TabsTrigger>
+              <TabsTrigger value="checklist">
+                <CheckSquare className="mr-2 h-4 w-4" /> Checklist
+              </TabsTrigger>
+              <TabsTrigger value="incidents">
+                <AlertCircle className="mr-2 h-4 w-4" /> Incidencias
+              </TabsTrigger>
+              <TabsTrigger value="provider">
+                <Building2 className="mr-2 h-4 w-4" /> Proveedor
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="resources">
+              <ResourcesTab bookingId={booking.id} />
+            </TabsContent>
+            <TabsContent value="transport">
+              <BookingTransportTab bookingId={booking.id} />
+            </TabsContent>
+            <TabsContent value="checklist">
+              <BookingChecklistPanel bookingId={booking.id} />
+            </TabsContent>
+            <TabsContent value="incidents">
+              <BookingIncidentsPanel bookingId={booking.id} />
+            </TabsContent>
+            <TabsContent value="provider">
+              <ProviderTab booking={booking} onSaved={load} />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* ----------------------------------------------------------- Economía */}
+        <TabsContent value="economy">
+          <BookingEconomyPanel booking={booking} payments={payments} />
+        </TabsContent>
+
+        {/* --------------------------------------------------------- Documentos */}
         <TabsContent value="documents">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="font-display text-xl font-semibold">Documentación</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Estructura preparada para voucher, recibos, facturas y otros archivos. La carga de
-              archivos se habilitará en una próxima versión.
+              Documentos asociados a la reserva: voucher, recibos, facturas y otros archivos.
             </p>
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="py-2 pr-4">Documento</th>
+                    <th className="py-2 pr-4">Tipo</th>
+                    <th className="py-2 pr-4">Fecha de creación</th>
+                    <th className="py-2 pr-4">Cargado por</th>
+                    <th className="py-2">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-4 text-sm text-muted-foreground">
+                        Sin documentos cargados.
+                      </td>
+                    </tr>
+                  )}
+                  {documents.map((d) => (
+                    <tr key={d.id} className="border-t border-border/60">
+                      <td className="py-2 pr-4 font-medium">{d.title}</td>
+                      <td className="py-2 pr-4">{documentKindLabel(d.kind)}</td>
+                      <td className="py-2 pr-4 text-muted-foreground">
+                        {new Date(d.created_at).toLocaleString("es-AR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </td>
+                      <td className="py-2 pr-4 text-muted-foreground">
+                        {d.user_id ? "Usuario interno" : "—"}
+                      </td>
+                      <td className="py-2">{d.file_path ? "Archivo cargado" : "Sin archivo"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {BOOKING_DOCUMENT_KINDS.map((k) => {
                 const items = documents.filter((d) => d.kind === k.value);
@@ -440,11 +517,6 @@ function BookingDetailPage() {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {items.length === 0 ? "Sin archivos" : `${items.length} archivo(s)`}
                     </p>
-                    <ul className="mt-2 space-y-1 text-xs">
-                      {items.map((d) => (
-                        <li key={d.id}>{d.title}</li>
-                      ))}
-                    </ul>
                   </div>
                 );
               })}
@@ -452,60 +524,28 @@ function BookingDetailPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="payments">
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="font-display text-xl font-semibold">Pagos</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Estructura preparada para seña y saldo con estado, método y fecha. La lógica de cobro
-              se implementará más adelante.
-            </p>
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    <th className="py-2 pr-4">Concepto</th>
-                    <th className="py-2 pr-4">Importe</th>
-                    <th className="py-2 pr-4">Estado</th>
-                    <th className="py-2 pr-4">Método</th>
-                    <th className="py-2">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {BOOKING_PAYMENT_KINDS.filter((k) => k.value !== "other").map((k) => {
-                    const p = payments.find((x) => x.kind === k.value);
-                    return (
-                      <tr key={k.value} className="border-t border-border/60">
-                        <td className="py-2 pr-4 font-medium">{k.label}</td>
-                        <td className="py-2 pr-4">
-                          {p ? formatMoney(p.currency, Number(p.amount ?? 0)) : "—"}
-                        </td>
-                        <td className="py-2 pr-4">{p ? p.status : "Pendiente"}</td>
-                        <td className="py-2 pr-4">{p?.method ?? "—"}</td>
-                        <td className="py-2">{p?.due_date ?? p?.paid_at?.slice(0, 10) ?? "—"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* ----------------------------------------------------- Comunicaciones */}
+        <TabsContent value="communications">
+          <BookingCommunicationsPanel bookingId={booking.id} />
         </TabsContent>
 
-        <TabsContent value="resources">
-          <ResourcesTab bookingId={booking.id} />
+        {/* --------------------------------------------------------- Comisiones */}
+        <TabsContent value="commissions" className="space-y-3">
+          <p className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-sm">
+            Simulación — no genera movimiento contable
+          </p>
+          <CommissionSimulationPanel bookingId={booking.id} />
         </TabsContent>
 
-        <TabsContent value="transport">
-          <BookingTransportTab bookingId={booking.id} />
-        </TabsContent>
-
-        <TabsContent value="provider">
-          <ProviderTab booking={booking} onSaved={load} />
+        {/* ----------------------------------------------------------- Timeline */}
+        <TabsContent value="timeline">
+          <BookingTimelinePanel bookingId={booking.id} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
 
 /** Relación con el futuro módulo de proveedores: por ahora, datos de referencia. */
 function ProviderTab({ booking, onSaved }: { booking: Booking; onSaved: () => void }) {
