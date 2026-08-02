@@ -147,6 +147,170 @@ export type Database = {
         }
         Relationships: []
       }
+      agreement_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          agreement_id: string
+          changes: Json
+          comment: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["agreement_status"] | null
+          id: string
+          owner_id: string
+          rule_id: string | null
+          to_status: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          agreement_id: string
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["agreement_status"] | null
+          id?: string
+          owner_id: string
+          rule_id?: string | null
+          to_status?: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          agreement_id?: string
+          changes?: Json
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["agreement_status"] | null
+          id?: string
+          owner_id?: string
+          rule_id?: string | null
+          to_status?: Database["public"]["Enums"]["agreement_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_history_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_rules: {
+        Row: {
+          agreement_id: string
+          base: Database["public"]["Enums"]["agreement_base"]
+          calc_type: Database["public"]["Enums"]["commission_type"]
+          city: string | null
+          country: string | null
+          created_at: string
+          currency: string
+          excludes_extras: boolean
+          excludes_taxes: boolean
+          id: string
+          label: string | null
+          max_amount: number | null
+          min_amount: number | null
+          notes: string | null
+          priority: number
+          provider_type: Database["public"]["Enums"]["provider_type"] | null
+          scope: Database["public"]["Enums"]["agreement_scope"]
+          service_kind:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state: string | null
+          status: Database["public"]["Enums"]["record_status"]
+          transport_service_type:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          agreement_id: string
+          base?: Database["public"]["Enums"]["agreement_base"]
+          calc_type?: Database["public"]["Enums"]["commission_type"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
+          id?: string
+          label?: string | null
+          max_amount?: number | null
+          min_amount?: number | null
+          notes?: string | null
+          priority?: number
+          provider_type?: Database["public"]["Enums"]["provider_type"] | null
+          scope?: Database["public"]["Enums"]["agreement_scope"]
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Update: {
+          agreement_id?: string
+          base?: Database["public"]["Enums"]["agreement_base"]
+          calc_type?: Database["public"]["Enums"]["commission_type"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
+          id?: string
+          label?: string | null
+          max_amount?: number | null
+          min_amount?: number | null
+          notes?: string | null
+          priority?: number
+          provider_type?: Database["public"]["Enums"]["provider_type"] | null
+          scope?: Database["public"]["Enums"]["agreement_scope"]
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["record_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_rules_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -788,57 +952,81 @@ export type Database = {
         Row: {
           agent_id: string | null
           agreement_type: Database["public"]["Enums"]["agreement_type"]
+          auto_apply: boolean
+          code: string | null
           commission_type: Database["public"]["Enums"]["commission_type"] | null
           commission_value: number | null
           created_at: string
           currency: string
+          default_base: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras: boolean
+          excludes_taxes: boolean
           id: string
           notes: string | null
           organization_id: string | null
+          party_type: Database["public"]["Enums"]["agreement_party"] | null
+          priority: number
           status: Database["public"]["Enums"]["agreement_status"]
           title: string | null
           updated_at: string
           user_id: string
           valid_from: string | null
           valid_until: string | null
+          version: number
         }
         Insert: {
           agent_id?: string | null
           agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          auto_apply?: boolean
+          code?: string | null
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           created_at?: string
           currency?: string
+          default_base?: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
           id?: string
           notes?: string | null
           organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          priority?: number
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
           user_id?: string
           valid_from?: string | null
           valid_until?: string | null
+          version?: number
         }
         Update: {
           agent_id?: string | null
           agreement_type?: Database["public"]["Enums"]["agreement_type"]
+          auto_apply?: boolean
+          code?: string | null
           commission_type?:
             | Database["public"]["Enums"]["commission_type"]
             | null
           commission_value?: number | null
           created_at?: string
           currency?: string
+          default_base?: Database["public"]["Enums"]["agreement_base"]
+          excludes_extras?: boolean
+          excludes_taxes?: boolean
           id?: string
           notes?: string | null
           organization_id?: string | null
+          party_type?: Database["public"]["Enums"]["agreement_party"] | null
+          priority?: number
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
           user_id?: string
           valid_from?: string | null
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2742,6 +2930,14 @@ export type Database = {
         | "inactive"
         | "archived"
       agent_wa_status: "available" | "busy" | "offline"
+      agreement_base: "gross" | "net" | "cost" | "margin"
+      agreement_party: "organization" | "agent" | "viae"
+      agreement_scope:
+        | "all"
+        | "booking"
+        | "booking_service"
+        | "transport_service"
+        | "quotation"
       agreement_status:
         | "draft"
         | "active"
@@ -3118,6 +3314,15 @@ export const Constants = {
         "archived",
       ],
       agent_wa_status: ["available", "busy", "offline"],
+      agreement_base: ["gross", "net", "cost", "margin"],
+      agreement_party: ["organization", "agent", "viae"],
+      agreement_scope: [
+        "all",
+        "booking",
+        "booking_service",
+        "transport_service",
+        "quotation",
+      ],
       agreement_status: ["draft", "active", "expired", "suspended", "archived"],
       agreement_type: [
         "commission_percentage",
