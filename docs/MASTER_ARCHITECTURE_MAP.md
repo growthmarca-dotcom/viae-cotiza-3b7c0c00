@@ -1,0 +1,284 @@
+# MASTER ARCHITECTURE MAP — ViaE Sales Hub v1.9.5.x
+
+> Auditoría de arquitectura al 2 de agosto de 2026. Documento **descriptivo**: refleja
+> únicamente lo que existe en el código, las migraciones y el catálogo actual de la base.
+> Leyenda: ✅ implementado · 🟡 parcial · 🔵 planificado (no existe código).
+
+## Índice
+1. [Visión general del sistema](#visión-general-del-sistema)
+2. [Mapa de módulos](#mapa-de-módulos)
+3. [Relaciones entre módulos](#relaciones-entre-módulos)
+4. [Flujo completo de negocio](#flujo-completo-de-negocio)
+5. [Entidades principales](#entidades-principales)
+6. [Qué está listo](#qué-está-listo)
+7. [Qué está parcialmente desarrollado](#qué-está-parcialmente-desarrollado)
+8. [Qué falta para ser un SaaS multiproveedor](#qué-falta-para-ser-un-saas-multiproveedor)
+9. [Riesgos de arquitectura detectados](#riesgos-de-arquitectura-detectados)
+
+---
+
+## Visión general del sistema
+
+**ViaE Sales Hub** es una aplicación web responsive (una sola app, es-AR) que cubre el
+ciclo comercial y operativo de una agencia de viajes: captación → cotización → reserva
+→ operación → economía.
+
+| Capa | Tecnología / decisión |
+| --- | --- |
+| Framework | TanStack Start v1 (SSR edge/worker) + Vite |
+| UI | React 19, TypeScript, Tailwind v4 (`src/styles.css`), shadcn/ui |
+| Router | TanStack Router (rutas de archivo en `src/routes`) |
+| Datos | TanStack Query v5 sobre el cliente tipado del backend |
+| Backend | Lovable Cloud (Postgres + Auth + Storage + Realtime) |
+| Lógica de negocio | **En la base**: funciones `SECURITY DEFINER`/`STABLE` + triggers |
+| Server functions | Solo una: validación del token de cotización pública |
+
+Principios estructurales vigentes:
+
+1. **La seguridad la hace RLS**, no el cliente. 43 tablas, todas con RLS habilitado.
+2. **Nunca borrar**: `record_status = 'archived'`.
+3. **Historial inmutable**: `booking_timeline`, `audit_log`, `*_history` son append-only.
+4. **Costos y márgenes = información sensible**, visible solo para Administrador.
+5. **Multimoneda explícita**: nunca se suman monedas distintas en un total.
+6. **Instancia única (single-tenant)**: no hay `tenant_id` en ninguna tabla.
+
+---
+
+## Mapa de módulos
+
+| Dominio | Módulo | Ruta | Dominio TS (`src/lib/`) | Estado |
+| --- | --- | --- | --- | --- |
+| Identidad | Auth + aprobación de cuentas | `/auth` | — (`use-account`) | ✅ |
+| Identidad | Administración de usuarios y roles | `/admin` | `audit` | ✅ |
+| Identidad | Configuración / branding | `/settings` | `company`, `exchange-rates` | ✅ |
+| Comercial | Dashboard | `/dashboard` | `quotations`, `crm` | ✅ |
+| Comercial | Leads | `/leads`, `/leads/$id` | `leads` | ✅ |
+| Comercial | Clientes (CRM) | `/clients`, `/clients/$id` | `clients`, `crm` | ✅ |
+| Comercial | Oportunidades | panel en CRM | `opportunities` | ✅ |
+| Comercial | Cotizaciones | `/quotations/*` | `quotations` | ✅ |
+| Comercial | Cotización pública | `/cotizacion/$token` | `public-quotation.functions` | ✅ |
+| Comercial | Agentes | `/agents`, `/agents/$id` | `agents` | ✅ |
+| Entidades | Organizaciones | `/organizations` | `organizations` | 🟡 |
+| Entidades | Proveedores (legado) | `/providers` | `providers` | 🟡 |
+| Acuerdos | Acuerdos comerciales | `/agreements` | `agreements` | ✅ |
+| Acuerdos | Comisiones (simulación) | pestaña en la reserva | `commissions` | 🟡 |
+| Operación | Reservas — Expediente 360° | `/bookings/$id` | `bookings`, `timeline`, `trip-state`, `passengers` | ✅ |
+| Operación | Central operativa | `/operations` | `operations`, `checklist` | ✅ |
+| Operación | Recursos operativos | `/resources/*` | `resources`, `resource-catalog`, `geo` | ✅ |
+| Operación | Transporte | `/transport` | `transport`, `transport-ops`, `transport-economics` | ✅ |
+| Operación | Agenda | `/agenda` | `transport-ops` | ✅ |
+| Operación | Panel del conductor | `/driver` | `driver` | ✅ |
+| Cliente | Seguimiento público | `/seguimiento/$token` | `client-tracking` | ✅ |
+| Transversal | Comunicaciones | paneles embebidos | `communication`, `notifications` | 🟡 registro sin envío |
+
+Regla vigente: **los componentes no arman consultas propias**; consumen los módulos de
+`src/lib/`, que a su vez llaman a tablas bajo RLS o a funciones por RPC.
+
+---
+
+## Relaciones entre módulos
+
+```
+                       ┌───────────────────────────────┐
+                       │ IDENTIDAD                     │
+                       │ profiles · user_roles         │
+                       │ company_settings · audit_log  │
+                       └──────────────┬────────────────┘
+                                      │ define permisos (RLS) en todo el sistema
+   ┌──────────────────────────────────┼──────────────────────────────────┐
+   │                                  │                                  │
+┌──▼──────────────┐   ┌───────────────▼────────────┐   ┌────────────────▼─────────┐
+│ COMERCIAL       │   │ ENTIDADES COMERCIALES      │   │ RECURSOS / TRANSPORTE    │
+│ leads           │   │ organizations              │   │ resources                │
+│ clients         │   │  organization_roles        │   │  resource_extras         │
+│ opportunities   │◄──┤ companies (legado)         ├──►│  availability_log        │
+│ quotations      │   │ providers (legado)         │   │ transport_services       │
+│ agents          │   │  provider_evaluations      │   │  service_extras/history  │
+└──┬──────────────┘   └───────────────┬────────────┘   └────────────┬─────────────┘
+   │ genera                            │ contraparte                │ ejecuta
+   │                          ┌────────▼──────────┐                 │
+   │                          │ ACUERDOS          │                 │
+   │                          │ commercial_agree. │                 │
+   │                          │ agreement_rules   │                 │
+   │                          │ agreement_history │                 │
+   │                          └────────┬──────────┘                 │
+   │                                   │ resuelve regla             │
+┌──▼───────────────────────────────────▼────────────────────────────▼─────────────┐
+│ RESERVA — EXPEDIENTE DE VIAJE 360°  (bookings)                                  │
+│ booking_services · booking_resources · booking_passengers · booking_payments     │
+│ booking_documents · booking_checklist_items · booking_incidents                  │
+│ booking_service_economics · booking_status_history                               │
+│ booking_timeline (append-only, alimentado solo por triggers)                     │
+│ booking_trip_state() (estado operativo derivado, no persistido)                  │
+└──────────────┬──────────────────────────────┬───────────────────────────────────┘
+               │ simulación                   │ eventos
+      ┌────────▼──────────┐          ┌────────▼────────────────────┐
+      │ COMISIONES 🟡     │          │ COMUNICACIÓN 🟡             │
+      │ commissions (0)   │          │ communication_events        │
+      │ compute_commission│          │ notifications (realtime)    │
+      │ simulate_*        │          │ seguimiento por token ✅    │
+      └───────────────────┘          └─────────────────────────────┘
+```
+
+Puntos de acoplamiento reales:
+
+| Origen | Destino | Mecanismo |
+| --- | --- | --- |
+| `quotations` | `clients` + `opportunities` | sincronización en la capa de dominio al crear |
+| `leads` | `clients` | conversión sin duplicar registros |
+| `bookings` | `booking_checklist_items` | trigger `tg_seed_booking_checklist` |
+| cualquier tabla del expediente | `booking_timeline` | triggers `tg_timeline_*` → `create_booking_timeline_event` |
+| `booking_services` / `transport_services` | acuerdos | `resolve_agreement` + `compute_commission` (simulación) |
+| `exchange_rates` | economía | `rate_at(fecha)` con snapshot en `booking_service_economics` |
+| `resources` ↔ `transport_services` | disponibilidad | `sync_transport_resource_state` + `availability_log` |
+| eventos operativos | `notifications` | `notify_operations_team` + Realtime |
+
+---
+
+## Flujo completo de negocio
+
+| # | Etapa | Entidades | Disparador / lógica | Estado |
+| --- | --- | --- | --- | --- |
+| 1 | **Lead** | `leads`, `lead_history` | Alta manual en `/leads`; ciclo de vida; asignación manual o automática (`lead_assignment_mode`) | ✅ |
+| 2 | **Cliente** | `clients` | Conversión del lead o sincronización automática al cotizar | ✅ |
+| 3 | **Cotización** | `quotations`, `quotation_history`, `opportunities` | Alta detallada, versiones, enlace público por token, PDF con branding; crea/actualiza la oportunidad | ✅ |
+| 4 | **Reserva** | `bookings` | Alta manual; `booking_number VIA-AA-000001`; estado comercial manual + `booking_trip_state()` derivado; checklist sembrado | ✅ |
+| 5 | **Operación** | `booking_checklist_items`, `booking_incidents`, `booking_documents`, `booking_resources`, `/operations`, `/agenda` | Bandeja operativa, avance %, pendientes, advertencias críticas | ✅ |
+| 6 | **Servicio** | `booking_services`, `transport_services`, `resources`, `/driver` | Asignación **manual** con sugerencia geográfica y aviso de solapamiento; conductor acepta/rechaza y avanza estados | ✅ |
+| 7 | **Pago / cobro** | `booking_payments`, estados de cobro en transporte | Registro manual; genera evento `payment_received` en el timeline | ✅ registro · 🔵 conciliación / pasarela |
+| 8 | **Comisión** | `commercial_agreements`, `agreement_rules`, `compute_commission`, `simulate_commission*` | Resuelve acuerdo + regla por score de especificidad y calcula el importe **al vuelo** | 🟡 solo simulación: `commissions` está vacía por diseño |
+| 9 | **Liquidación** | `commission_history`, `transport_settlement_status` | — | 🔵 no existe cierre por período ni pago a contrapartes |
+
+Corte real del flujo: **entre 7 y 8**. Todo lo anterior escribe datos definitivos; desde
+la comisión en adelante el sistema solo calcula y muestra, sin generar movimiento contable.
+
+---
+
+## Entidades principales
+
+### `users` (identidad) ✅
+`profiles` (estado de cuenta, nombre, agencia) + `user_roles` (tabla separada, nunca en el
+perfil) + `permission_audit_log`. Enum `app_role`: `admin`, `agent`, `provider`,
+`operations`. "Conductor" **no es un rol**: se deriva de `resources` vinculados al usuario
+(`is_driver()`). Toda cuenta nace `pending` y requiere aprobación; sin registro libre ni
+acceso anónimo. `prevent_last_admin_removal` protege al último administrador y
+`claim_admin_if_none` permite recuperación solo si no hay ninguno.
+
+### `organizations` 🟡
+Modelo objetivo de entidad comercial (`organizations` + `organization_roles`: agencia,
+mayorista, proveedor, etc.). Conviven `companies` y `providers`, aún en uso por pantallas y
+FKs. `ensure_provider_organization()` puentea proveedor → organización. Es la
+**deuda estructural más importante** del sistema.
+
+### `agents` ✅
+Red comercial: datos personales, idiomas, especialidades, perfil comercial, estadísticas
+automáticas. Un agente puede existir **sin usuario**; al invitarlo se vincula el perfil
+(`current_agent_id()` resuelve el agente del usuario para RLS). Campos de WhatsApp
+preparados (`agent_wa_status`) sin envío real.
+
+### `providers` 🟡
+Ficha, clasificación, recursos asociados, reservas, evaluación interna
+(`provider_evaluations`) y métricas. Legado en convivencia con `organizations`.
+
+### `resources` ✅
+Catálogo operativo con 77 columnas: clase y subtipo, propietario
+(`resource_owner_type`), datos técnicos de vehículo, cobertura geográfica completa de
+Argentina, extras (`resource_extras` / `resource_extra_links`), rent a car y
+disponibilidad auditada (`resource_availability_log`).
+
+### `bookings` ✅
+Núcleo del expediente. `booking_number` humano único, **doble estado**: comercial
+(`bookings.status`, manual) y operativo (`booking_trip_state()`, derivado: draft → quoted →
+partially_confirmed → confirmed → operational → finished → cancelled) con `progress` y
+`pending_items`. `booking_status_history` guarda los cambios.
+
+### `services` ✅
+Dos familias no unificadas: `booking_services` (servicio genérico de la reserva, con
+`booking_service_economics`) y `transport_services` (60 columnas con operación **y**
+economía propia). Duplican el concepto de economía del servicio.
+
+### `passengers` ✅ (estructural)
+`booking_passengers`: titular único activo por reserva (índice de unicidad),
+`passenger_type` (adult/child/infant/senior/other), `birth_date` opcional y recomendada
+para menores, `relationship_to_lead_passenger`. La edad **nunca se persiste**
+(`calculate_passenger_age` / `calculatePassengerAge`). `groupComposition` es un contrato de
+lectura preparado para tarifas futuras; hoy no calcula precios.
+
+### `timeline` ✅
+`booking_timeline`: append-only garantizado por `tg_timeline_append_only`. Se alimenta
+exclusivamente desde triggers vía `create_booking_timeline_event` (`SECURITY DEFINER`,
+concedida solo a `service_role`): creación, cambios de estado, pagos, servicios,
+documentos, checklist, incidencias y comunicaciones. Cada evento lleva
+`timeline_visibility`; el filtro "visible al cliente" en la UI es **solo visual**.
+
+### `economics` 🟡
+`booking_service_economics` (venta, impuestos, extras, descuento, costo, margen y snapshot
+de tipo de cambio) + economía embebida en `transport_services` + `exchange_rates` con
+`rate_at()`. Margen = venta − costo por servicio. Visible solo para Administrador.
+Falta consolidar ambas fuentes en una sola.
+
+---
+
+## Qué está listo
+
+| Bloque | Detalle |
+| --- | --- |
+| Identidad y permisos | Roles en tabla separada, aprobación de cuentas, recuperación de admin, auditoría de permisos, RLS en las 43 tablas |
+| Ciclo comercial | Leads → clientes → oportunidades → cotizaciones, con enlace público y PDF con branding |
+| Agentes | Ficha, estadísticas, invitación y vinculación con usuario |
+| Reservas | Expediente 360° con 7 pestañas, doble estado, avance y pendientes |
+| Operación | Central `/operations`, checklist base, incidencias, documentos, agenda |
+| Transporte | Servicios por reserva, sugerencia geográfica, panel del conductor, estados de viaje |
+| Recursos | Catálogo inteligente con geografía AR, extras y disponibilidad auditada |
+| Acuerdos | `commercial_agreements` + `agreement_rules` versionados con historial inmutable |
+| Expediente narrativo | Motor de eventos del timeline completo y protegido |
+| Cliente final | Seguimiento público por token, sin login y sin datos sensibles |
+| Multimoneda | Tipos de cambio manuales por fecha, moneda de análisis global, totales separados por moneda |
+
+## Qué está parcialmente desarrollado
+
+| Tema | Qué existe | Qué falta |
+| --- | --- | --- |
+| Comisiones | `resolve_agreement`, `compute_commission`, `simulate_commission*`, UI de simulación | Devengo real: escribir en `commissions`, usar `commission_status` y `commission_history` |
+| Liquidaciones | Estados de cobro/liquidación en transporte | Cierre por período, documento de liquidación, pago a agentes y proveedores |
+| Entidades comerciales | `organizations` + `organization_roles` | Migrar FKs de `companies`/`providers` y retirar las tablas legado |
+| Economía del servicio | `booking_service_economics` y economía en `transport_services` | Modelo único de economía por servicio |
+| Trip state | Función derivada estable | Materializarlo para alertas, bandejas e índices |
+| Comunicaciones | Registro de eventos + notificaciones internas realtime | Envío real de WhatsApp/email y estados de entrega |
+| Tarifas | `passenger_type`, edad dinámica, `groupComposition` | Motor tarifario por composición del grupo y tarifas mayoristas |
+| Pagos | Registro manual de cobros | Conciliación, pasarela, comprobantes |
+| Exposición al cliente | `timeline_visibility` en cada evento | Selección curada de eventos publicables |
+
+## Qué falta para ser un SaaS multiproveedor
+
+El sistema es hoy **single-tenant, una agencia**. Brechas, en orden de dependencia:
+
+| # | Brecha | Impacto | Trabajo requerido |
+| --- | --- | --- | --- |
+| 1 | **Sin `tenant_id`** | Bloqueante | Añadir tenant a todas las tablas de negocio, incluirlo en cada política RLS, índices compuestos y funciones `SECURITY DEFINER`; hoy `company_settings` es una fila global |
+| 2 | **Aislamiento de datos** | Bloqueante | Toda RLS se apoya en `has_role` / `current_agent_id` sin dimensión de organización: un admin ve todo el sistema, no "su" agencia |
+| 3 | **Consolidar `organizations`** | Alto | Es el candidato natural a tenant/contraparte; hasta retirar `companies` y `providers` no hay entidad única para colgar el aislamiento |
+| 4 | **Onboarding autoservicio** | Alto | Alta de agencia, invitación de equipo, plan y límites; hoy solo hay aprobación manual por un admin |
+| 5 | **Portal del proveedor real** | Alto | El rol `provider` accede a la app interna; falta un espacio propio con confirmación de servicios, tarifas y disponibilidad |
+| 6 | **Branding por tenant** | Medio | Logo, colores y datos de contacto son globales (`company_settings`) |
+| 7 | **Economía multi-parte** | Medio | Comisión devengada + liquidación por contraparte es requisito para operar entre agencias y proveedores |
+| 8 | **Facturación del SaaS** | Medio | Planes, suscripción, medición de uso; no existe integración de pagos |
+| 9 | **Integraciones externas** | Medio | Ni webhooks, ni API pública, ni GDS/mayoristas; no hay rutas `api/public/*` |
+| 10 | **Observabilidad y límites** | Medio | Sin cuotas, rate limiting, métricas por tenant ni política de retención de historiales |
+| 11 | **Pruebas automatizadas** | Medio | Hoy solo typecheck, linter de base y verificación manual; un multi-tenant sin tests de RLS es riesgoso |
+| 12 | **Numeración y secuencias** | Bajo | `booking_number` es global: en multi-tenant debe ser único **por** tenant |
+
+## Riesgos de arquitectura detectados
+
+1. **Doble modelo de entidades** (`organizations` vs `companies`/`providers`): riesgo de
+   datos divergentes y de reglas de acuerdo aplicadas a la contraparte equivocada.
+2. **Doble modelo de economía del servicio**: los totales de un viaje pueden calcularse de
+   dos formas distintas según el tipo de servicio.
+3. **Estado operativo no persistido**: cada lectura recalcula; sin materializar no hay
+   índices, alertas ni histórico del estado del viaje.
+4. **Lógica concentrada en la base**: sólido para seguridad, pero difícil de testear y
+   versionar; toda regla nueva pasa por migración.
+5. **Crecimiento de tablas append-only** (`booking_timeline`, `communication_events`,
+   `audit_log`): sin índices de rendimiento ni política de retención.
+6. **`commissions` vacía con trigger de inmutabilidad**: la fase de devengo deberá escribir
+   respetando ese trigger; conviene definir el orden de escritura antes de activarla.
