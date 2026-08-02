@@ -6,6 +6,7 @@ import {
   Archive,
   Boxes,
   Building2,
+  Calculator,
   CheckSquare,
   CreditCard,
   FileText,
