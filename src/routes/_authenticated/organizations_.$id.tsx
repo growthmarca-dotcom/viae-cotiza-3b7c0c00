@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useAccount } from "@/hooks/use-account";
 import { OrganizationFormDialog } from "@/components/organization-form-dialog";
+import { AgreementsPanel } from "@/components/agreements-panel";
 import {
   ORGANIZATION_STATUSES,
   getOrganization,
