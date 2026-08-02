@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { BookingTransportTab } from "@/components/booking-transport-panel";
 import { BookingServicesPanel } from "@/components/booking-services-panel";
+import { CommissionSimulationPanel } from "@/components/commission-simulation-panel";
 import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
 import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
@@ -364,6 +365,9 @@ function BookingDetailPage() {
           <TabsTrigger value="incidents">
             <AlertCircle className="mr-2 h-4 w-4" /> Incidencias
           </TabsTrigger>
+          <TabsTrigger value="commissions">
+            <Calculator className="mr-2 h-4 w-4" /> Comisiones
+          </TabsTrigger>
           <TabsTrigger value="provider">
             <Building2 className="mr-2 h-4 w-4" /> Proveedor
           </TabsTrigger>
@@ -379,6 +383,10 @@ function BookingDetailPage() {
 
         <TabsContent value="services">
           <BookingServicesPanel bookingId={booking.id} />
+        </TabsContent>
+
+        <TabsContent value="commissions">
+          <CommissionSimulationPanel bookingId={booking.id} />
         </TabsContent>
 
 
