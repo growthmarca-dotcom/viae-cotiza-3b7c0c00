@@ -1403,9 +1403,11 @@ export type Database = {
           created_by: string | null
           effective_date: string
           id: string
+          is_snapshot: boolean
           note: string | null
           quote_currency: string
           rate: number
+          snapshot_of: string | null
           source: string
           updated_at: string
           user_id: string
@@ -1416,9 +1418,11 @@ export type Database = {
           created_by?: string | null
           effective_date?: string
           id?: string
+          is_snapshot?: boolean
           note?: string | null
           quote_currency?: string
           rate: number
+          snapshot_of?: string | null
           source?: string
           updated_at?: string
           user_id: string
@@ -1429,14 +1433,24 @@ export type Database = {
           created_by?: string | null
           effective_date?: string
           id?: string
+          is_snapshot?: boolean
           note?: string | null
           quote_currency?: string
           rate?: number
+          snapshot_of?: string | null
           source?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_snapshot_of_fkey"
+            columns: ["snapshot_of"]
+            isOneToOne: false
+            referencedRelation: "exchange_rates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_history: {
         Row: {
@@ -3065,6 +3079,10 @@ export type Database = {
           _title: string
         }
         Returns: undefined
+      }
+      rate_at: {
+        Args: { _base: string; _date?: string; _owner: string; _quote: string }
+        Returns: number
       }
       sync_booking_client_status: {
         Args: { _booking_id: string }
