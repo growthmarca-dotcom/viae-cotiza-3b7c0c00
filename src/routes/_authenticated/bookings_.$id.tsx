@@ -126,6 +126,8 @@ function BookingDetailPage() {
   const [history, setHistory] = useState<BookingStatusEvent[]>([]);
   const [documents, setDocuments] = useState<BookingDocument[]>([]);
   const [payments, setPayments] = useState<BookingPayment[]>([]);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
+  const [tripState, setTripState] = useState<TripStateResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
