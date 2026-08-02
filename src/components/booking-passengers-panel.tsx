@@ -14,17 +14,22 @@ import {
 } from "@/components/ui/select";
 import {
   archivePassenger,
+  birthDateRecommended,
   createPassenger,
   documentTypeLabel,
   DOCUMENT_TYPES,
   emptyPassenger,
+  groupComposition,
   listPassengers,
   passengerAge,
   passengerFullName,
+  passengerTypeLabel,
+  PASSENGER_TYPES,
   RELATIONSHIPS,
   updatePassenger,
   type BookingPassenger,
   type PassengerInput,
+  type PassengerType,
 } from "@/lib/passengers";
 
 /**
@@ -69,6 +74,7 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
       document_type: p.document_type,
       document_number: p.document_number,
       birth_date: p.birth_date,
+      passenger_type: p.passenger_type ?? "adult",
       nationality: p.nationality,
       email: p.email,
       phone: p.phone,
@@ -178,13 +184,42 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
             />
           </div>
           <div>
-            <Label htmlFor="pax-birth">Fecha de nacimiento</Label>
+            <Label>Tipo de pasajero</Label>
+            <Select
+              value={form.passenger_type}
+              onValueChange={(v) => set("passenger_type", v as PassengerType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PASSENGER_TYPES.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {PASSENGER_TYPES.find((t) => t.value === form.passenger_type)?.hint}
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="pax-birth">
+              Fecha de nacimiento
+              {birthDateRecommended(form.passenger_type) ? " (recomendada)" : ""}
+            </Label>
             <Input
               id="pax-birth"
               type="date"
               value={form.birth_date ?? ""}
               onChange={(e) => set("birth_date", e.target.value)}
             />
+            {birthDateRecommended(form.passenger_type) && !form.birth_date && (
+              <p className="mt-1 text-xs text-gold">
+                Sin fecha de nacimiento no se podrá calcular la edad para tarifas diferenciadas.
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="pax-nat">Nacionalidad</Label>
@@ -276,7 +311,23 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
           Todavía no hay pasajeros cargados en esta reserva.
         </p>
       ) : (
-        <ul className="mt-5 divide-y divide-border">
+        <>
+          {(() => {
+            const c = groupComposition(items);
+            return (
+              <p className="mt-5 rounded-xl border border-border bg-secondary/30 px-4 py-2 text-xs text-muted-foreground">
+                Composición del grupo: {c.total} pasajeros · {c.adults} adultos · {c.children} niños
+                · {c.infants} infantes
+                {c.seniors ? ` · ${c.seniors} adultos mayores` : ""}
+                {c.others ? ` · ${c.others} otros` : ""}
+                {c.childAges.length ? ` · edades de niños: ${c.childAges.join(", ")}` : ""}
+                {c.missingBirthDates
+                  ? ` · ${c.missingBirthDates} sin fecha de nacimiento`
+                  : ""}
+              </p>
+            );
+          })()}
+          <ul className="mt-3 divide-y divide-border">
           {items.map((p) => {
             const age = passengerAge(p.birth_date);
             return (
@@ -289,6 +340,9 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
                         Titular
                       </span>
                     )}
+                    <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {passengerTypeLabel(p.passenger_type)}
+                    </span>
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {documentTypeLabel(p.document_type)}
@@ -317,7 +371,8 @@ export function BookingPassengersPanel({ bookingId }: { bookingId: string }) {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
     </section>
   );
