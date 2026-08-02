@@ -14,17 +14,22 @@ import {
 } from "@/components/ui/select";
 import {
   archivePassenger,
+  birthDateRecommended,
   createPassenger,
   documentTypeLabel,
   DOCUMENT_TYPES,
   emptyPassenger,
+  groupComposition,
   listPassengers,
   passengerAge,
   passengerFullName,
+  passengerTypeLabel,
+  PASSENGER_TYPES,
   RELATIONSHIPS,
   updatePassenger,
   type BookingPassenger,
   type PassengerInput,
+  type PassengerType,
 } from "@/lib/passengers";
 
 /**
