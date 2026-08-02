@@ -1974,6 +1974,259 @@ export type Database = {
           },
         ]
       }
+      itinerary_requests: {
+        Row: {
+          adults: number
+          children: number
+          created_at: string
+          destination: string | null
+          id: string
+          infants: number
+          notes: string | null
+          organization_id: string | null
+          owner_id: string | null
+          request_source: Database["public"]["Enums"]["itinerary_request_source"]
+          status: Database["public"]["Enums"]["itinerary_request_status"]
+          travel_end: string | null
+          travel_start: string | null
+        }
+        Insert: {
+          adults?: number
+          children?: number
+          created_at?: string
+          destination?: string | null
+          id?: string
+          infants?: number
+          notes?: string | null
+          organization_id?: string | null
+          owner_id?: string | null
+          request_source?: Database["public"]["Enums"]["itinerary_request_source"]
+          status?: Database["public"]["Enums"]["itinerary_request_status"]
+          travel_end?: string | null
+          travel_start?: string | null
+        }
+        Update: {
+          adults?: number
+          children?: number
+          created_at?: string
+          destination?: string | null
+          id?: string
+          infants?: number
+          notes?: string | null
+          organization_id?: string | null
+          owner_id?: string | null
+          request_source?: Database["public"]["Enums"]["itinerary_request_source"]
+          status?: Database["public"]["Enums"]["itinerary_request_status"]
+          travel_end?: string | null
+          travel_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itinerary_rules: {
+        Row: {
+          active: boolean
+          compatible_destinations: string[]
+          compatible_seasons: string[]
+          created_at: string
+          id: string
+          maximum_nights: number | null
+          maximum_passengers: number | null
+          minimum_nights: number | null
+          minimum_passengers: number | null
+          priority: number
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          compatible_destinations?: string[]
+          compatible_seasons?: string[]
+          created_at?: string
+          id?: string
+          maximum_nights?: number | null
+          maximum_passengers?: number | null
+          minimum_nights?: number | null
+          minimum_passengers?: number | null
+          priority?: number
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          compatible_destinations?: string[]
+          compatible_seasons?: string[]
+          created_at?: string
+          id?: string
+          maximum_nights?: number | null
+          maximum_passengers?: number | null
+          minimum_nights?: number | null
+          minimum_passengers?: number | null
+          priority?: number
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "itinerary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itinerary_template_items: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          mandatory: boolean
+          notes: string | null
+          optional: boolean
+          sequence: number
+          service_kind: Database["public"]["Enums"]["itinerary_service_kind"]
+          template_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          mandatory?: boolean
+          notes?: string | null
+          optional?: boolean
+          sequence?: number
+          service_kind?: Database["public"]["Enums"]["itinerary_service_kind"]
+          template_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          mandatory?: boolean
+          notes?: string | null
+          optional?: boolean
+          sequence?: number
+          service_kind?: Database["public"]["Enums"]["itinerary_service_kind"]
+          template_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "itinerary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itinerary_templates: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          destination: string | null
+          duration_days: number
+          duration_nights: number
+          id: string
+          itinerary_type: Database["public"]["Enums"]["itinerary_type"]
+          name: string
+          organization_id: string | null
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          destination?: string | null
+          duration_days?: number
+          duration_nights?: number
+          id?: string
+          itinerary_type?: Database["public"]["Enums"]["itinerary_type"]
+          name: string
+          organization_id?: string | null
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          destination?: string | null
+          duration_days?: number
+          duration_nights?: number
+          id?: string
+          itinerary_type?: Database["public"]["Enums"]["itinerary_type"]
+          name?: string
+          organization_id?: string | null
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      itinerary_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          published: boolean
+          snapshot: Json | null
+          template_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          snapshot?: Json | null
+          template_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          snapshot?: Json | null
+          template_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "itinerary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_history: {
         Row: {
           action: string
@@ -4296,6 +4549,32 @@ export type Database = {
       incident_priority: "low" | "medium" | "high" | "urgent"
       incident_status: "open" | "in_review" | "resolved" | "closed"
       invitation_status: "pending" | "accepted" | "rejected" | "expired"
+      itinerary_request_source:
+        | "crm"
+        | "widget"
+        | "api"
+        | "manual"
+        | "whitelabel"
+      itinerary_request_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "cancelled"
+      itinerary_service_kind:
+        | "hotel"
+        | "transfer"
+        | "activity"
+        | "car_rental"
+        | "insurance"
+        | "flight"
+        | "meal"
+        | "custom"
+      itinerary_type:
+        | "city_break"
+        | "circuit"
+        | "excursion"
+        | "package"
+        | "custom"
       lead_assignment_mode: "manual" | "automatic"
       lead_source:
         | "website"
@@ -4735,6 +5014,36 @@ export const Constants = {
       incident_priority: ["low", "medium", "high", "urgent"],
       incident_status: ["open", "in_review", "resolved", "closed"],
       invitation_status: ["pending", "accepted", "rejected", "expired"],
+      itinerary_request_source: [
+        "crm",
+        "widget",
+        "api",
+        "manual",
+        "whitelabel",
+      ],
+      itinerary_request_status: [
+        "pending",
+        "processing",
+        "completed",
+        "cancelled",
+      ],
+      itinerary_service_kind: [
+        "hotel",
+        "transfer",
+        "activity",
+        "car_rental",
+        "insurance",
+        "flight",
+        "meal",
+        "custom",
+      ],
+      itinerary_type: [
+        "city_break",
+        "circuit",
+        "excursion",
+        "package",
+        "custom",
+      ],
       lead_assignment_mode: ["manual", "automatic"],
       lead_source: [
         "website",
