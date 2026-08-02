@@ -3385,6 +3385,19 @@ export type Database = {
           warnings: Json
         }[]
       }
+      create_booking_timeline_event: {
+        Args: {
+          _actor?: string
+          _actor_role?: string
+          _booking_id: string
+          _entity_id?: string
+          _entity_type?: string
+          _event_type: Database["public"]["Enums"]["booking_timeline_event"]
+          _metadata?: Json
+          _visibility?: Database["public"]["Enums"]["timeline_visibility"]
+        }
+        Returns: string
+      }
       current_agent_id: { Args: never; Returns: string }
       current_driver_resource_ids: { Args: never; Returns: string[] }
       default_checklist_items: {
