@@ -210,6 +210,7 @@ function normalize(input: PassengerInput) {
     document_type: clean(input.document_type),
     document_number: clean(input.document_number),
     birth_date: clean(input.birth_date),
+    passenger_type: input.passenger_type,
     nationality: clean(input.nationality),
     email: clean(input.email),
     phone: clean(input.phone),
