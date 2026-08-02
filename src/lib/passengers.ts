@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Enums, Tables } from "@/integrations/supabase/types";
 
 /**
  * Pasajeros de la reserva — v1.9.5 Fase 1.
