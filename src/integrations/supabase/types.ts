@@ -511,6 +511,7 @@ export type Database = {
           last_name: string
           nationality: string | null
           notes: string | null
+          passenger_type: Database["public"]["Enums"]["passenger_type"]
           phone: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger: string | null
@@ -530,6 +531,7 @@ export type Database = {
           last_name: string
           nationality?: string | null
           notes?: string | null
+          passenger_type?: Database["public"]["Enums"]["passenger_type"]
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger?: string | null
@@ -549,6 +551,7 @@ export type Database = {
           last_name?: string
           nationality?: string | null
           notes?: string | null
+          passenger_type?: Database["public"]["Enums"]["passenger_type"]
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger?: string | null
@@ -3356,6 +3359,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      calculate_passenger_age: {
+        Args: { _birth_date: string; _travel_date?: string }
+        Returns: number
+      }
       claim_admin_if_none: { Args: never; Returns: boolean }
       compute_commission: {
         Args: {
@@ -3644,6 +3651,7 @@ export type Database = {
         | "wholesaler"
         | "corporate_client"
         | "partner"
+      passenger_type: "adult" | "child" | "infant" | "senior" | "other"
       provider_operation_mode:
         | "manual"
         | "viae_portal"
@@ -4062,6 +4070,7 @@ export const Constants = {
         "corporate_client",
         "partner",
       ],
+      passenger_type: ["adult", "child", "infant", "senior", "other"],
       provider_operation_mode: [
         "manual",
         "viae_portal",
