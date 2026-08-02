@@ -2758,6 +2758,224 @@ export type Database = {
         }
         Relationships: []
       }
+      product_attributes: {
+        Row: {
+          attribute_key: string
+          attribute_value: string | null
+          created_at: string
+          id: string
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          attribute_key: string
+          attribute_value?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          attribute_key?: string
+          attribute_value?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_attributes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_categories: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_media: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          product_id: string
+          title: string | null
+          type: Database["public"]["Enums"]["product_media_type"]
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          product_id: string
+          title?: string | null
+          type?: Database["public"]["Enums"]["product_media_type"]
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          product_id?: string
+          title?: string | null
+          type?: Database["public"]["Enums"]["product_media_type"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_media_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          capacity_max: number | null
+          capacity_min: number
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          metadata: Json
+          name: string
+          product_id: string
+          status: Database["public"]["Enums"]["product_status"]
+          updated_at: string
+        }
+        Insert: {
+          capacity_max?: number | null
+          capacity_min?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json
+          name: string
+          product_id: string
+          status?: Database["public"]["Enums"]["product_status"]
+          updated_at?: string
+        }
+        Update: {
+          capacity_max?: number | null
+          capacity_min?: number
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          metadata?: Json
+          name?: string
+          product_id?: string
+          status?: Database["public"]["Enums"]["product_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: Database["public"]["Enums"]["product_category"]
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          metadata: Json
+          name: string
+          organization_id: string
+          short_description: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["product_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["product_category"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
+          name: string
+          organization_id: string
+          short_description?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["product_category"]
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json
+          name?: string
+          organization_id?: string
+          short_description?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["product_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           agency_name: string | null
@@ -4280,6 +4498,7 @@ export type Database = {
         Args: { _birth_date: string; _travel_date?: string }
         Returns: number
       }
+      can_manage_product: { Args: { _product_id: string }; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       compute_commission: {
         Args: {
@@ -4621,6 +4840,16 @@ export type Database = {
         | "corporate_client"
         | "partner"
       passenger_type: "adult" | "child" | "infant" | "senior" | "other"
+      product_category:
+        | "accommodation"
+        | "activity"
+        | "excursion"
+        | "transfer"
+        | "rental"
+        | "package"
+        | "other"
+      product_media_type: "image" | "video" | "document"
+      product_status: "draft" | "active" | "inactive" | "archived"
       provider_operation_mode:
         | "manual"
         | "viae_portal"
@@ -5095,6 +5324,17 @@ export const Constants = {
         "partner",
       ],
       passenger_type: ["adult", "child", "infant", "senior", "other"],
+      product_category: [
+        "accommodation",
+        "activity",
+        "excursion",
+        "transfer",
+        "rental",
+        "package",
+        "other",
+      ],
+      product_media_type: ["image", "video", "document"],
+      product_status: ["draft", "active", "inactive", "archived"],
       provider_operation_mode: [
         "manual",
         "viae_portal",
