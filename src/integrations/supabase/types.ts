@@ -2212,6 +2212,74 @@ export type Database = {
         }
         Relationships: []
       }
+      passenger_categories: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_free: boolean
+          label: string
+          max_age: number | null
+          min_age: number | null
+          notes: string | null
+          occupies_seat: boolean
+          organization_id: string | null
+          passenger_type: Database["public"]["Enums"]["passenger_type"] | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          requires_document: boolean
+          sort_order: number
+          status: Database["public"]["Enums"]["tariff_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          label: string
+          max_age?: number | null
+          min_age?: number | null
+          notes?: string | null
+          occupies_seat?: boolean
+          organization_id?: string | null
+          passenger_type?: Database["public"]["Enums"]["passenger_type"] | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          requires_document?: boolean
+          sort_order?: number
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          label?: string
+          max_age?: number | null
+          min_age?: number | null
+          notes?: string | null
+          occupies_seat?: boolean
+          organization_id?: string | null
+          passenger_type?: Database["public"]["Enums"]["passenger_type"] | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          requires_document?: boolean
+          sort_order?: number
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_audit_log: {
         Row: {
           action: string
@@ -2987,6 +3055,350 @@ export type Database = {
           },
         ]
       }
+      tariff_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          notes: string | null
+          organization_id: string | null
+          priority: number
+          provider_id: string | null
+          record_status: Database["public"]["Enums"]["record_status"]
+          resource_id: string | null
+          service_kind:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status: Database["public"]["Enums"]["tariff_status"]
+          title: string
+          transport_service_type:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          priority?: number
+          provider_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status?: Database["public"]["Enums"]["tariff_status"]
+          title: string
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          priority?: number
+          provider_id?: string | null
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status?: Database["public"]["Enums"]["tariff_status"]
+          title?: string
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tariff_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_plans_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_plans_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tariff_rule_conditions: {
+        Row: {
+          condition_type: Database["public"]["Enums"]["tariff_condition_type"]
+          created_at: string
+          id: string
+          is_restriction: boolean
+          notes: string | null
+          operator: string
+          priority: number
+          record_status: Database["public"]["Enums"]["record_status"]
+          rule_id: string
+          status: Database["public"]["Enums"]["tariff_status"]
+          updated_at: string
+          user_id: string
+          value_json: Json
+          value_numeric: number | null
+          value_text: string | null
+        }
+        Insert: {
+          condition_type: Database["public"]["Enums"]["tariff_condition_type"]
+          created_at?: string
+          id?: string
+          is_restriction?: boolean
+          notes?: string | null
+          operator?: string
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          rule_id: string
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id: string
+          value_json?: Json
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          condition_type?: Database["public"]["Enums"]["tariff_condition_type"]
+          created_at?: string
+          id?: string
+          is_restriction?: boolean
+          notes?: string | null
+          operator?: string
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          rule_id?: string
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id?: string
+          value_json?: Json
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tariff_rule_conditions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "tariff_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tariff_rules: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          label: string | null
+          max_quantity: number | null
+          min_quantity: number | null
+          notes: string | null
+          occupancy: number | null
+          organization_id: string | null
+          passenger_category_id: string | null
+          plan_id: string
+          price: number | null
+          priority: number
+          record_status: Database["public"]["Enums"]["record_status"]
+          resource_id: string | null
+          season_id: string | null
+          service_kind:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status: Database["public"]["Enums"]["tariff_status"]
+          transport_service_type:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string | null
+          max_quantity?: number | null
+          min_quantity?: number | null
+          notes?: string | null
+          occupancy?: number | null
+          organization_id?: string | null
+          passenger_category_id?: string | null
+          plan_id: string
+          price?: number | null
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          season_id?: string | null
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status?: Database["public"]["Enums"]["tariff_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string | null
+          max_quantity?: number | null
+          min_quantity?: number | null
+          notes?: string | null
+          occupancy?: number | null
+          organization_id?: string | null
+          passenger_category_id?: string | null
+          plan_id?: string
+          price?: number | null
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          resource_id?: string | null
+          season_id?: string | null
+          service_kind?:
+            | Database["public"]["Enums"]["booking_service_kind"]
+            | null
+          status?: Database["public"]["Enums"]["tariff_status"]
+          transport_service_type?:
+            | Database["public"]["Enums"]["transport_service_type"]
+            | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tariff_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_rules_passenger_category_id_fkey"
+            columns: ["passenger_category_id"]
+            isOneToOne: false
+            referencedRelation: "passenger_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_rules_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "tariff_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_rules_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tariff_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "tariff_seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tariff_seasons: {
+        Row: {
+          created_at: string
+          date_from: string
+          date_to: string
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string | null
+          priority: number
+          record_status: Database["public"]["Enums"]["record_status"]
+          season_type: Database["public"]["Enums"]["tariff_season_type"]
+          status: Database["public"]["Enums"]["tariff_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_from: string
+          date_to: string
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id?: string | null
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          season_type?: Database["public"]["Enums"]["tariff_season_type"]
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_from?: string
+          date_to?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string | null
+          priority?: number
+          record_status?: Database["public"]["Enums"]["record_status"]
+          season_type?: Database["public"]["Enums"]["tariff_season_type"]
+          status?: Database["public"]["Enums"]["tariff_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tariff_seasons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_service_extras: {
         Row: {
           created_at: string
@@ -3726,6 +4138,16 @@ export type Database = {
         | "partner_company"
         | "private"
         | "other"
+      tariff_condition_type:
+        | "nights"
+        | "operating_days"
+        | "min_advance_days"
+        | "group_size"
+        | "promotion"
+        | "restriction"
+        | "other"
+      tariff_season_type: "high" | "mid" | "low" | "special"
+      tariff_status: "draft" | "active" | "inactive" | "archived"
       timeline_visibility: "internal" | "client"
       transport_collection_status:
         | "not_applicable"
@@ -4151,6 +4573,17 @@ export const Constants = {
         "private",
         "other",
       ],
+      tariff_condition_type: [
+        "nights",
+        "operating_days",
+        "min_advance_days",
+        "group_size",
+        "promotion",
+        "restriction",
+        "other",
+      ],
+      tariff_season_type: ["high", "mid", "low", "special"],
+      tariff_status: ["draft", "active", "inactive", "archived"],
       timeline_visibility: ["internal", "client"],
       transport_collection_status: [
         "not_applicable",
