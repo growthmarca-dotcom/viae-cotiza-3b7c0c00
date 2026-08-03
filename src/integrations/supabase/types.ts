@@ -46,6 +46,7 @@ export type Database = {
           max_active_clients: number | null
           max_open_opportunities: number | null
           notes: string | null
+          person_id: string | null
           priority: number
           specialties: string[]
           state: string | null
@@ -90,6 +91,7 @@ export type Database = {
           max_active_clients?: number | null
           max_open_opportunities?: number | null
           notes?: string | null
+          person_id?: string | null
           priority?: number
           specialties?: string[]
           state?: string | null
@@ -134,6 +136,7 @@ export type Database = {
           max_active_clients?: number | null
           max_open_opportunities?: number | null
           notes?: string | null
+          person_id?: string | null
           priority?: number
           specialties?: string[]
           state?: string | null
@@ -145,7 +148,15 @@ export type Database = {
           wa_status?: Database["public"]["Enums"]["agent_wa_status"]
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       agreement_history: {
         Row: {
@@ -727,6 +738,7 @@ export type Database = {
           nationality: string | null
           notes: string | null
           passenger_type: Database["public"]["Enums"]["passenger_type"]
+          person_id: string | null
           phone: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger: string | null
@@ -747,6 +759,7 @@ export type Database = {
           nationality?: string | null
           notes?: string | null
           passenger_type?: Database["public"]["Enums"]["passenger_type"]
+          person_id?: string | null
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger?: string | null
@@ -767,6 +780,7 @@ export type Database = {
           nationality?: string | null
           notes?: string | null
           passenger_type?: Database["public"]["Enums"]["passenger_type"]
+          person_id?: string | null
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           relationship_to_lead_passenger?: string | null
@@ -779,6 +793,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_passengers_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -1389,6 +1410,7 @@ export type Database = {
           notes: string | null
           opportunity_status: Database["public"]["Enums"]["opportunity_status"]
           pax_count: number | null
+          person_id: string | null
           phone: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           travel_end: string | null
@@ -1409,6 +1431,7 @@ export type Database = {
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
+          person_id?: string | null
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           travel_end?: string | null
@@ -1429,6 +1452,7 @@ export type Database = {
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
           pax_count?: number | null
+          person_id?: string | null
           phone?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           travel_end?: string | null
@@ -1436,7 +1460,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commercial_agreements: {
         Row: {
@@ -2322,6 +2354,7 @@ export type Database = {
           notes: string | null
           opportunity_id: string | null
           pax_count: number | null
+          person_id: string | null
           quotation_id: string | null
           record_status: Database["public"]["Enums"]["record_status"]
           services_interest: string[]
@@ -2360,6 +2393,7 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           pax_count?: number | null
+          person_id?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           services_interest?: string[]
@@ -2398,6 +2432,7 @@ export type Database = {
           notes?: string | null
           opportunity_id?: string | null
           pax_count?: number | null
+          person_id?: string | null
           quotation_id?: string | null
           record_status?: Database["public"]["Enums"]["record_status"]
           services_interest?: string[]
@@ -2429,6 +2464,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
           {

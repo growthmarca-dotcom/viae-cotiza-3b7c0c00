@@ -727,3 +727,67 @@ customer_profile   traveler_profile        relationships         history
 | v1.10.7.2.6 Cleanup | baja de columnas redundantes y unificación del acceso de agentes en `organization_members`. | medio |
 
 Sin cambios en base de datos ni en código en esta versión.
+
+---
+
+# CRM 360 Link Layer (v1.10.7.2.1)
+
+Primera fase de integración real: las entidades comerciales existentes ya pueden
+apuntar al maestro de identidad. **Solo relaciones** — sin backfill, sin
+deduplicación y sin cambios en la lógica comercial.
+
+```
+persons
+   |
+   + clients            (clients.person_id)
+   + leads              (leads.person_id)
+   + booking_passengers (booking_passengers.person_id)
+   + agents             (agents.person_id)
+```
+
+## Columnas agregadas
+
+| Tabla | Columna | FK | ON DELETE | Índice |
+| --- | --- | --- | --- | --- |
+| `clients` | `person_id uuid null` | `persons.id` | `SET NULL` | `idx_clients_person_id` |
+| `leads` | `person_id uuid null` | `persons.id` | `SET NULL` | `idx_leads_person_id` |
+| `booking_passengers` | `person_id uuid null` | `persons.id` | `SET NULL` | `idx_booking_passengers_person_id` |
+| `agents` | `person_id uuid null` | `persons.id` | `SET NULL` | `idx_agents_person_id` |
+
+`ON DELETE SET NULL` protege el histórico comercial: borrar una identidad nunca
+elimina un cliente, lead, pasajero o agente. Migración idempotente
+(`ADD COLUMN IF NOT EXISTS`, constraints e índices condicionales) y reversible
+(basta con quitar columna, FK e índice).
+
+## Invariantes respetadas
+
+- No se eliminó ni modificó ninguna columna existente, ni se tocaron datos.
+- `bookings`, `quotations`, `smart_quotes` y los motores del core sin cambios.
+- `booking_passengers` conserva `first_name`, `last_name`, `document_type/number`,
+  `birth_date` y `passenger_type` como snapshot del viaje.
+- `agents` conserva `user_id`, comisiones, estados e invitaciones; la separación
+  futura será: `persons` = identidad, `organization_members` = acceso,
+  `agents` = función comercial y comisiones.
+- RLS sin cambios: `person_id` es nullable y las políticas legacy siguen
+  gobernando por `user_id` y roles globales; la FK no otorga lectura de `persons`
+  (esa tabla mantiene su RLS por pertenencia a la organización, `org_identity_can_*`).
+
+## Riesgos pendientes
+
+1. `clients`, `leads`, `booking_passengers` y `agents` siguen **sin
+   `organization_id`**: al hacer el backfill hay que resolver a qué organización
+   pertenece cada identidad (v1.10.7.2.2 / .2.4).
+2. Doble fuente de verdad temporal: identidad duplicada entre la tabla legacy y
+   `persons` hasta la fase de consolidación.
+3. Una fila legacy con `person_id` de otra organización no está bloqueada por
+   constraint; se controlará en el backfill y en el scoping por organización.
+4. Ninguna UI escribe `person_id` todavía: el vínculo se llena en fases futuras.
+
+## Roadmap CRM 360 actualizado
+
+| Versión | Alcance | Estado |
+| --- | --- | --- |
+| v1.10.7.2.0 Consolidation Audit | auditoría de arquitectura CRM y plan por fases | ✅ |
+| v1.10.7.2.1 Person Link Layer | `person_id` nullable + FK + índices en `clients`, `leads`, `booking_passengers`, `agents` | ✅ |
+| v1.10.7.2.2 Backfill de identidad | creación de `persons` desde registros existentes con deduplicación | 🔵 |
+| v1.10.7.2.3 Customer & Traveler Profiles | ficha 360, búsqueda unificada e historial por persona | 🔵 |
