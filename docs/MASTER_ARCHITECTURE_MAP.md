@@ -599,3 +599,131 @@ modifica y la migración es idempotente. `bookings`, `quotations`, `smart_quotes
 | v1.10.7.1.4 UI de miembros | pantalla de gestión de miembros e invitaciones por organización | 🔵 |
 
 
+---
+
+# CRM 360 Consolidation Audit (v1.10.7.2.0)
+
+Auditoría **solo lectura**. No se crearon tablas, ni se modificaron migraciones,
+RLS, relaciones ni código. Estado observado: `persons` = 0 filas,
+`person_roles` = 0, `clients` = 3, `leads` = 1, `opportunities` = 1,
+`booking_passengers` = 0, `agents` = 1, `organizations` = 2,
+`organization_members` = 2, `quotations` = 15, `bookings` = 3, `profiles` = 5.
+
+## 1. Tablas CRM encontradas
+
+| Tabla | Propósito actual | Columnas principales | Relaciones | Organización | Usuario | Duplica `persons` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `clients` | ficha comercial del cliente final (CRM módulo 1) | `full_name`, `last_name`, `email`, `phone`, `company`, `city`, `country`, `destination`, `travel_start/end`, `pax_count`, `opportunity_status`, `record_status` | referenciada por `opportunities`, `quotations`, `bookings`, `leads.client_id` | ❌ sin `organization_id` (aislada por `user_id`) | `user_id` = dueño del registro | 🔴 **alta** (nombre, email, teléfono, ciudad, país) |
+| `leads` | captación previa al cliente | `first_name`, `last_name`, `whatsapp`, `email`, `country`, `city`, `language`, `source`, `status`, `assigned_agent_id`, `client_id`, `opportunity_id`, `quotation_id`, `converted_at` | → `clients`, `opportunities`, `quotations`, `agents` | ❌ | `user_id` creador | 🟠 media (datos de contacto de la misma persona antes de convertir) |
+| `opportunities` | pipeline comercial | `client_id`, `quotation_id`, `title`, `stage`, `estimated_value`, `currency`, `probability`, `next_action`, `owner_user_id`, `assigned_agent_id` | → `clients`, `quotations`, `agents` | ❌ (heredada del cliente) | `user_id`, `owner_user_id` | ⚪ no (es transacción, no identidad) |
+| `booking_passengers` | pasajeros del expediente 360 | `booking_id`, `first_name`, `last_name`, `document_type/number`, `birth_date`, `nationality`, `email`, `phone`, `passenger_type`, `is_lead_passenger`, `relationship_to_lead_passenger` | → `bookings` | ❌ | `user_id` creador | 🔴 **alta** (coincide casi 1:1 con `persons`) |
+| `agents` | red comercial (puede existir sin acceso) | `first_name`, `last_name`, `email`, `whatsapp`, `company`, ciudad/país, `languages`, `specialties`, `commission_*`, `access_status`, `availability`, cupos y prioridad | `user_id` → `auth.users` (opcional), referenciada por `leads`, `opportunities`, `commissions` | ❌ (implícita por `created_by`) | `user_id` cuando está `linked` | 🟠 media (identidad + configuración operativa mezcladas) |
+| `profiles` | perfil de la cuenta de plataforma | `full_name`, `agency_name`, `phone`, `avatar_url`, `status` | 1:1 `auth.users` | ❌ | sí (PK = user id) | 🟠 media (identidad del usuario interno) |
+| `persons` | maestro de identidad CRM 360 | `organization_id`, `first_name`, `last_name`, `email`, `phone`, `document_type/number`, `birth_date`, `nationality`, `language`, `avatar_url` | → `organizations`, `person_roles` | ✅ | ❌ (identidad ≠ cuenta) | — |
+| `person_roles` | rol de la persona por organización | `person_id`, `organization_id`, `role_type` | → `persons`, `organizations` | ✅ | ❌ | — |
+| `organization_members` | acceso de usuarios a la organización | `organization_id`, `user_id`, `role`, `status`, `is_owner` | → `organizations`, `auth.users` | ✅ | ✅ | ⚪ no (es acceso, no identidad) |
+| `commissions`, `lead_history`, `communication_events` | historial y economía | snapshots inmutables / eventos | → leads, bookings, agreements | parcial | creador | ⚪ no |
+
+## 2. Flujos actuales y pérdida de información
+
+```
+A) Captación   Lead ──convert──> Client ──> Opportunity
+B) Venta       Client ──> Quotation ──> Booking
+C) Operación   Booking ──> booking_passengers ──> Expediente 360
+```
+
+Puntos donde hoy se pierde información:
+
+1. **Lead → Client**: se copian nombre/contacto; no queda una identidad única, la
+   misma persona puede existir como lead y como cliente sin vínculo fuerte.
+2. **Client → Booking**: el cliente no se vuelve pasajero. `booking_passengers`
+   se tipea a mano, así que el titular queda duplicado y sin documento en `clients`.
+3. **Pasajero recurrente**: un pasajero que viaja tres veces genera tres filas sin
+   historial consolidado (no hay "traveler profile").
+4. **Sin organización**: `clients`, `leads`, `opportunities`, `booking_passengers`
+   y `agents` no tienen `organization_id`; el aislamiento es por `user_id` + roles
+   globales, incompatible con White Label real.
+5. **Agentes**: la persona del agente y su configuración comercial viven en la
+   misma fila, y el acceso está duplicado entre `agents.user_id` y
+   `organization_members`.
+
+## 3. Relación con `persons` — opción recomendada
+
+Se evaluaron dos caminos:
+
+| Opción | Descripción | Veredicto |
+| --- | --- | --- |
+| A) `persons` reemplaza `clients` | migración destructiva de la tabla más referenciada (quotations, bookings, opportunities, leads) | ❌ riesgo alto, rompe módulos y RLS legacy |
+| B) `persons` = capa de identidad relacionada | `clients` conserva su rol comercial y apunta a la persona (`person_id`) | ✅ **recomendada** |
+
+Fundamentos: `clients` es referenciada por 4 módulos productivos; `persons` está
+vacía (migración limpia y sin conflictos); los campos coincidentes son
+`first/last_name`, `email`, `phone`, `city`, `country`; `persons` aporta lo que
+falta (documento, fecha de nacimiento, nacionalidad, idioma, organización).
+Riesgos a controlar en la migración: deduplicación por `lower(email)` +
+documento, `clients` sin `organization_id` (hay que resolver la organización de
+destino antes del backfill), y doble fuente de verdad temporal mientras coexistan.
+
+## 4. `booking_passengers`
+
+Recomendación: **agregar `person_id` nullable** (no tabla intermedia, no
+separación). La relación natural es `persons 1 ── N booking_passengers`: la
+persona es la identidad estable y la fila de pasajero es el snapshot del viaje
+(tipo de pasajero, titular, relación con el titular, notas de ese booking). Una
+tabla intermedia no aporta porque la relación ya es 1:N y el snapshot debe seguir
+siendo inmutable por reserva. Mantener los campos actuales para no romper el
+expediente ni la preparación tarifaria por edad.
+
+## 5. Agentes
+
+`agents` mezcla hoy tres cosas: identidad (nombre, email, whatsapp, ciudad),
+acceso (`user_id`, `access_status`, invitaciones) y configuración comercial
+(comisión, cupos, prioridad, zona, disponibilidad). Integración futura:
+
+- identidad → `persons` + `person_roles.role_type = 'agent'`;
+- acceso → `organization_members` (rol `agent`), deprecando `agents.access_status`
+  y el flujo de invitación propio a favor de `organization_invitations`;
+- configuración comercial y comisiones → permanecen en `agents` (perfil de agente),
+  ahora con `person_id` y `organization_id`.
+
+## 6. Oportunidades
+
+Estructura sana y transaccional: `client_id`, `quotation_id`, `stage`,
+`estimated_value`/`currency`, `probability`, `next_action`, `owner_user_id`,
+`assigned_agent_id`, `record_status`. No requiere identidad propia: hereda la
+persona a través de `clients.person_id`. Solo necesita `organization_id` en la
+fase de multi-tenancy para el aislamiento por marca.
+
+## 7. Modelo recomendado CRM 360
+
+```
+                      persons  (identidad única por organización)
+                         |
+   +---------------------+----------------------+------------------+
+   |                     |                      |                  |
+customer_profile   traveler_profile        relationships         history
+(= clients con      (= booking_passengers   (person ↔ person:     (leads,
+ person_id)          con person_id)          familia, empresa)     timeline,
+   |                     |                                         communications)
+   +--> opportunities --> quotations --> bookings --> expediente 360
+```
+
+| Acción | Tablas |
+| --- | --- |
+| Mantener | `opportunities`, `quotations`, `bookings`, `commissions`, `communication_events`, `lead_history`, `organization_members`, `organization_invitations` |
+| Extender | `clients` (+`person_id`, `organization_id`), `booking_passengers` (+`person_id`), `agents` (+`person_id`, `organization_id`), `leads` (+`person_id`, `organization_id`), `persons` (preferencias, deduplicación) |
+| Migrar | datos de identidad de `clients`, `leads`, `booking_passengers` y `agents` hacia `persons` (backfill idempotente, sin borrar origen) |
+| Eliminar en futuras versiones | ninguna tabla; solo **columnas** redundantes de identidad una vez que `person_id` sea obligatorio y la UI lea de `persons` (candidatas: contacto duplicado en `leads`, `access_status`/invitaciones de `agents`) |
+
+## 8. Plan de migración por fases (propuesto, no ejecutado)
+
+| Fase | Alcance | Riesgo |
+| --- | --- | --- |
+| v1.10.7.2.1 Person Link Layer | `person_id` nullable en `clients`, `leads`, `booking_passengers`, `agents`. Sin lógica ni UI. | bajo |
+| v1.10.7.2.2 Backfill de identidad | crear `persons` desde los registros existentes con deduplicación por email/documento y resolución de organización. Origen intacto. | medio |
+| v1.10.7.2.3 Customer & Traveler Profiles | UI de ficha 360, búsqueda unificada, historial por persona. | bajo |
+| v1.10.7.2.4 Org Scoping | `organization_id` en `clients`, `leads`, `opportunities` y RLS por pertenencia. | alto (toca RLS productivo) |
+| v1.10.7.2.5 Person as source of truth | lectura de identidad desde `persons`; columnas duplicadas quedan solo de lectura. | medio |
+| v1.10.7.2.6 Cleanup | baja de columnas redundantes y unificación del acceso de agentes en `organization_members`. | medio |
+
+Sin cambios en base de datos ni en código en esta versión.
