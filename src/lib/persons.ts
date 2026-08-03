@@ -58,3 +58,15 @@ export function personDisplayName(p: Pick<Person, "first_name" | "last_name" | "
   const name = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
   return name || p.email || p.phone || "Sin nombre";
 }
+
+/** Vínculos legacy → identidad, con el rol de `person_roles` que corresponde. */
+export const PERSON_LINKED_TABLES: {
+  table: PersonLinkedTable;
+  label: string;
+  role: PersonRoleType;
+}[] = [
+  { table: "clients", label: "Clientes", role: "customer" },
+  { table: "leads", label: "Leads", role: "customer" },
+  { table: "booking_passengers", label: "Pasajeros de reserva", role: "passenger" },
+  { table: "agents", label: "Agentes", role: "agent" },
+];
