@@ -2879,6 +2879,243 @@ export type Database = {
           },
         ]
       }
+      package_constraints: {
+        Row: {
+          constraint_type: Database["public"]["Enums"]["package_constraint_type"]
+          created_at: string
+          id: string
+          operator: Database["public"]["Enums"]["package_constraint_operator"]
+          package_template_id: string
+          value: Json
+        }
+        Insert: {
+          constraint_type: Database["public"]["Enums"]["package_constraint_type"]
+          created_at?: string
+          id?: string
+          operator?: Database["public"]["Enums"]["package_constraint_operator"]
+          package_template_id: string
+          value?: Json
+        }
+        Update: {
+          constraint_type?: Database["public"]["Enums"]["package_constraint_type"]
+          created_at?: string
+          id?: string
+          operator?: Database["public"]["Enums"]["package_constraint_operator"]
+          package_template_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_constraints_package_template_id_fkey"
+            columns: ["package_template_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_rules: {
+        Row: {
+          action: Json
+          active: boolean
+          condition: Json
+          created_at: string
+          id: string
+          package_template_id: string
+          priority: number
+          rule_type: Database["public"]["Enums"]["package_rule_type"]
+          updated_at: string
+        }
+        Insert: {
+          action?: Json
+          active?: boolean
+          condition?: Json
+          created_at?: string
+          id?: string
+          package_template_id: string
+          priority?: number
+          rule_type: Database["public"]["Enums"]["package_rule_type"]
+          updated_at?: string
+        }
+        Update: {
+          action?: Json
+          active?: boolean
+          condition?: Json
+          created_at?: string
+          id?: string
+          package_template_id?: string
+          priority?: number
+          rule_type?: Database["public"]["Enums"]["package_rule_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_rules_package_template_id_fkey"
+            columns: ["package_template_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_template_items: {
+        Row: {
+          component_type: Database["public"]["Enums"]["package_item_component_type"]
+          created_at: string
+          id: string
+          metadata: Json
+          order_index: number
+          package_template_id: string
+          product_id: string
+          product_variant_id: string | null
+          quantity: number
+          required: boolean
+        }
+        Insert: {
+          component_type?: Database["public"]["Enums"]["package_item_component_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json
+          order_index?: number
+          package_template_id: string
+          product_id: string
+          product_variant_id?: string | null
+          quantity?: number
+          required?: boolean
+        }
+        Update: {
+          component_type?: Database["public"]["Enums"]["package_item_component_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json
+          order_index?: number
+          package_template_id?: string
+          product_id?: string
+          product_variant_id?: string | null
+          quantity?: number
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_template_items_package_template_id_fkey"
+            columns: ["package_template_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_template_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_template_items_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          destination_city: string | null
+          destination_country: string | null
+          destination_state: string | null
+          duration_days: number | null
+          id: string
+          metadata: Json
+          name: string
+          organization_id: string | null
+          priority: number
+          status: Database["public"]["Enums"]["package_template_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          duration_days?: number | null
+          id?: string
+          metadata?: Json
+          name: string
+          organization_id?: string | null
+          priority?: number
+          status?: Database["public"]["Enums"]["package_template_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          duration_days?: number | null
+          id?: string
+          metadata?: Json
+          name?: string
+          organization_id?: string | null
+          priority?: number
+          status?: Database["public"]["Enums"]["package_template_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          package_template_id: string
+          snapshot: Json
+          status: Database["public"]["Enums"]["package_version_status"]
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          package_template_id: string
+          snapshot?: Json
+          status?: Database["public"]["Enums"]["package_version_status"]
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          package_template_id?: string
+          snapshot?: Json
+          status?: Database["public"]["Enums"]["package_version_status"]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_versions_package_template_id_fkey"
+            columns: ["package_template_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passenger_categories: {
         Row: {
           code: string
@@ -5446,6 +5683,10 @@ export type Database = {
         Returns: boolean
       }
       can_manage_package: { Args: { _package_id: string }; Returns: boolean }
+      can_manage_package_template: {
+        Args: { _template_id: string }
+        Returns: boolean
+      }
       can_manage_pricing_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -5460,6 +5701,10 @@ export type Database = {
         Returns: boolean
       }
       can_read_package: { Args: { _package_id: string }; Returns: boolean }
+      can_read_package_template: {
+        Args: { _template_id: string }
+        Returns: boolean
+      }
       can_read_search_request: {
         Args: { _request_id: string }
         Returns: boolean
@@ -5546,6 +5791,10 @@ export type Database = {
           _title: string
         }
         Returns: undefined
+      }
+      provider_in_package_template: {
+        Args: { _template_id: string }
+        Returns: boolean
       }
       rate_at: {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
@@ -5834,6 +6083,33 @@ export type Database = {
         | "generated"
         | "selected"
         | "rejected"
+      package_constraint_operator:
+        | "equals"
+        | "greater_than"
+        | "less_than"
+        | "between"
+      package_constraint_type:
+        | "budget"
+        | "age"
+        | "duration"
+        | "destination"
+        | "availability"
+        | "provider"
+      package_item_component_type:
+        | "accommodation"
+        | "activity"
+        | "excursion"
+        | "transfer"
+        | "rental"
+        | "other"
+      package_rule_type:
+        | "compatibility"
+        | "exclusion"
+        | "requirement"
+        | "recommendation"
+        | "upgrade"
+      package_template_status: "draft" | "active" | "inactive" | "archived"
+      package_version_status: "draft" | "published" | "retired"
       passenger_type: "adult" | "child" | "infant" | "senior" | "other"
       pricing_calculation_type: "fixed_amount" | "percentage" | "per_unit"
       pricing_condition_operator:
@@ -6421,6 +6697,37 @@ export const Constants = {
         "selected",
         "rejected",
       ],
+      package_constraint_operator: [
+        "equals",
+        "greater_than",
+        "less_than",
+        "between",
+      ],
+      package_constraint_type: [
+        "budget",
+        "age",
+        "duration",
+        "destination",
+        "availability",
+        "provider",
+      ],
+      package_item_component_type: [
+        "accommodation",
+        "activity",
+        "excursion",
+        "transfer",
+        "rental",
+        "other",
+      ],
+      package_rule_type: [
+        "compatibility",
+        "exclusion",
+        "requirement",
+        "recommendation",
+        "upgrade",
+      ],
+      package_template_status: ["draft", "active", "inactive", "archived"],
+      package_version_status: ["draft", "published", "retired"],
       passenger_type: ["adult", "child", "infant", "senior", "other"],
       pricing_calculation_type: ["fixed_amount", "percentage", "per_unit"],
       pricing_condition_operator: [
