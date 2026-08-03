@@ -8,12 +8,25 @@ import type { Tables } from "@/integrations/supabase/types";
  * una misma persona dentro de esa organización (cliente, pasajero, agente,
  * contacto de proveedor, conductor, empleado).
  *
- * Esta fase es **solo estructura**: no está conectada con `bookings`,
- * `booking_passengers`, `quotations` ni `smart_quotes`.
+ * v1.10.7.2.1 — Person Link Layer: las entidades comerciales existentes ya
+ * pueden apuntar a una identidad mediante `person_id` (nullable). Todavía **no**
+ * hay backfill ni deduplicación: la identidad sigue viviendo en cada tabla
+ * legacy y `person_id` es un vínculo opcional. `bookings`, `quotations` y
+ * `smart_quotes` no se modificaron.
  */
 
 export type Person = Tables<"persons">;
 export type PersonRole = Tables<"person_roles">;
+
+/** Tablas legacy vinculadas a `persons` mediante `person_id` (v1.10.7.2.1). */
+export type PersonLinkedTable = "clients" | "leads" | "booking_passengers" | "agents";
+
+/** Registro legacy que puede apuntar a una identidad de `persons`. */
+export type PersonLinkable = { person_id: string | null };
+
+export function isLinkedToPerson(row: PersonLinkable) {
+  return row.person_id != null;
+}
 
 export type PersonRoleType =
   | "customer"
