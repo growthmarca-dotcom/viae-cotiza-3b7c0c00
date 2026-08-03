@@ -455,4 +455,67 @@ person_roles
 | v1.10.7.2 Customer Profiles | Fichas de persona, preferencias, deduplicación y UI de búsqueda | 🔵 |
 | v1.10.7.3 CRM Integration | Vinculación con `clients`, `leads`, `booking_passengers`, `quotations` y `smart_quotes` | 🔵 |
 
+---
+
+# SaaS Identity Layer
+
+Capa de pertenencia usuario ↔ organización (v1.10.7.1.1). Es la base del
+aislamiento por marca (White Label): antes de esta capa el único vínculo era
+`organizations.user_id` (propiedad 1:1) y los roles globales de `user_roles`.
+
+```
+organizations
+      |
+organization_members
+      |
+   auth.users
+```
+
+## Distinción crítica
+
+| Tabla | Significado |
+| --- | --- |
+| `organization_roles` | **clasificación de la organización** — qué *es* (cliente, proveedor, etc.) |
+| `organization_members` | **usuarios con acceso** a esa organización y su rol interno |
+
+## organization_members
+
+- Campos: `organization_id` → `organizations.id` (cascada), `user_id` → `auth.users.id`,
+  `role`, `status`, `is_owner`, `invited_by`, `created_at`, `updated_at`.
+- Único por `(user_id, organization_id)`. Índices por organización, usuario y rol.
+- Enum `organization_member_role`: `organization_owner`, `organization_admin`,
+  `operations`, `agent`, `provider`, `driver`, `viewer` (extensible).
+- Enum `organization_member_status`: `active`, `pending`, `inactive`, `suspended`.
+- Trigger `trg_organization_members_updated_at` (reutiliza `tg_set_updated_at`).
+
+## Helpers de seguridad (SECURITY DEFINER)
+
+- `is_member_of(_user_id, _org_id)` — pertenencia activa.
+- `has_org_role(_user_id, _org_id, _role)` — rol dentro de la organización.
+- `can_manage_organization_members(_org_id)` — Administración global, Operaciones,
+  o dueño/administrador de esa organización.
+
+Son una **capa de extensión**: el RLS existente de los demás módulos no se
+reescribió y sigue apoyado en `has_role`, `is_approved`, `is_operations`.
+
+## RLS de organization_members
+
+- Lectura: propias pertenencias (`user_id = auth.uid()`), o usuario aprobado que
+  sea Administración, Operaciones o miembro activo de la organización.
+- Alta / edición: `can_manage_organization_members(organization_id)`.
+- Baja: Administración global o dueño de la organización.
+
+## Backfill inicial
+
+- Cada `organizations.user_id` → miembro `organization_owner`, `is_owner = true`.
+- Cada `agents.user_id` con `access_status = 'linked'` → miembro `agent` de la
+  organización de su creador. Idempotente (`ON CONFLICT DO NOTHING`).
+
+## Roadmap de la capa de identidad SaaS
+
+| Versión | Alcance | Estado |
+| --- | --- | --- |
+| v1.10.7.1.1 Membership Layer | `organization_members`, enums, helpers, RLS y backfill | ✅ |
+| v1.10.7.1.2 Migración progresiva | acotar RLS de `persons`, inventario y motores nuevos por pertenencia | 🔵 |
+| v1.10.7.1.3 Gestión de miembros | UI de invitación, alta/baja y cambio de rol por organización | 🔵 |
 
