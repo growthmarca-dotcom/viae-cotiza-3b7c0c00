@@ -545,6 +545,7 @@ reescribió y sigue apoyado en `has_role`, `is_approved`, `is_operations`.
 | Versión | Alcance | Estado |
 | --- | --- | --- |
 | v1.10.7.1.1 Membership Layer | `organization_members`, enums, helpers, RLS y backfill | ✅ |
-| v1.10.7.1.2 Migración progresiva | acotar RLS de `persons`, inventario y motores nuevos por pertenencia | 🔵 |
+| v1.10.7.1.2 Identity Security Alignment | RLS de `persons`/`person_roles` acotada por pertenencia | ✅ |
+| v1.10.7.1.2b Migración progresiva | acotar inventario y motores nuevos por pertenencia | 🔵 |
 | v1.10.7.1.3 Gestión de miembros | UI de invitación, alta/baja y cambio de rol por organización | 🔵 |
 
