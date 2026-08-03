@@ -2677,6 +2677,50 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          is_owner: boolean
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_member_role"]
+          status: Database["public"]["Enums"]["organization_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_owner?: boolean
+          organization_id: string
+          role?: Database["public"]["Enums"]["organization_member_role"]
+          status?: Database["public"]["Enums"]["organization_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          is_owner?: boolean
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_member_role"]
+          status?: Database["public"]["Enums"]["organization_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_roles: {
         Row: {
           created_at: string
@@ -6102,6 +6146,10 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: boolean
       }
+      can_manage_organization_members: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
       can_manage_package: { Args: { _package_id: string }; Returns: boolean }
       can_manage_package_template: {
         Args: { _template_id: string }
@@ -6191,6 +6239,10 @@ export type Database = {
         Returns: string
       }
       expire_stale_invitations: { Args: never; Returns: number }
+      has_org_role: {
+        Args: { _org_id: string; _role: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6200,6 +6252,10 @@ export type Database = {
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
+      is_member_of: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_operations: { Args: { _user_id: string }; Returns: boolean }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       notify_operations_team: {
@@ -6488,6 +6544,19 @@ export type Database = {
         | "exclusion"
         | "preference"
         | "package"
+      organization_member_role:
+        | "organization_owner"
+        | "organization_admin"
+        | "operations"
+        | "agent"
+        | "provider"
+        | "driver"
+        | "viewer"
+      organization_member_status:
+        | "active"
+        | "pending"
+        | "inactive"
+        | "suspended"
       organization_role:
         | "provider"
         | "agency"
@@ -7124,6 +7193,21 @@ export const Constants = {
         "exclusion",
         "preference",
         "package",
+      ],
+      organization_member_role: [
+        "organization_owner",
+        "organization_admin",
+        "operations",
+        "agent",
+        "provider",
+        "driver",
+        "viewer",
+      ],
+      organization_member_status: [
+        "active",
+        "pending",
+        "inactive",
+        "suspended",
       ],
       organization_role: [
         "provider",
