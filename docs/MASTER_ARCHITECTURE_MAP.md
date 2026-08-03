@@ -441,17 +441,46 @@ person_roles
 - `person_roles` — papeles simultáneos de esa persona en la organización, con el
   enum `person_role_type`: `customer`, `passenger`, `agent`, `supplier_contact`,
   `driver`, `employee` (extensible).
-- Seguridad: RLS activa con las funciones existentes (`is_approved`, `has_role`,
-  `is_operations`). Lectura para usuarios aprobados, escritura Administración /
-  Operaciones, borrado solo Administración. No hay sistema paralelo de permisos.
-- Alcance actual: **solo estructura**. Sin vínculo con `bookings`,
+- Seguridad (v1.10.7.1.2 Identity Security Alignment): RLS acotada por
+  **pertenencia a la organización** (`organization_members`), no por rol global.
+  - Lectura: Administración global **o** miembro activo de la misma organización.
+  - Alta / edición de `persons`: Administración global, dueño o administrador de
+    la organización, u Operaciones **dentro de** esa organización.
+  - Alta / edición de `person_roles`: Administración global, dueño o
+    administrador de la organización.
+  - Baja (`persons` y `person_roles`): Administración global o dueño de la organización.
+  - Helpers `SECURITY DEFINER`: `org_identity_can_read`, `org_identity_can_write`,
+    `org_identity_can_admin`, `org_identity_can_delete` (apoyados en `has_role`,
+    `is_member_of` y `has_org_role`).
+- Alcance actual: **solo estructura y seguridad**. Sin vínculo con `bookings`,
   `booking_passengers`, `quotations` ni `smart_quotes`.
+
+## Identity Security Flow
+
+```
+auth.users
+    ↓
+organization_members      (pertenencia + rol interno)
+    ↓
+organizations             (marca / cliente SaaS)
+    ↓
+persons / person_roles    (identidad de la organización)
+```
+
+| Capa | Significado |
+| --- | --- |
+| `user_roles` | permisos **globales de la plataforma** (admin, operations, agent, provider) |
+| `organization_members` | permisos **dentro del cliente SaaS** (organización) |
+
+Las funciones legacy (`is_approved`, `has_role`, `is_operations`) se mantienen
+intactas para los módulos existentes.
 
 ## Roadmap del CRM 360
 
 | Versión | Alcance | Estado |
 | --- | --- | --- |
 | v1.10.7.1 Identity Core | `persons`, `person_roles`, enum de roles, RLS y trigger de `updated_at` | ✅ |
+| v1.10.7.1.2 Identity Security Alignment | RLS de `persons`/`person_roles` por pertenencia a la organización | ✅ |
 | v1.10.7.2 Customer Profiles | Fichas de persona, preferencias, deduplicación y UI de búsqueda | 🔵 |
 | v1.10.7.3 CRM Integration | Vinculación con `clients`, `leads`, `booking_passengers`, `quotations` y `smart_quotes` | 🔵 |
 
