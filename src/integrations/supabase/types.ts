@@ -3402,6 +3402,60 @@ export type Database = {
           },
         ]
       }
+      provider_search_sources: {
+        Row: {
+          active: boolean
+          configuration: Json
+          created_at: string
+          id: string
+          organization_id: string | null
+          priority: number
+          provider_id: string | null
+          source_type: Database["public"]["Enums"]["search_source_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          configuration?: Json
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          priority?: number
+          provider_id?: string | null
+          source_type?: Database["public"]["Enums"]["search_source_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          active?: boolean
+          configuration?: Json
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          priority?: number
+          provider_id?: string | null
+          source_type?: Database["public"]["Enums"]["search_source_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_search_sources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_search_sources_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       providers: {
         Row: {
           address: string | null
@@ -4060,6 +4114,264 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_items: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json
+          quantity: number
+          search_request_id: string
+          service_category: Database["public"]["Enums"]["search_service_category"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          quantity?: number
+          search_request_id: string
+          service_category: Database["public"]["Enums"]["search_service_category"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          quantity?: number
+          search_request_id?: string
+          service_category?: Database["public"]["Enums"]["search_service_category"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_items_search_request_id_fkey"
+            columns: ["search_request_id"]
+            isOneToOne: false
+            referencedRelation: "search_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_requests: {
+        Row: {
+          adults: number
+          agent_id: string | null
+          children: number
+          created_at: string
+          destination_city: string | null
+          destination_country: string | null
+          destination_state: string | null
+          end_date: string | null
+          id: string
+          infants: number
+          organization_id: string | null
+          passengers_metadata: Json
+          request_type: Database["public"]["Enums"]["search_request_type"]
+          start_date: string | null
+          status: Database["public"]["Enums"]["search_request_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adults?: number
+          agent_id?: string | null
+          children?: number
+          created_at?: string
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          end_date?: string | null
+          id?: string
+          infants?: number
+          organization_id?: string | null
+          passengers_metadata?: Json
+          request_type?: Database["public"]["Enums"]["search_request_type"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["search_request_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adults?: number
+          agent_id?: string | null
+          children?: number
+          created_at?: string
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          end_date?: string | null
+          id?: string
+          infants?: number
+          organization_id?: string | null
+          passengers_metadata?: Json
+          request_type?: Database["public"]["Enums"]["search_request_type"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["search_request_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_requests_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_result_components: {
+        Row: {
+          amount: number | null
+          component_type: Database["public"]["Enums"]["search_component_type"]
+          created_at: string
+          currency: string | null
+          id: string
+          metadata: Json
+          product_id: string | null
+          quantity: number
+          search_result_id: string
+          variant_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          component_type: Database["public"]["Enums"]["search_component_type"]
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json
+          product_id?: string | null
+          quantity?: number
+          search_result_id: string
+          variant_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          component_type?: Database["public"]["Enums"]["search_component_type"]
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json
+          product_id?: string | null
+          quantity?: number
+          search_result_id?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_result_components_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_result_components_search_result_id_fkey"
+            columns: ["search_result_id"]
+            isOneToOne: false
+            referencedRelation: "search_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_result_components_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_results: {
+        Row: {
+          availability_status: Database["public"]["Enums"]["search_availability_status"]
+          created_at: string
+          currency: string | null
+          estimated_amount: number | null
+          id: string
+          metadata: Json
+          organization_id: string | null
+          pricing_status: Database["public"]["Enums"]["search_pricing_status"]
+          priority: number
+          product_id: string | null
+          product_variant_id: string | null
+          provider_id: string | null
+          search_request_id: string
+          source_type: Database["public"]["Enums"]["search_source_type"]
+        }
+        Insert: {
+          availability_status?: Database["public"]["Enums"]["search_availability_status"]
+          created_at?: string
+          currency?: string | null
+          estimated_amount?: number | null
+          id?: string
+          metadata?: Json
+          organization_id?: string | null
+          pricing_status?: Database["public"]["Enums"]["search_pricing_status"]
+          priority?: number
+          product_id?: string | null
+          product_variant_id?: string | null
+          provider_id?: string | null
+          search_request_id: string
+          source_type?: Database["public"]["Enums"]["search_source_type"]
+        }
+        Update: {
+          availability_status?: Database["public"]["Enums"]["search_availability_status"]
+          created_at?: string
+          currency?: string | null
+          estimated_amount?: number | null
+          id?: string
+          metadata?: Json
+          organization_id?: string | null
+          pricing_status?: Database["public"]["Enums"]["search_pricing_status"]
+          priority?: number
+          product_id?: string | null
+          product_variant_id?: string | null
+          provider_id?: string | null
+          search_request_id?: string
+          source_type?: Database["public"]["Enums"]["search_source_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_results_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_results_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_results_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_results_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_results_search_request_id_fkey"
+            columns: ["search_request_id"]
+            isOneToOne: false
+            referencedRelation: "search_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -4888,6 +5200,19 @@ export type Database = {
         Returns: boolean
       }
       can_manage_product: { Args: { _product_id: string }; Returns: boolean }
+      can_manage_search_request: {
+        Args: { _request_id: string }
+        Returns: boolean
+      }
+      can_manage_search_result: {
+        Args: { _result_id: string }
+        Returns: boolean
+      }
+      can_read_search_request: {
+        Args: { _request_id: string }
+        Returns: boolean
+      }
+      can_read_search_result: { Args: { _result_id: string }; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       compute_commission: {
         Args: {
@@ -5337,6 +5662,38 @@ export type Database = {
         | "partner_company"
         | "private"
         | "other"
+      search_availability_status:
+        | "available"
+        | "unavailable"
+        | "request_only"
+        | "unknown"
+      search_component_type:
+        | "product"
+        | "transfer"
+        | "accommodation"
+        | "activity"
+        | "rental"
+      search_pricing_status: "calculated" | "unavailable" | "pending"
+      search_request_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "expired"
+      search_request_type:
+        | "package"
+        | "accommodation"
+        | "activity"
+        | "transfer"
+        | "rental"
+        | "custom"
+      search_service_category:
+        | "accommodation"
+        | "activity"
+        | "transfer"
+        | "rental"
+        | "package"
+      search_source_type: "internal" | "api" | "manual"
       tariff_condition_type:
         | "nights"
         | "operating_days"
@@ -5871,6 +6228,43 @@ export const Constants = {
         "private",
         "other",
       ],
+      search_availability_status: [
+        "available",
+        "unavailable",
+        "request_only",
+        "unknown",
+      ],
+      search_component_type: [
+        "product",
+        "transfer",
+        "accommodation",
+        "activity",
+        "rental",
+      ],
+      search_pricing_status: ["calculated", "unavailable", "pending"],
+      search_request_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "expired",
+      ],
+      search_request_type: [
+        "package",
+        "accommodation",
+        "activity",
+        "transfer",
+        "rental",
+        "custom",
+      ],
+      search_service_category: [
+        "accommodation",
+        "activity",
+        "transfer",
+        "rental",
+        "package",
+      ],
+      search_source_type: ["internal", "api", "manual"],
       tariff_condition_type: [
         "nights",
         "operating_days",
