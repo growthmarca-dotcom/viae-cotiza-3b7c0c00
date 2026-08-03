@@ -488,6 +488,8 @@ export type Database = {
           organization_id: string | null
           owner_id: string
           priority: number
+          product_id: string | null
+          product_variant_id: string | null
           provider_id: string | null
           source_name: string
           source_type: Database["public"]["Enums"]["availability_source_type"]
@@ -501,6 +503,8 @@ export type Database = {
           organization_id?: string | null
           owner_id: string
           priority?: number
+          product_id?: string | null
+          product_variant_id?: string | null
           provider_id?: string | null
           source_name: string
           source_type?: Database["public"]["Enums"]["availability_source_type"]
@@ -514,6 +518,8 @@ export type Database = {
           organization_id?: string | null
           owner_id?: string
           priority?: number
+          product_id?: string | null
+          product_variant_id?: string | null
           provider_id?: string | null
           source_name?: string
           source_type?: Database["public"]["Enums"]["availability_source_type"]
@@ -525,6 +531,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_sources_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_sources_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
           {
@@ -2946,6 +2966,113 @@ export type Database = {
           },
         ]
       }
+      product_availability_profiles: {
+        Row: {
+          availability_mode: Database["public"]["Enums"]["product_availability_mode"]
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          priority: number
+          product_id: string
+          product_variant_id: string | null
+          status: Database["public"]["Enums"]["product_availability_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability_mode?: Database["public"]["Enums"]["product_availability_mode"]
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          priority?: number
+          product_id: string
+          product_variant_id?: string | null
+          status?: Database["public"]["Enums"]["product_availability_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability_mode?: Database["public"]["Enums"]["product_availability_mode"]
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          priority?: number
+          product_id?: string
+          product_variant_id?: string | null
+          status?: Database["public"]["Enums"]["product_availability_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_availability_profiles_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_availability_profiles_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_availability_rules: {
+        Row: {
+          availability_profile_id: string
+          created_at: string
+          day_of_week: number | null
+          end_date: string | null
+          id: string
+          metadata: Json
+          quantity: number | null
+          rule_type: Database["public"]["Enums"]["product_availability_rule_type"]
+          start_date: string | null
+          status: Database["public"]["Enums"]["product_availability_status"]
+          updated_at: string
+        }
+        Insert: {
+          availability_profile_id: string
+          created_at?: string
+          day_of_week?: number | null
+          end_date?: string | null
+          id?: string
+          metadata?: Json
+          quantity?: number | null
+          rule_type: Database["public"]["Enums"]["product_availability_rule_type"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["product_availability_status"]
+          updated_at?: string
+        }
+        Update: {
+          availability_profile_id?: string
+          created_at?: string
+          day_of_week?: number | null
+          end_date?: string | null
+          id?: string
+          metadata?: Json
+          quantity?: number | null
+          rule_type?: Database["public"]["Enums"]["product_availability_rule_type"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["product_availability_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_availability_rules_availability_profile_id_fkey"
+            columns: ["availability_profile_id"]
+            isOneToOne: false
+            referencedRelation: "product_availability_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           active: boolean
@@ -3940,45 +4067,69 @@ export type Database = {
       service_availability: {
         Row: {
           availability_date: string
+          availability_type: Database["public"]["Enums"]["availability_quantity_type"]
+          available_quantity: number | null
           available_units: number
+          booking_cutoff_hours: number | null
           created_at: string
           end_time: string | null
           id: string
+          maximum_quantity: number | null
+          metadata: Json
+          minimum_quantity: number | null
           notes: string | null
           organization_id: string | null
           owner_id: string
+          product_id: string | null
+          product_variant_id: string | null
           reserved_units: number
-          service_id: string
+          service_id: string | null
           start_time: string | null
           status: Database["public"]["Enums"]["availability_status"]
           updated_at: string
         }
         Insert: {
           availability_date: string
+          availability_type?: Database["public"]["Enums"]["availability_quantity_type"]
+          available_quantity?: number | null
           available_units?: number
+          booking_cutoff_hours?: number | null
           created_at?: string
           end_time?: string | null
           id?: string
+          maximum_quantity?: number | null
+          metadata?: Json
+          minimum_quantity?: number | null
           notes?: string | null
           organization_id?: string | null
           owner_id: string
+          product_id?: string | null
+          product_variant_id?: string | null
           reserved_units?: number
-          service_id: string
+          service_id?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["availability_status"]
           updated_at?: string
         }
         Update: {
           availability_date?: string
+          availability_type?: Database["public"]["Enums"]["availability_quantity_type"]
+          available_quantity?: number | null
           available_units?: number
+          booking_cutoff_hours?: number | null
           created_at?: string
           end_time?: string | null
           id?: string
+          maximum_quantity?: number | null
+          metadata?: Json
+          minimum_quantity?: number | null
           notes?: string | null
           organization_id?: string | null
           owner_id?: string
+          product_id?: string | null
+          product_variant_id?: string | null
           reserved_units?: number
-          service_id?: string
+          service_id?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["availability_status"]
           updated_at?: string
@@ -3989,6 +4140,20 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_availability_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_availability_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -4714,6 +4879,10 @@ export type Database = {
         Args: { _birth_date: string; _travel_date?: string }
         Returns: number
       }
+      can_manage_availability_profile: {
+        Args: { _profile_id: string }
+        Returns: boolean
+      }
       can_manage_pricing_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -4885,6 +5054,13 @@ export type Database = {
         | "service_fee"
         | "custom"
       app_role: "admin" | "agent" | "provider" | "operations"
+      availability_quantity_type:
+        | "capacity"
+        | "units"
+        | "seats"
+        | "rooms"
+        | "vehicles"
+        | "slots"
       availability_request_status:
         | "pending"
         | "processing"
@@ -5083,6 +5259,14 @@ export type Database = {
         | "percentage"
         | "supplement"
         | "discount"
+      product_availability_mode: "calendar" | "request" | "external"
+      product_availability_rule_type:
+        | "weekly"
+        | "date_range"
+        | "blackout"
+        | "minimum_stay"
+        | "minimum_notice"
+      product_availability_status: "draft" | "active" | "inactive"
       product_category:
         | "accommodation"
         | "activity"
@@ -5371,6 +5555,14 @@ export const Constants = {
         "custom",
       ],
       app_role: ["admin", "agent", "provider", "operations"],
+      availability_quantity_type: [
+        "capacity",
+        "units",
+        "seats",
+        "rooms",
+        "vehicles",
+        "slots",
+      ],
       availability_request_status: [
         "pending",
         "processing",
@@ -5593,6 +5785,15 @@ export const Constants = {
         "supplement",
         "discount",
       ],
+      product_availability_mode: ["calendar", "request", "external"],
+      product_availability_rule_type: [
+        "weekly",
+        "date_range",
+        "blackout",
+        "minimum_stay",
+        "minimum_notice",
+      ],
+      product_availability_status: ["draft", "active", "inactive"],
       product_category: [
         "accommodation",
         "activity",
