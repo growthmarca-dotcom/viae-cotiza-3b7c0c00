@@ -2570,6 +2570,113 @@ export type Database = {
           },
         ]
       }
+      orchestrator_rules: {
+        Row: {
+          actions: Json
+          active: boolean
+          conditions: Json
+          created_at: string
+          id: string
+          name: string
+          organization_id: string | null
+          priority: number
+          rule_type: Database["public"]["Enums"]["orchestrator_rule_type"]
+          scope: Database["public"]["Enums"]["orchestrator_rule_scope"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions?: Json
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          id?: string
+          name: string
+          organization_id?: string | null
+          priority?: number
+          rule_type: Database["public"]["Enums"]["orchestrator_rule_type"]
+          scope?: Database["public"]["Enums"]["orchestrator_rule_scope"]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          actions?: Json
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string | null
+          priority?: number
+          rule_type?: Database["public"]["Enums"]["orchestrator_rule_type"]
+          scope?: Database["public"]["Enums"]["orchestrator_rule_scope"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orchestrator_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orchestrator_scores: {
+        Row: {
+          availability_score: number | null
+          calculation_metadata: Json
+          created_at: string
+          final_score: number | null
+          id: string
+          pricing_score: number | null
+          provider_score: number | null
+          quality_score: number | null
+          search_request_id: string
+          search_result_id: string
+        }
+        Insert: {
+          availability_score?: number | null
+          calculation_metadata?: Json
+          created_at?: string
+          final_score?: number | null
+          id?: string
+          pricing_score?: number | null
+          provider_score?: number | null
+          quality_score?: number | null
+          search_request_id: string
+          search_result_id: string
+        }
+        Update: {
+          availability_score?: number | null
+          calculation_metadata?: Json
+          created_at?: string
+          final_score?: number | null
+          id?: string
+          pricing_score?: number | null
+          provider_score?: number | null
+          quality_score?: number | null
+          search_request_id?: string
+          search_result_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orchestrator_scores_search_request_id_fkey"
+            columns: ["search_request_id"]
+            isOneToOne: false
+            referencedRelation: "search_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orchestrator_scores_search_result_id_fkey"
+            columns: ["search_result_id"]
+            isOneToOne: false
+            referencedRelation: "search_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_roles: {
         Row: {
           created_at: string
@@ -2679,6 +2786,98 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      package_components: {
+        Row: {
+          component_type: Database["public"]["Enums"]["package_component_type"]
+          created_at: string
+          id: string
+          metadata: Json
+          order_index: number
+          package_id: string
+          search_result_id: string
+        }
+        Insert: {
+          component_type?: Database["public"]["Enums"]["package_component_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json
+          order_index?: number
+          package_id: string
+          search_result_id: string
+        }
+        Update: {
+          component_type?: Database["public"]["Enums"]["package_component_type"]
+          created_at?: string
+          id?: string
+          metadata?: Json
+          order_index?: number
+          package_id?: string
+          search_result_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_components_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "package_compositions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_components_search_result_id_fkey"
+            columns: ["search_result_id"]
+            isOneToOne: false
+            referencedRelation: "search_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_compositions: {
+        Row: {
+          created_at: string
+          currency: string | null
+          id: string
+          metadata: Json
+          name: string | null
+          score: number | null
+          search_request_id: string
+          status: Database["public"]["Enums"]["package_composition_status"]
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          score?: number | null
+          search_request_id: string
+          status?: Database["public"]["Enums"]["package_composition_status"]
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json
+          name?: string | null
+          score?: number | null
+          search_request_id?: string
+          status?: Database["public"]["Enums"]["package_composition_status"]
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_compositions_search_request_id_fkey"
+            columns: ["search_request_id"]
+            isOneToOne: false
+            referencedRelation: "search_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       passenger_categories: {
         Row: {
@@ -3395,6 +3594,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "provider_evaluations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_preferences: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          organization_id: string
+          preference_type: Database["public"]["Enums"]["provider_preference_type"]
+          provider_id: string | null
+          updated_at: string
+          user_id: string
+          value: Json
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          organization_id: string
+          preference_type: Database["public"]["Enums"]["provider_preference_type"]
+          provider_id?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: Json
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string
+          preference_type?: Database["public"]["Enums"]["provider_preference_type"]
+          provider_id?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_preferences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_preferences_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "providers"
@@ -5195,6 +5445,7 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: boolean
       }
+      can_manage_package: { Args: { _package_id: string }; Returns: boolean }
       can_manage_pricing_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -5208,6 +5459,7 @@ export type Database = {
         Args: { _result_id: string }
         Returns: boolean
       }
+      can_read_package: { Args: { _package_id: string }; Returns: boolean }
       can_read_search_request: {
         Args: { _request_id: string }
         Returns: boolean
@@ -5554,12 +5806,34 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "expired"
+      orchestrator_rule_scope:
+        | "global"
+        | "destination"
+        | "product_category"
+        | "provider"
+      orchestrator_rule_type:
+        | "priority"
+        | "compatibility"
+        | "exclusion"
+        | "preference"
+        | "package"
       organization_role:
         | "provider"
         | "agency"
         | "wholesaler"
         | "corporate_client"
         | "partner"
+      package_component_type:
+        | "accommodation"
+        | "activity"
+        | "transfer"
+        | "rental"
+        | "other"
+      package_composition_status:
+        | "draft"
+        | "generated"
+        | "selected"
+        | "rejected"
       passenger_type: "adult" | "child" | "infant" | "senior" | "other"
       pricing_calculation_type: "fixed_amount" | "percentage" | "per_unit"
       pricing_condition_operator:
@@ -5610,6 +5884,12 @@ export type Database = {
         | "email"
         | "whatsapp"
         | "other"
+      provider_preference_type:
+        | "preferred"
+        | "blocked"
+        | "priority"
+        | "commission"
+        | "quality"
       provider_status: "active" | "inactive" | "suspended" | "archived"
       provider_type:
         | "wholesaler"
@@ -6108,12 +6388,38 @@ export const Constants = {
         "cancelled",
         "expired",
       ],
+      orchestrator_rule_scope: [
+        "global",
+        "destination",
+        "product_category",
+        "provider",
+      ],
+      orchestrator_rule_type: [
+        "priority",
+        "compatibility",
+        "exclusion",
+        "preference",
+        "package",
+      ],
       organization_role: [
         "provider",
         "agency",
         "wholesaler",
         "corporate_client",
         "partner",
+      ],
+      package_component_type: [
+        "accommodation",
+        "activity",
+        "transfer",
+        "rental",
+        "other",
+      ],
+      package_composition_status: [
+        "draft",
+        "generated",
+        "selected",
+        "rejected",
       ],
       passenger_type: ["adult", "child", "infant", "senior", "other"],
       pricing_calculation_type: ["fixed_amount", "percentage", "per_unit"],
@@ -6170,6 +6476,13 @@ export const Constants = {
         "email",
         "whatsapp",
         "other",
+      ],
+      provider_preference_type: [
+        "preferred",
+        "blocked",
+        "priority",
+        "commission",
+        "quality",
       ],
       provider_status: ["active", "inactive", "suspended", "archived"],
       provider_type: [
