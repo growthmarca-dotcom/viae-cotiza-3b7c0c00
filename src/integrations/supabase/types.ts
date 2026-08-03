@@ -4957,6 +4957,325 @@ export type Database = {
           },
         ]
       }
+      smart_quote_items: {
+        Row: {
+          availability_snapshot: Json
+          created_at: string
+          currency: string
+          id: string
+          item_type: Database["public"]["Enums"]["smart_quote_item_type"]
+          package_id: string | null
+          pricing_snapshot: Json
+          product_id: string | null
+          product_variant_id: string | null
+          quantity: number
+          smart_quote_id: string
+          total_amount: number
+          unit_amount: number
+        }
+        Insert: {
+          availability_snapshot?: Json
+          created_at?: string
+          currency?: string
+          id?: string
+          item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
+          package_id?: string | null
+          pricing_snapshot?: Json
+          product_id?: string | null
+          product_variant_id?: string | null
+          quantity?: number
+          smart_quote_id: string
+          total_amount?: number
+          unit_amount?: number
+        }
+        Update: {
+          availability_snapshot?: Json
+          created_at?: string
+          currency?: string
+          id?: string
+          item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
+          package_id?: string | null
+          pricing_snapshot?: Json
+          product_id?: string | null
+          product_variant_id?: string | null
+          quantity?: number
+          smart_quote_id?: string
+          total_amount?: number
+          unit_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_quote_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_items_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_items_smart_quote_id_fkey"
+            columns: ["smart_quote_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      smart_quote_pricing: {
+        Row: {
+          base_amount: number
+          calculated_amount: number
+          calculation_metadata: Json
+          created_at: string
+          currency: string
+          id: string
+          passenger_type: string | null
+          pricing_profile_id: string | null
+          pricing_rule_id: string | null
+          quantity: number
+          smart_quote_item_id: string
+        }
+        Insert: {
+          base_amount?: number
+          calculated_amount?: number
+          calculation_metadata?: Json
+          created_at?: string
+          currency?: string
+          id?: string
+          passenger_type?: string | null
+          pricing_profile_id?: string | null
+          pricing_rule_id?: string | null
+          quantity?: number
+          smart_quote_item_id: string
+        }
+        Update: {
+          base_amount?: number
+          calculated_amount?: number
+          calculation_metadata?: Json
+          created_at?: string
+          currency?: string
+          id?: string
+          passenger_type?: string | null
+          pricing_profile_id?: string | null
+          pricing_rule_id?: string | null
+          quantity?: number
+          smart_quote_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_quote_pricing_pricing_profile_id_fkey"
+            columns: ["pricing_profile_id"]
+            isOneToOne: false
+            referencedRelation: "product_pricing_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_pricing_pricing_rule_id_fkey"
+            columns: ["pricing_rule_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_pricing_smart_quote_item_id_fkey"
+            columns: ["smart_quote_item_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quote_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      smart_quote_sources: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json
+          organization_id: string | null
+          provider_id: string | null
+          smart_quote_id: string
+          source_type: Database["public"]["Enums"]["smart_quote_source_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          organization_id?: string | null
+          provider_id?: string | null
+          smart_quote_id: string
+          source_type?: Database["public"]["Enums"]["smart_quote_source_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          organization_id?: string | null
+          provider_id?: string | null
+          smart_quote_id?: string
+          source_type?: Database["public"]["Enums"]["smart_quote_source_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_quote_sources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_sources_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quote_sources_smart_quote_id_fkey"
+            columns: ["smart_quote_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      smart_quote_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          smart_quote_id: string
+          snapshot: Json
+          status: Database["public"]["Enums"]["smart_quote_version_status"]
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          smart_quote_id: string
+          snapshot?: Json
+          status?: Database["public"]["Enums"]["smart_quote_version_status"]
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          smart_quote_id?: string
+          snapshot?: Json
+          status?: Database["public"]["Enums"]["smart_quote_version_status"]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_quote_versions_smart_quote_id_fkey"
+            columns: ["smart_quote_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      smart_quotes: {
+        Row: {
+          agent_id: string | null
+          client_id: string | null
+          created_at: string
+          currency: string
+          destination_city: string | null
+          destination_country: string | null
+          destination_state: string | null
+          end_date: string | null
+          id: string
+          organization_id: string | null
+          passengers_metadata: Json
+          snapshot: Json
+          source: Database["public"]["Enums"]["smart_quote_source"]
+          start_date: string | null
+          status: Database["public"]["Enums"]["smart_quote_status"]
+          title: string
+          total_amount: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          end_date?: string | null
+          id?: string
+          organization_id?: string | null
+          passengers_metadata?: Json
+          snapshot?: Json
+          source?: Database["public"]["Enums"]["smart_quote_source"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["smart_quote_status"]
+          title: string
+          total_amount?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          destination_city?: string | null
+          destination_country?: string | null
+          destination_state?: string | null
+          end_date?: string | null
+          id?: string
+          organization_id?: string | null
+          passengers_metadata?: Json
+          snapshot?: Json
+          source?: Database["public"]["Enums"]["smart_quote_source"]
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["smart_quote_status"]
+          title?: string
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "smart_quotes_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quotes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tariff_plans: {
         Row: {
           created_at: string
@@ -5700,6 +6019,7 @@ export type Database = {
         Args: { _result_id: string }
         Returns: boolean
       }
+      can_manage_smart_quote: { Args: { _quote_id: string }; Returns: boolean }
       can_read_package: { Args: { _package_id: string }; Returns: boolean }
       can_read_package_template: {
         Args: { _template_id: string }
@@ -5710,6 +6030,7 @@ export type Database = {
         Returns: boolean
       }
       can_read_search_result: { Args: { _result_id: string }; Returns: boolean }
+      can_read_smart_quote: { Args: { _quote_id: string }; Returns: boolean }
       claim_admin_if_none: { Args: never; Returns: boolean }
       compute_commission: {
         Args: {
@@ -6250,6 +6571,25 @@ export type Database = {
         | "rental"
         | "package"
       search_source_type: "internal" | "api" | "manual"
+      smart_quote_item_type:
+        | "accommodation"
+        | "activity"
+        | "excursion"
+        | "transfer"
+        | "rental"
+        | "package"
+        | "other"
+      smart_quote_source: "manual" | "orchestrator" | "package" | "external"
+      smart_quote_source_type: "internal" | "provider" | "api" | "manual"
+      smart_quote_status:
+        | "draft"
+        | "calculating"
+        | "ready"
+        | "sent"
+        | "accepted"
+        | "rejected"
+        | "expired"
+      smart_quote_version_status: "draft" | "published" | "retired"
       tariff_condition_type:
         | "nights"
         | "operating_days"
@@ -6885,6 +7225,27 @@ export const Constants = {
         "package",
       ],
       search_source_type: ["internal", "api", "manual"],
+      smart_quote_item_type: [
+        "accommodation",
+        "activity",
+        "excursion",
+        "transfer",
+        "rental",
+        "package",
+        "other",
+      ],
+      smart_quote_source: ["manual", "orchestrator", "package", "external"],
+      smart_quote_source_type: ["internal", "provider", "api", "manual"],
+      smart_quote_status: [
+        "draft",
+        "calculating",
+        "ready",
+        "sent",
+        "accepted",
+        "rejected",
+        "expired",
+      ],
+      smart_quote_version_status: ["draft", "published", "retired"],
       tariff_condition_type: [
         "nights",
         "operating_days",
