@@ -969,3 +969,78 @@ como *contraparte proveedora*, no como tenant.
 
 **Conclusión**: no se debe activar aislamiento SaaS en el núcleo operativo hasta
 completar Fases 1–3. Ningún cambio fue realizado en esta auditoría.
+
+---
+
+# Booking Organization Ownership Model (v1.10.7.2.1.3)
+
+Fase de **fundación**: se crearon únicamente dos funciones de base de datos.
+No hubo backfill, no se crearon columnas ni triggers, no se modificó RLS y
+ningún dato existente fue alterado.
+
+## 1. Semántica formal
+
+`bookings.organization_id` representa:
+
+> **La organización comercial propietaria de la operación turística.**
+
+**NO** representa proveedor, prestador, empresa externa ni la organización del
+servicio. Esas relaciones viven en `booking_services.provider_id`,
+`transport_services.provider_id` y `providers.organization_id`.
+
+Regla derivada: todo lo que cuelga de la booking (`booking_services`,
+`transport_services`, `booking_passengers`, `booking_service_economics`,
+`commissions`) hereda pertenencia de la booking; su propio `organization_id`
+—cuando existe— se interpreta como **contraparte proveedora**, nunca como tenant.
+
+## 2. Funciones creadas
+
+### `resolve_booking_organization(_creator_user_id uuid, _agent_id uuid default null, _explicit_org_id uuid default null) returns jsonb`
+
+Prioridad de resolución:
+
+1. `_explicit_org_id` presente y existente → `source=explicit`, `confidence=high`.
+2. `_agent_id` → `agents.user_id` → `organization_members` activas.
+   Única → `source=agent_membership`, `confidence=high`.
+3. Sin agente → membresías activas del creador. Única → `creator_membership`, `confidence=medium`.
+4. Múltiples candidatas → **no elige**: `error=ambiguous_organization` + `candidates[]`.
+5. Ninguna → `error=no_organization_found`.
+
+### `validate_booking_organization(_booking_id uuid) returns jsonb`
+
+Verifica que la booking exista, que tenga `organization_id`, que la organización
+exista y esté `active`, y marca `provider_semantics_conflict` cuando esa
+organización también actúa como proveedor en `providers` (violación conceptual
+del modelo de propiedad).
+
+Seguridad de ambas: `SECURITY DEFINER`, `SET search_path = public`,
+`REVOKE ALL ... FROM PUBLIC, anon`, `GRANT EXECUTE TO authenticated, service_role`.
+
+## 3. Triggers futuros (documentado, NO implementado)
+
+Uso previsto en una fase posterior: trigger `BEFORE INSERT ON bookings` que, si
+`NEW.organization_id IS NULL`, invoque `resolve_booking_organization` y aborte con
+error explícito cuando el resultado sea ambiguo. **Hoy no existe ningún trigger.**
+
+## 4. Reporte de bookings existentes (solo lectura, sin cambios)
+
+| booking | user_id | assigned_agent_id | organization_id actual | org detectada | confianza |
+|---|---|---|---|---|---|
+| 03880bd5… | feb6d26c… | 155ae261… | NULL | — | ambigua (2 membresías) |
+| 21251e01… | feb6d26c… | 155ae261… | NULL | — | ambigua (2 membresías) |
+| 6006cc6c… | feb6d26c… | NULL | NULL | — | ambigua (2 membresías) |
+
+Las 3 reservas quedan sin resolución automática: el único usuario operativo es
+miembro activo de **ambas** organizaciones (`04b15cb8…`, `1eabdb41…`), por lo que la
+función devuelve `ambiguous_organization` en los tres casos. Se requiere decisión
+humana antes de cualquier backfill.
+
+## 5. Riesgos pendientes
+
+1. **Ambigüedad total del dataset actual**: 3/3 bookings sin resolución automática.
+2. **Sin trigger**: nuevas bookings pueden seguir naciendo con `organization_id` NULL.
+3. **Doble semántica** de `organization_id` en tablas de servicio/economía todavía sin
+   separar en columna propia (`provider_organization_id`).
+4. **`quotations` y `booking_passengers`** aún sin `organization_id`.
+5. **RLS por organización sigue inactivo** en el núcleo operativo: el aislamiento SaaS
+   real depende de las fases 2–4 de la auditoría v1.10.7.2.1.2.

@@ -294,3 +294,73 @@ export function computeBookingStats(
     excluded: converted.filter((v) => v == null).length,
   };
 }
+
+/* ------------------------------------------------------------------------- *
+ * Booking Organization Ownership (v1.10.7.2.1.3)
+ *
+ * `bookings.organization_id` = organización comercial PROPIETARIA de la
+ * operación turística. NO es el proveedor, prestador, empresa externa ni la
+ * organización del servicio (esas viven en booking_services.provider_id /
+ * transport_services.provider_id / providers.organization_id).
+ *
+ * Esta fase solo expone los tipos y el contrato de resolución: no hay backfill,
+ * no hay triggers y no cambió ninguna política RLS.
+ * ------------------------------------------------------------------------- */
+
+export type BookingOrganizationSource =
+  | "explicit"
+  | "agent_membership"
+  | "creator_membership"
+  | "none";
+
+export type BookingOrganizationConfidence = "high" | "medium" | "ambiguous" | "none";
+
+export type BookingOrganizationError =
+  | "organization_not_found"
+  | "ambiguous_organization"
+  | "no_organization_found";
+
+/** Resultado de `resolve_booking_organization(_creator_user_id, _agent_id, _explicit_org_id)`. */
+export type BookingOrganizationResolution = {
+  organization_id: string | null;
+  source: BookingOrganizationSource;
+  confidence: BookingOrganizationConfidence;
+  error: BookingOrganizationError | null;
+  /** Presente solo cuando `error === "ambiguous_organization"`. */
+  candidates?: string[];
+};
+
+export type BookingOrganizationValidationError =
+  | "booking_not_found"
+  | "organization_missing"
+  | "organization_not_found"
+  | "organization_inactive"
+  | "organization_is_provider_scope";
+
+/** Resultado de `validate_booking_organization(_booking_id)`. */
+export type BookingOrganizationValidation = {
+  valid: boolean;
+  organization_id?: string | null;
+  organization_status?: string;
+  provider_semantics_conflict?: boolean;
+  error: BookingOrganizationValidationError | null;
+};
+
+export const BOOKING_ORG_SOURCE_LABELS: Record<BookingOrganizationSource, string> = {
+  explicit: "Organización indicada explícitamente",
+  agent_membership: "Membresía del agente asignado",
+  creator_membership: "Membresía del usuario creador",
+  none: "Sin origen determinado",
+};
+
+export const BOOKING_ORG_CONFIDENCE_LABELS: Record<BookingOrganizationConfidence, string> = {
+  high: "Alta",
+  medium: "Media",
+  ambiguous: "Ambigua",
+  none: "Sin datos",
+};
+
+/** `true` cuando la resolución es apta para asignarse sin intervención humana. */
+export function isBookingOrganizationResolved(r: BookingOrganizationResolution): boolean {
+  return !!r.organization_id && r.error === null;
+}
