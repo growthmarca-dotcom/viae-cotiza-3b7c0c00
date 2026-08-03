@@ -870,3 +870,102 @@ organización activa por usuario (o el criterio de precedencia formal) y poblar
 `bookings.organization_id`. Con volumen actual mínimo (3 clientes, 1 lead,
 1 oportunidad, 1 agente, 0 pasajeros) la corrección manual es trivial hoy y
 mucho más costosa después.
+
+---
+
+# Booking Organization Scoping Audit (v1.10.7.2.1.2)
+
+Auditoría **solo lectura**: no se crearon tablas ni columnas, no se modificó RLS,
+no se ejecutaron migraciones ni se cambiaron código o datos.
+
+Flujo auditado: `bookings → quotations → booking_services → transport_services →
+booking_passengers → booking_service_economics / commissions`.
+
+## 1. Tablas analizadas
+
+| Tabla | organization_id | Dueño actual del registro | Notas |
+|---|---|---|---|
+| `bookings` | ✅ existe, nullable | `user_id` (creador) + `assigned_agent_id`, `operations_owner_id` | 3 filas, **100% organization_id NULL** |
+| `quotations` | ❌ no existe | `user_id` + `client_id` | 15 filas; sin agente propio |
+| `booking_services` | ✅ nullable | `user_id`, `responsible_user_id`, `provider_id` | 0 filas |
+| `transport_services` | ✅ nullable | `user_id`, `provider_id`, recursos (driver/vehicle) | 0 filas |
+| `booking_passengers` | ❌ no existe | `user_id` + `booking_id` (+ `person_id`) | 0 filas |
+| `booking_service_economics` | ✅ nullable | `user_id`, `provider_id` | 0 filas |
+| `commissions` | ✅ nullable | `user_id`, `agent_id`, `booking_id`, `quotation_id` | 0 filas |
+| `agents` | ❌ no existe | `created_by`, `user_id` (nullable) | 1 fila |
+| `providers` / `products` | ✅ existe | `user_id` | entidades de catálogo |
+| `organizations` / `organization_members` | — | `user_id` / membresías | 2 orgs, 2 membresías |
+
+## 2. Relaciones encontradas
+
+- **¿Quién crea una booking?** Un usuario autenticado: `bookings.user_id` es el
+  creador real. `assigned_agent_id` es comercial y `operations_owner_id` operativo;
+  ninguno de los tres implica pertenencia organizacional.
+- **Booking ↔ Quotation**: `bookings.quotation_id` es **nullable** — existen reservas
+  sin cotización origen. La quotation **no tiene** `organization_id` ni `agent_id`.
+- **Servicios operativos**: `booking_services` y `transport_services` cuelgan de
+  `booking_id` (NOT NULL) y además tienen `organization_id` y `provider_id` propios.
+  Es decir: **pueden apuntar a una organización distinta de la de la booking** (caso
+  legítimo: la marca vendedora contrata un proveedor de otra organización).
+- **Pasajeros**: sin organización propia; heredan siempre de la booking.
+- **Economía / comisiones**: `booking_service_economics` y `commissions` ya llevan
+  `organization_id` (rol de *contraparte del acuerdo*, no de tenant vendedor).
+- **Agentes**: `agents` no tiene organización; el vínculo es `agents.user_id →
+  organization_members`. Un agente puede ser miembro de varias organizaciones
+  (hoy ya existe 1 usuario con 2 membresías), por lo que **sí podría vender bajo
+  varias marcas** y derivar la organización desde el usuario es ambiguo.
+- **Proveedor ≠ Organización**: `providers.organization_id` demuestra que el proveedor
+  es un *rol comercial* de una organización, no el tenant dueño del dato. Confundirlos
+  daría a un proveedor visibilidad de reservas ajenas.
+
+## 3. Fuente de verdad recomendada
+
+Opciones evaluadas: **A)** Booking · **B)** Quotation · **C)** Agent membership ·
+**D)** Organización del creador · **E)** Combinación de reglas.
+
+**Recomendación: A con resolución en cascada (variante de E).**
+`bookings.organization_id` es la **única fuente de verdad del núcleo operativo**;
+todo lo que cuelga de la booking (servicios, pasajeros, economía, comisiones) hereda
+de ella. La cascada solo se usa para *determinar* ese valor al crear la booking:
+
+1. organización explícita elegida en la UI (cuando el usuario es multi-org);
+2. si no, organización del `assigned_agent_id` vía `organization_members` activo;
+3. si no, única membresía activa del `user_id` creador;
+4. si hay ambigüedad → error explícito, nunca adivinar.
+
+Quotation (B) se descarta como fuente por no tener el campo y por ser opcional;
+Agent membership (C) y creador (D) se descartan como fuente porque un usuario puede
+pertenecer a varias organizaciones. `organization_id` en servicios se reinterpreta
+como *contraparte proveedora*, no como tenant.
+
+## 4. Riesgos
+
+1. **Ambigüedad multi-org**: 1 usuario con 2 membresías → backfill por `user_id` no
+   es determinista para reservas creadas por él.
+2. **Backfill vacío**: las 3 bookings existentes tienen `organization_id` NULL; activar
+   RLS por organización hoy dejaría esas reservas invisibles para todos menos admin global.
+3. **Semántica doble de `organization_id`** en `booking_services`, `transport_services`,
+   `booking_service_economics` y `commissions`: si se usa como tenant y como proveedor
+   a la vez, un proveedor podría leer reservas de otra marca.
+4. **Quotation huérfana**: sin `organization_id`, las 15 cotizaciones no pueden aislarse
+   ni heredar hacia atrás desde una booking inexistente.
+5. **Pasajeros e identidad**: `booking_passengers` sin organización obliga a JOIN con
+   `bookings` en cada policy (coste y riesgo de olvido en una policy nueva).
+
+## 5. Orden de implementación sugerido (NO implementado)
+
+- **Fase 1 — Estructura**: `organization_id` nullable + FK + índice en `quotations`,
+  `booking_passengers` y `agents`; en las tablas que ya lo tienen, separar semántica
+  (documentar `organization_id` = tenant vs `provider_organization_id` = contraparte).
+- **Fase 2 — Backfill seguro**: resolver por cascada solo cuando la membresía activa es
+  única; dejar NULL y registrar en `audit_log` los casos ambiguos. Bookings primero,
+  luego propagar a quotation, servicios, pasajeros y economía por `booking_id`.
+- **Fase 3 — Validación de excepciones**: reporte de filas NULL, reservas con proveedor
+  de otra organización, y usuarios multi-org; resolución manual desde `/admin`.
+- **Fase 4 — RLS progresivo**: helpers `booking_org_can_read/write`; activar primero en
+  módulos nuevos, luego en bookings con cláusula transitoria
+  `organization_id IS NULL OR is_member_of(organization_id)`, y recién cuando el NULL
+  llegue a cero endurecer a pertenencia estricta.
+
+**Conclusión**: no se debe activar aislamiento SaaS en el núcleo operativo hasta
+completar Fases 1–3. Ningún cambio fue realizado en esta auditoría.
