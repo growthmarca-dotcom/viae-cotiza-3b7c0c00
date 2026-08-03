@@ -6270,6 +6270,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      org_identity_can_admin: { Args: { _org_id: string }; Returns: boolean }
+      org_identity_can_delete: { Args: { _org_id: string }; Returns: boolean }
+      org_identity_can_read: { Args: { _org_id: string }; Returns: boolean }
+      org_identity_can_write: { Args: { _org_id: string }; Returns: boolean }
       provider_in_package_template: {
         Args: { _template_id: string }
         Returns: boolean
