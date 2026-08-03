@@ -6497,6 +6497,14 @@ export type Database = {
           score: number
         }[]
       }
+      resolve_booking_organization: {
+        Args: {
+          _agent_id?: string
+          _creator_user_id: string
+          _explicit_org_id?: string
+        }
+        Returns: Json
+      }
       simulate_commission: {
         Args: { _booking_service_id: string }
         Returns: Json
@@ -6512,6 +6520,10 @@ export type Database = {
       sync_transport_resource_state: {
         Args: { _resource_id: string }
         Returns: undefined
+      }
+      validate_booking_organization: {
+        Args: { _booking_id: string }
+        Returns: Json
       }
     }
     Enums: {
