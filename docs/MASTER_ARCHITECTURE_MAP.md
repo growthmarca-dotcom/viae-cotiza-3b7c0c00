@@ -422,3 +422,37 @@ ya implementados (Disponibilidad, Tarifario, Itinerarios, Comercial, Operaciones
 resultado se materializa en la **Reserva** y su **Expediente 360°**, desde donde se
 simulan **Comisiones**; las **Liquidaciones** reales siguen planificadas.
 
+---
+
+# CRM 360 Identity Layer
+
+Capa central de identidad de personas (v1.10.7.1). Un único maestro por
+organización que unifica a quien hoy aparece duplicado en `clients`, `leads`,
+`booking_passengers`, `agents` y contactos de proveedores.
+
+```
+persons
+   |
+person_roles
+```
+
+- `persons` — identidad: nombre, contacto, documento, nacimiento, nacionalidad,
+  idioma, avatar y notas. Siempre ligada a `organizations.id` (White Label).
+- `person_roles` — papeles simultáneos de esa persona en la organización, con el
+  enum `person_role_type`: `customer`, `passenger`, `agent`, `supplier_contact`,
+  `driver`, `employee` (extensible).
+- Seguridad: RLS activa con las funciones existentes (`is_approved`, `has_role`,
+  `is_operations`). Lectura para usuarios aprobados, escritura Administración /
+  Operaciones, borrado solo Administración. No hay sistema paralelo de permisos.
+- Alcance actual: **solo estructura**. Sin vínculo con `bookings`,
+  `booking_passengers`, `quotations` ni `smart_quotes`.
+
+## Roadmap del CRM 360
+
+| Versión | Alcance | Estado |
+| --- | --- | --- |
+| v1.10.7.1 Identity Core | `persons`, `person_roles`, enum de roles, RLS y trigger de `updated_at` | ✅ |
+| v1.10.7.2 Customer Profiles | Fichas de persona, preferencias, deduplicación y UI de búsqueda | 🔵 |
+| v1.10.7.3 CRM Integration | Vinculación con `clients`, `leads`, `booking_passengers`, `quotations` y `smart_quotes` | 🔵 |
+
+
