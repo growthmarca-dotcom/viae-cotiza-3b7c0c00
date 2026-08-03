@@ -791,3 +791,82 @@ elimina un cliente, lead, pasajero o agente. Migración idempotente
 | v1.10.7.2.1 Person Link Layer | `person_id` nullable + FK + índices en `clients`, `leads`, `booking_passengers`, `agents` | ✅ |
 | v1.10.7.2.2 Backfill de identidad | creación de `persons` desde registros existentes con deduplicación | 🔵 |
 | v1.10.7.2.3 Customer & Traveler Profiles | ficha 360, búsqueda unificada e historial por persona | 🔵 |
+
+# CRM Organization Scoping Audit (v1.10.7.2.1.1)
+
+Auditoría **solo lectura**: no se crearon tablas ni columnas, no se modificó RLS,
+no se ejecutaron migraciones ni se cambió código o datos.
+
+## 1. Tablas CRM legacy auditadas
+
+| Tabla | Relación con usuario | FK relevantes | Campos de propiedad | Filas |
+| --- | --- | --- | --- | --- |
+| `clients` | `user_id` → `auth.users` (CASCADE) | `person_id` → `persons` | `user_id` (dueño de facto) | 3 |
+| `leads` | vía `assigned_agent_id` | `client_id`, `opportunity_id`, `quotation_id`, `assigned_agent_id`, `person_id` | `assigned_agent_id` | 1 |
+| `opportunities` | vía `assigned_agent_id` / cliente | `client_id`, `quotation_id`, `assigned_agent_id` | `assigned_agent_id` | 1 |
+| `agents` | `user_id` → `auth.users` (nullable), `created_by` | `person_id` | `created_by`, `user_id` | 1 |
+| `booking_passengers` | `user_id` (creador) | `booking_id` → `bookings`, `person_id` | `user_id` | 0 |
+
+Ninguna de las cinco tablas tiene `organization_id`. La única tabla del flujo con
+esa columna es `bookings` (`organization_id` → `organizations`, ON DELETE SET NULL),
+y hoy está **NULL en las 3 reservas existentes**.
+
+## 2. Origen posible de `organization_id`
+
+| Tabla | Fuente candidata | Nivel de confianza |
+| --- | --- | --- |
+| `clients` | `user_id` → `organization_members.user_id` (activo) | Parcialmente determinista |
+| `leads` | `assigned_agent_id` → `agents.user_id` → `organization_members` | Parcialmente determinista |
+| `opportunities` | `assigned_agent_id`, con respaldo en `clients.organization_id` | Parcialmente determinista |
+| `agents` | `user_id` → `organization_members`; si es NULL, `created_by` | Parcialmente determinista |
+| `booking_passengers` | `booking_id` → `bookings.organization_id` | Imposible hoy (origen vacío) |
+
+Motivo de la degradación: `organization_members` permite N:M. La verificación
+mostró 3 clientes que resuelven a 6 membresías activas, es decir usuarios que
+pertenecen a más de una organización → la resolución por `user_id` **no es única**.
+`organizations.user_id` (2 filas con dueño) sirve como desempate únicamente
+cuando el usuario es dueño de una sola organización.
+
+## 3. Flujos actuales
+
+- **Cliente**: lo crea un usuario autenticado (agente o admin) y queda atado a
+  `user_id`; la organización es implícita, nunca persistida.
+- **Lead**: entra por la bandeja `/leads` y se asigna manual o automáticamente a
+  un agente; su pertenencia real es la del agente asignado.
+- **Opportunity**: tiene agente asignado y cliente asociado; hereda pertenencia
+  por dos caminos que pueden discrepar.
+- **Agent**: hoy no puede pertenecer formalmente a varias organizaciones desde
+  `agents`; la relación multi-organización vive en `organization_members`.
+- **Booking passengers**: siempre cuelgan de una reserva, y `bookings` sí tiene
+  `organization_id`; el camino existe pero el dato está vacío.
+
+## 4. Riesgo de backfill
+
+| Clasificación | Tablas | Condición |
+| --- | --- | --- |
+| Seguro | ninguna | requiere membresía única por usuario |
+| Parcial | `clients`, `agents`, `leads`, `opportunities` | resoluble con regla de precedencia (owner > membresía única > `created_by`) |
+| Manual | `booking_passengers` y todo caso con membresía múltiple | exige primero poblar `bookings.organization_id` y revisión humana |
+
+Riesgo principal: un backfill automático por `user_id` asignaría organización
+arbitraria a usuarios multi-organización, generando fugas de datos al activar RLS.
+
+## 5. Propuesta de migración (no implementada)
+
+1. **Fase 1** — `organization_id uuid` nullable + FK + índice en las cinco tablas.
+2. **Fase 2** — poblar `bookings.organization_id` (prerrequisito de pasajeros).
+3. **Fase 3** — backfill determinista: dueño único → membresía activa única →
+   `created_by`; herencia `booking_passengers` ← `bookings`, `opportunities` ←
+   `clients`, `leads` ← agente.
+4. **Fase 4** — informe de excepciones y resolución manual de ambigüedades.
+5. **Fase 5** — `NOT NULL` solo donde la cobertura sea 100 %.
+6. **Fase 6** — activar RLS por organización con los helpers `is_member_of` /
+   `has_org_role`, manteniendo el acceso legacy de administradores globales.
+
+## 6. Recomendación
+
+No agregar `organization_id` hasta cerrar dos precondiciones: definir la
+organización activa por usuario (o el criterio de precedencia formal) y poblar
+`bookings.organization_id`. Con volumen actual mínimo (3 clientes, 1 lead,
+1 oportunidad, 1 agente, 0 pasajeros) la corrección manual es trivial hoy y
+mucho más costosa después.
