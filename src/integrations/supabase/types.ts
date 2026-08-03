@@ -3264,6 +3264,107 @@ export type Database = {
         }
         Relationships: []
       }
+      person_roles: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          person_id: string
+          role_type: Database["public"]["Enums"]["person_role_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          person_id: string
+          role_type: Database["public"]["Enums"]["person_role_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          person_id?: string
+          role_type?: Database["public"]["Enums"]["person_role_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_roles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persons: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          created_at: string
+          document_number: string | null
+          document_type: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          language: string | null
+          last_name: string | null
+          nationality: string | null
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          language?: string | null
+          last_name?: string | null
+          nationality?: string | null
+          notes?: string | null
+          organization_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          created_at?: string
+          document_number?: string | null
+          document_type?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          language?: string | null
+          last_name?: string | null
+          nationality?: string | null
+          notes?: string | null
+          organization_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_conditions: {
         Row: {
           condition_type: Database["public"]["Enums"]["pricing_condition_type"]
@@ -6432,6 +6533,13 @@ export type Database = {
       package_template_status: "draft" | "active" | "inactive" | "archived"
       package_version_status: "draft" | "published" | "retired"
       passenger_type: "adult" | "child" | "infant" | "senior" | "other"
+      person_role_type:
+        | "customer"
+        | "passenger"
+        | "agent"
+        | "supplier_contact"
+        | "driver"
+        | "employee"
       pricing_calculation_type: "fixed_amount" | "percentage" | "per_unit"
       pricing_condition_operator:
         | "equals"
@@ -7069,6 +7177,14 @@ export const Constants = {
       package_template_status: ["draft", "active", "inactive", "archived"],
       package_version_status: ["draft", "published", "retired"],
       passenger_type: ["adult", "child", "infant", "senior", "other"],
+      person_role_type: [
+        "customer",
+        "passenger",
+        "agent",
+        "supplier_contact",
+        "driver",
+        "employee",
+      ],
       pricing_calculation_type: ["fixed_amount", "percentage", "per_unit"],
       pricing_condition_operator: [
         "equals",
