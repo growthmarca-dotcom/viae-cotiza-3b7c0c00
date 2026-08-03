@@ -56,11 +56,32 @@ export const DEFAULT_PRIORITY_ORDER: AvailabilitySourceType[] = [
   "manual",
 ];
 
+/** v1.10.2 — granularidad de cupo cuando la fila describe un producto del catálogo. */
+export type AvailabilityQuantityType =
+  | "capacity"
+  | "units"
+  | "seats"
+  | "rooms"
+  | "vehicles"
+  | "slots";
+
+export const AVAILABILITY_QUANTITY_TYPE_LABELS: Record<AvailabilityQuantityType, string> = {
+  capacity: "Capacidad",
+  units: "Unidades",
+  seats: "Asientos",
+  rooms: "Habitaciones",
+  vehicles: "Vehículos",
+  slots: "Turnos",
+};
+
 export interface AvailabilitySource {
   id: string;
   owner_id: string;
   organization_id: string | null;
   provider_id: string | null;
+  /** v1.10.2 — vínculo opcional con el Inventario Global. */
+  product_id: string | null;
+  product_variant_id: string | null;
   source_type: AvailabilitySourceType;
   source_name: string;
   priority: number;
@@ -74,17 +95,28 @@ export interface ServiceAvailability {
   id: string;
   owner_id: string;
   organization_id: string | null;
-  service_id: string;
+  /** Nulo cuando la fila describe un producto del catálogo en lugar de un servicio. */
+  service_id: string | null;
+  /** v1.10.2 — vínculo opcional con el Inventario Global. */
+  product_id: string | null;
+  product_variant_id: string | null;
   availability_date: string;
   start_time: string | null;
   end_time: string | null;
   available_units: number;
   reserved_units: number;
+  availability_type: AvailabilityQuantityType;
+  available_quantity: number | null;
+  minimum_quantity: number | null;
+  maximum_quantity: number | null;
+  booking_cutoff_hours: number | null;
+  metadata: Record<string, unknown>;
   status: AvailabilityStatus;
   notes: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export interface AvailabilityCacheEntry {
   id: string;
