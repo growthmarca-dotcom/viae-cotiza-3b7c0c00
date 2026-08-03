@@ -540,12 +540,62 @@ reescribió y sigue apoyado en `has_role`, `is_approved`, `is_operations`.
 - Cada `agents.user_id` con `access_status = 'linked'` → miembro `agent` de la
   organización de su creador. Idempotente (`ON CONFLICT DO NOTHING`).
 
+# SaaS Membership Lifecycle (v1.10.7.1.3)
+
+```
+Organization
+     ↓
+Invitation          (organization_invitations, status = pending)
+     ↓
+Organization Member (organization_members, status = active)
+     ↓
+Access              (RLS por pertenencia: org_identity_can_* / is_member_of)
+```
+
+| Tabla | Rol en el ciclo |
+| --- | --- |
+| `organization_members` | usuarios con **acceso activo** a la organización y su rol interno |
+| `organization_invitations` | **flujo previo al acceso**: correo invitado, rol propuesto, token y vencimiento |
+
+## organization_invitations
+
+- Campos: `organization_id`, `email`, `role` (`organization_member_role`),
+  `status` (`organization_member_status`, default `pending`), `invited_by`,
+  `token` (uuid único), `expires_at` (default +14 días), `accepted_at`,
+  `accepted_by`, `created_at`, `updated_at`.
+- Índices: `organization_id`, `lower(email)`, `token` (único), `status`.
+- Índice único parcial `uq_org_invitations_pending` → **no se permiten dos
+  invitaciones pendientes** para el mismo correo en la misma organización.
+- Trigger `set_updated_at_org_invitations` (reutiliza `tg_set_updated_at`).
+
+## RLS de organization_invitations
+
+- Lectura: Administración global o miembro de la organización (`is_member_of`).
+- Alta / edición: Administración global, `organization_owner` u `organization_admin`.
+- Baja: Administración global o `organization_owner`.
+- Sin acceso `anon`.
+
+## RPC de aprovisionamiento (SECURITY DEFINER, solo `authenticated`)
+
+| Función | Permiso | Efecto |
+| --- | --- | --- |
+| `invite_organization_member(_org_id, _email, _role)` | admin global, owner, org admin | crea invitación `pending` con `invited_by = auth.uid()` |
+| `accept_organization_invitation(_token)` | usuario autenticado con token válido | valida token y expiración, crea/reactiva `organization_members` activo con el rol invitado, marca la invitación aceptada (`accepted_at`, `accepted_by`) |
+| `change_organization_member_role(_member_id, _new_role)` | admin global, owner, org admin | cambia rol e `is_owner`; bloquea quitar el **último owner activo** |
+| `remove_organization_member(_member_id)` | admin global, owner | pasa el miembro a `inactive` (no borra historial); bloquea al último owner activo |
+
+Compatibilidad: no se crean invitaciones históricas, `organization_members` no se
+modifica y la migración es idempotente. `bookings`, `quotations`, `smart_quotes`,
+`persons`, `person_roles` y los motores existentes quedan intactos.
+
 ## Roadmap de la capa de identidad SaaS
 
 | Versión | Alcance | Estado |
 | --- | --- | --- |
 | v1.10.7.1.1 Membership Layer | `organization_members`, enums, helpers, RLS y backfill | ✅ |
 | v1.10.7.1.2 Identity Security Alignment | RLS de `persons`/`person_roles` acotada por pertenencia | ✅ |
+| v1.10.7.1.3 Membership Provisioning Layer | `organization_invitations` + RPC de invitación, aceptación, cambio de rol y revocación | ✅ |
 | v1.10.7.1.2b Migración progresiva | acotar inventario y motores nuevos por pertenencia | 🔵 |
-| v1.10.7.1.3 Gestión de miembros | UI de invitación, alta/baja y cambio de rol por organización | 🔵 |
+| v1.10.7.1.4 UI de miembros | pantalla de gestión de miembros e invitaciones por organización | 🔵 |
+
 
