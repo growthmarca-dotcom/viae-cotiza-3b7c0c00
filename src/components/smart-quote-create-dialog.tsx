@@ -19,9 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CURRENCIES } from "@/lib/currency";
 import { createSmartQuoteFromOpportunity } from "@/lib/smartQuotes";
-
-const CURRENCIES = ["USD", "ARS", "EUR", "BRL"];
 
 /**
  * Alta de una Smart Quote desde una oportunidad (v1.10.9.2).
@@ -106,7 +105,7 @@ export function SmartQuoteCreateDialog({
               />
             </div>
             <div>
-              <Label>Moneda</Label>
+              <Label>Moneda de la cotización</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger className="mt-1.5">
                   <SelectValue />
@@ -119,6 +118,9 @@ export function SmartQuoteCreateDialog({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Es la moneda única de la cotización: todos los ítems se cargan en esta moneda.
+              </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>

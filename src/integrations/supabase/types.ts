@@ -5448,7 +5448,7 @@ export type Database = {
         Row: {
           availability_snapshot: Json
           created_at: string
-          currency: string
+          currency: string | null
           description: string | null
           id: string
           item_type: Database["public"]["Enums"]["smart_quote_item_type"]
@@ -5465,7 +5465,7 @@ export type Database = {
         Insert: {
           availability_snapshot?: Json
           created_at?: string
-          currency?: string
+          currency?: string | null
           description?: string | null
           id?: string
           item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
@@ -5482,7 +5482,7 @@ export type Database = {
         Update: {
           availability_snapshot?: Json
           created_at?: string
-          currency?: string
+          currency?: string | null
           description?: string | null
           id?: string
           item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
@@ -5533,7 +5533,7 @@ export type Database = {
           calculated_amount: number
           calculation_metadata: Json
           created_at: string
-          currency: string
+          currency: string | null
           id: string
           passenger_type: string | null
           pricing_profile_id: string | null
@@ -5546,7 +5546,7 @@ export type Database = {
           calculated_amount?: number
           calculation_metadata?: Json
           created_at?: string
-          currency?: string
+          currency?: string | null
           id?: string
           passenger_type?: string | null
           pricing_profile_id?: string | null
@@ -5559,7 +5559,7 @@ export type Database = {
           calculated_amount?: number
           calculation_metadata?: Json
           created_at?: string
-          currency?: string
+          currency?: string | null
           id?: string
           passenger_type?: string | null
           pricing_profile_id?: string | null
