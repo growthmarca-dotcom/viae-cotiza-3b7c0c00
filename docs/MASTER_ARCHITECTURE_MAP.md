@@ -1330,3 +1330,50 @@ igual que en bookings y quotations.
   sólo está verificado con datos sintéticos.
 - Sin reglas de transición de etapa ni normalización de `position` (rebalanceo).
 - `currency` sigue siendo texto libre: los totales por columna necesitarán conversión.
+
+---
+
+## v1.10.9.1 — Smart Quote Integration Foundation (Fase B1)
+
+Flujo comercial canónico: **Opportunity → Smart Quote → Quotation → Booking**.
+
+- `smart_quotes` = motor comercial/cálculo.
+- `quotations` = capa de presentación al cliente (PDF, enlace público, aceptación). No se migra ni se elimina.
+- `bookings` = capa operativa.
+
+### Relaciones nuevas
+| Columna | Referencia | ON DELETE |
+|---|---|---|
+| `smart_quotes.opportunity_id` | `opportunities.id` | SET NULL |
+| `quotations.smart_quote_id` | `smart_quotes.id` | SET NULL |
+| `bookings.smart_quote_id` | `smart_quotes.id` | SET NULL |
+
+Índices: `idx_smart_quotes_opportunity_id`, `idx_smart_quotes_organization_id`,
+`idx_smart_quotes_client_id`, `idx_smart_quotes_agent_id`,
+`idx_quotations_smart_quote_id`, `idx_bookings_smart_quote_id`.
+
+### Resolución de organización
+`resolve_smart_quote_organization(_creator_user_id, _opportunity_id, _client_id, _agent_id, _explicit_org_id)`
+→ jsonb `{ organization_id, source, confidence, error, candidates }`.
+
+Orden: explícita > oportunidad > agente > cliente > membresía única del creador.
+Si hay más de una candidata distinta devuelve `ambiguous_organization` y **no** inventa organización.
+
+### Triggers de coherencia multi-tenant
+- `trg_smart_quote_require_organization` (BEFORE INSERT en `smart_quotes`): resuelve y exige organización.
+- `trg_smart_quote_coherence` (BEFORE INSERT/UPDATE): bloquea mismatch con oportunidad, cotizaciones y reservas vinculadas.
+- `trg_quotation_smart_quote_same_org` (`quotations`): hereda `organization_id`/`opportunity_id` de la smart quote o bloquea mismatch.
+- `trg_booking_smart_quote_same_org` (`bookings`): hereda organización o bloquea mismatch.
+- `trg_smart_quote_guard_update`: el agente asignado no puede alterar `organization_id`, `opportunity_id`, `client_id`, `agent_id` ni `user_id`.
+
+### Permisos
+Admin total, operaciones gestiona, dueño (`user_id`) gestiona, agente asignado lee y actualiza
+(`smart_quotes_agent_update`) con campos estructurales bloqueados por el guard.
+
+### Código
+- `src/lib/smartQuotes.ts`: `opportunity_id` en `SmartQuote`, `resolveSmartQuoteOrganization()`,
+  `createSmartQuoteFromOpportunity()`, `linkQuotationToSmartQuote()`, `smartQuoteCreateErrorMessage()`.
+- `src/lib/bookings.ts`: `BookingOrigin.smartQuoteId` y propagación de `smart_quote_id` en `createBooking()`.
+
+Sin backfill: `smart_quotes` estaba vacía; las 16 cotizaciones y 3 reservas históricas quedan con
+`smart_quote_id = NULL`. No hay relación determinista que permita inferirlo.
