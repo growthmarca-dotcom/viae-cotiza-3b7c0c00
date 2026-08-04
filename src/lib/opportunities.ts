@@ -144,12 +144,114 @@ export type OpportunityPatch = Partial<{
   assigned_agent_id: string | null;
   title: string;
   notes: string | null;
+  /** Fecha estimada de cierre comercial (v1.10.8.1). */
+  expected_close_date: string | null;
+  /** Motivo de pérdida o cancelación (v1.10.8.1). */
+  lost_reason: string | null;
+  /** Orden manual dentro de la columna del pipeline (v1.10.8.1). */
+  position: number | null;
 }>;
 
 export async function updateOpportunity(id: string, patch: OpportunityPatch) {
   const { error } = await supabase.from("opportunities").update(patch).eq("id", id);
-  if (error) throw error;
+  if (error) throw new Error(opportunityUpdateErrorMessage(error));
 }
+
+// ============================================================
+// Configuración de etapas (v1.10.8.1)
+// La metadata del pipeline vive en `opportunity_stage_config`.
+// `OPPORTUNITY_STAGES` se mantiene como fallback durante la migración.
+// ============================================================
+
+export type StageConfig = Tables<"opportunity_stage_config">;
+export type PipelineGroup = "open" | "won" | "lost";
+
+/** Etapas del pipeline ordenadas, tal como están configuradas en la base. */
+export async function listStageConfig(includeInactive = false) {
+  let q = supabase
+    .from("opportunity_stage_config")
+    .select("*")
+    .order("sort_order", { ascending: true });
+  if (!includeInactive) q = q.eq("is_active", true);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as StageConfig[];
+}
+
+/** Grupo del pipeline derivado del catálogo local (fallback sin consulta). */
+export function stageGroup(value: string): PipelineGroup {
+  if (value === "booked" || value === "completed") return "won";
+  if (value === "lost" || value === "cancelled") return "lost";
+  return "open";
+}
+
+// ============================================================
+// Historial de etapas (v1.10.8.1)
+// ============================================================
+
+export type OpportunityHistoryRow = Tables<"opportunity_history">;
+
+export async function listOpportunityHistory(opportunityId: string) {
+  const { data, error } = await supabase
+    .from("opportunity_history")
+    .select("*")
+    .eq("opportunity_id", opportunityId)
+    .order("changed_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as OpportunityHistoryRow[];
+}
+
+/**
+ * Traduce los bloqueos de los triggers de actualización
+ * (`opportunities_guard_update`) a mensajes en español.
+ */
+export function opportunityUpdateErrorMessage(error: {
+  message?: string;
+  hint?: string | null;
+}): string {
+  const msg = error.message ?? "No se pudo actualizar la oportunidad";
+  if (error.hint === "agent_field_not_allowed" || msg.includes("commercial fields")) {
+    return "Como agente asignado sólo podés editar etapa, próxima acción, notas y fecha estimada de cierre.";
+  }
+  if (error.hint === "organization_mismatch" || msg.includes("different organizations")) {
+    return "El cambio deja la oportunidad en una organización distinta a su cotización o reserva.";
+  }
+  if (error.hint === "not_allowed_for_organization") {
+    return "No tenés permisos sobre esa organización.";
+  }
+  return msg;
+}
+
+/**
+ * Mueve una oportunidad de etapa (base del Pipeline Kanban).
+ * El sello de `stage_changed_at` y el registro en `opportunity_history`
+ * los realizan los triggers de la base de datos; la coherencia de
+ * organización y los permisos se validan del lado del servidor.
+ */
+export async function moveOpportunityStage(args: {
+  id: string;
+  stage: OpportunityStage;
+  /** Posición dentro de la columna destino (orden Kanban). */
+  position?: number | null;
+  /** Motivo obligatorio a nivel de negocio cuando la etapa es perdida/cancelada. */
+  lostReason?: string | null;
+}) {
+  const { data: current, error: readError } = await supabase
+    .from("opportunities")
+    .select("id, stage")
+    .eq("id", args.id)
+    .maybeSingle();
+  if (readError) throw readError;
+  if (!current) throw new Error("La oportunidad no existe o no tenés acceso.");
+  if (current.stage === args.stage && args.position == null) return;
+
+  const patch: OpportunityPatch = { stage: args.stage };
+  if (args.position != null) patch.position = args.position;
+  if (stageGroup(args.stage) === "lost") patch.lost_reason = args.lostReason ?? null;
+
+  await updateOpportunity(args.id, patch);
+}
+
 
 /**
  * Traduce el bloqueo del trigger `opportunities_require_organization`
