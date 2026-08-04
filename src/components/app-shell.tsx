@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   UserRound,
   TicketCheck,
+  Target,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -34,6 +35,7 @@ import { useAccount } from "@/hooks/use-account";
 const baseNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/leads", label: "Consultas", icon: Inbox },
+  { to: "/opportunities", label: "Pipeline comercial", icon: Target },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
