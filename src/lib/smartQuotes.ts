@@ -209,10 +209,10 @@ export async function resolveSmartQuoteOrganization(params: {
 }): Promise<SmartQuoteOrganizationResolution> {
   const { data, error } = await supabase.rpc("resolve_smart_quote_organization", {
     _creator_user_id: params.creatorUserId,
-    _opportunity_id: params.opportunityId ?? null,
-    _client_id: params.clientId ?? null,
-    _agent_id: params.agentId ?? null,
-    _explicit_org_id: params.explicitOrganizationId ?? null,
+    _opportunity_id: params.opportunityId ?? undefined,
+    _client_id: params.clientId ?? undefined,
+    _agent_id: params.agentId ?? undefined,
+    _explicit_org_id: params.explicitOrganizationId ?? undefined,
   });
   if (error) throw error;
   return data as unknown as SmartQuoteOrganizationResolution;
