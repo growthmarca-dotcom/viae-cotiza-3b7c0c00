@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SmartQuoteHeaderForm } from "@/components/smart-quote-header-form";
 import { SmartQuoteItemsPanel } from "@/components/smart-quote-items-panel";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney } from "@/lib/currency";
@@ -32,6 +33,7 @@ import {
   listSmartQuoteItems,
   smartQuoteAgentLabel,
   smartQuoteClientLabel,
+  smartQuotePassengersLabel,
   smartQuoteStatusClasses,
   updateSmartQuoteStatus,
   type SmartQuoteItemRow,
@@ -219,6 +221,7 @@ function SmartQuoteDetailPage() {
                   }`
                 : "—"}
             </Field>
+            <Field label="Pasajeros">{smartQuotePassengersLabel(quote.passengers_metadata)}</Field>
             <Field label="Monto">
               {quote.total_amount == null
                 ? "—"
@@ -293,6 +296,10 @@ function SmartQuoteDetailPage() {
             </p>
           )}
         </section>
+
+        <div className="lg:col-span-3">
+          <SmartQuoteHeaderForm quote={quote} editable={editable} onSaved={load} />
+        </div>
 
         <div className="lg:col-span-3">
           <SmartQuoteItemsPanel

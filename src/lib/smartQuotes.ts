@@ -120,6 +120,8 @@ export interface SmartQuote {
   start_date: string | null;
   end_date: string | null;
   passengers_metadata: Record<string, unknown>;
+  /** v1.12.3 — notas internas del agente (no se publican al cliente). */
+  notes: string | null;
   currency: string;
   total_amount: number | null;
   snapshot: Record<string, unknown>;
@@ -530,6 +532,133 @@ export async function addSmartQuoteItem(
   return data.id as string;
 }
 
+/* =========================================================================
+ * v1.12.3 (Fase 2.2) — Edición comercial de la cabecera
+ *
+ * La cabecera es editable por admin, operaciones y el agente asignado.
+ * Los campos estructurales (organización, oportunidad, cliente, agente) NO se
+ * editan acá: los protege `tg_smart_quote_guard_update` en la base.
+ * ========================================================================= */
+
+/** Composición de pasajeros guardada en `passengers_metadata`. */
+export type SmartQuotePassengers = {
+  adults: number;
+  children: number;
+  infants: number;
+};
+
+export const EMPTY_PASSENGERS: SmartQuotePassengers = { adults: 1, children: 0, infants: 0 };
+
+function toCount(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.floor(n);
+}
+
+/** Lee la composición de pasajeros tolerando registros antiguos o vacíos. */
+export function parseSmartQuotePassengers(
+  metadata: Record<string, unknown> | null | undefined,
+): SmartQuotePassengers {
+  if (!metadata || typeof metadata !== "object") return { ...EMPTY_PASSENGERS };
+  return {
+    adults: toCount((metadata as Record<string, unknown>).adults ?? EMPTY_PASSENGERS.adults),
+    children: toCount((metadata as Record<string, unknown>).children),
+    infants: toCount((metadata as Record<string, unknown>).infants),
+  };
+}
+
+export function totalSmartQuotePassengers(p: SmartQuotePassengers): number {
+  return p.adults + p.children + p.infants;
+}
+
+export function smartQuotePassengersLabel(
+  metadata: Record<string, unknown> | null | undefined,
+): string {
+  const p = parseSmartQuotePassengers(metadata);
+  const parts = [`${p.adults} adulto${p.adults === 1 ? "" : "s"}`];
+  if (p.children > 0) parts.push(`${p.children} menor${p.children === 1 ? "" : "es"}`);
+  if (p.infants > 0) parts.push(`${p.infants} infante${p.infants === 1 ? "" : "s"}`);
+  return parts.join(" · ");
+}
+
+export type SmartQuoteHeaderPatch = {
+  title?: string;
+  destination_country?: string | null;
+  destination_state?: string | null;
+  destination_city?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  passengers?: SmartQuotePassengers;
+  notes?: string | null;
+  /** Moneda existente de la cotización: la base propaga el cambio a los ítems. */
+  currency?: string;
+};
+
+/**
+ * Edición de la cabecera comercial. Valida datos mínimos en el cliente; la
+ * base valida el rango de fechas y la coherencia de moneda con los ítems.
+ */
+export async function updateSmartQuoteHeader(
+  smartQuoteId: string,
+  patch: SmartQuoteHeaderPatch,
+): Promise<void> {
+  const payload: {
+    title?: string;
+    destination_country?: string | null;
+    destination_state?: string | null;
+    destination_city?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    passengers_metadata?: SmartQuotePassengers;
+    notes?: string | null;
+    currency?: string;
+  } = {};
+  if (patch.title !== undefined) {
+    if (!patch.title.trim()) throw new Error("La cotización necesita un título.");
+    payload.title = patch.title.trim();
+  }
+  if (patch.destination_country !== undefined) {
+    payload.destination_country = patch.destination_country?.trim() || null;
+  }
+  if (patch.destination_state !== undefined) {
+    payload.destination_state = patch.destination_state?.trim() || null;
+  }
+  if (patch.destination_city !== undefined) {
+    payload.destination_city = patch.destination_city?.trim() || null;
+  }
+  if (patch.start_date !== undefined) payload.start_date = patch.start_date || null;
+  if (patch.end_date !== undefined) payload.end_date = patch.end_date || null;
+  const start = (payload.start_date ?? undefined) as string | null | undefined;
+  const end = (payload.end_date ?? undefined) as string | null | undefined;
+  if (start && end && end < start) {
+    throw new Error("La fecha de fin no puede ser anterior a la de inicio.");
+  }
+  if (patch.passengers !== undefined) {
+    const p = {
+      adults: toCount(patch.passengers.adults),
+      children: toCount(patch.passengers.children),
+      infants: toCount(patch.passengers.infants),
+    };
+    if (p.adults < 1) throw new Error("Tiene que haber al menos un pasajero adulto.");
+    payload.passengers_metadata = p;
+  }
+  if (patch.notes !== undefined) payload.notes = patch.notes?.trim() || null;
+  if (patch.currency !== undefined) {
+    const next = patch.currency.trim().toUpperCase();
+    if (!next) throw new Error("Indicá una moneda válida.");
+    payload.currency = next;
+  }
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase.from("smart_quotes").update(payload).eq("id", smartQuoteId);
+  if (error) {
+    if ((error.message ?? "").includes("smart_quotes_date_range_check")) {
+      throw new Error("La fecha de fin no puede ser anterior a la de inicio.");
+    }
+    throw new Error(smartQuoteCreateErrorMessage(error));
+  }
+  if (payload.currency !== undefined) await recalcSmartQuoteTotal(smartQuoteId);
+}
+
 export type SmartQuoteItemPatch = {
   title?: string;
   description?: string | null;
@@ -604,6 +733,82 @@ export async function deleteSmartQuoteItem(
   const { error } = await supabase.from("smart_quote_items").delete().eq("id", itemId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+}
+
+
+/* =========================================================================
+ * v1.12.3 (Fase 2.2) — Preparación de versionado (NO implementado)
+ *
+ * `smart_quote_versions` ya existe en la base. En esta fase sólo se expone la
+ * lectura del histórico y la construcción del snapshot en memoria. El alta de
+ * versiones, la publicación y el diff se implementan en una fase posterior.
+ * ========================================================================= */
+
+export type SmartQuoteSnapshot = {
+  version_schema: "v1";
+  header: {
+    title: string;
+    destination_country: string | null;
+    destination_state: string | null;
+    destination_city: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    passengers: SmartQuotePassengers;
+    notes: string | null;
+    currency: string;
+    total_amount: number;
+  };
+  items: {
+    title: string;
+    description: string | null;
+    item_type: SmartQuoteItemType;
+    quantity: number;
+    unit_amount: number;
+    total_amount: number;
+  }[];
+};
+
+/** Construye el snapshot de la cotización. Sólo memoria: no persiste nada. */
+export function buildSmartQuoteSnapshot(
+  quote: SmartQuote,
+  items: SmartQuoteItemRow[],
+): SmartQuoteSnapshot {
+  return {
+    version_schema: "v1",
+    header: {
+      title: quote.title,
+      destination_country: quote.destination_country,
+      destination_state: quote.destination_state,
+      destination_city: quote.destination_city,
+      start_date: quote.start_date,
+      end_date: quote.end_date,
+      passengers: parseSmartQuotePassengers(quote.passengers_metadata),
+      notes: quote.notes ?? null,
+      currency: quote.currency,
+      total_amount: Number(quote.total_amount ?? 0),
+    },
+    items: items.map((i) => ({
+      title: i.title,
+      description: i.description,
+      item_type: i.item_type,
+      quantity: Number(i.quantity),
+      unit_amount: Number(i.unit_amount ?? 0),
+      total_amount: Number(i.total_amount ?? 0),
+    })),
+  };
+}
+
+/** Histórico de versiones (solo lectura; hoy siempre vacío). */
+export async function listSmartQuoteVersions(
+  smartQuoteId: string,
+): Promise<SmartQuoteVersion[]> {
+  const { data, error } = await supabase
+    .from("smart_quote_versions")
+    .select("*")
+    .eq("smart_quote_id", smartQuoteId)
+    .order("version", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as SmartQuoteVersion[];
 }
 
 
