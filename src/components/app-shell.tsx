@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   UserRound,
   TicketCheck,
+  Target,
   LogOut,
 } from "lucide-react";
 import type { ReactNode } from "react";
