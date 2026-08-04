@@ -48,6 +48,7 @@ import {
   listOpportunitiesByClient,
   type Opportunity,
 } from "@/lib/opportunities";
+import { listMyQuotationOrganizations } from "@/lib/quotations";
 
 export const Route = createFileRoute("/_authenticated/clients_/$id")({
   component: ClientDetailPage,
