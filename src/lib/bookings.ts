@@ -217,12 +217,48 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   const uid = userData.user?.id;
   if (!uid) throw new Error("Sesión no válida");
 
+  let opportunityId = origin.opportunityId ?? null;
+  let organizationId = input.organization_id ?? null;
+  let clientId = input.client_id;
+  let agentId = input.assigned_agent_id;
+
+  // Conversión cotización -> reserva: la reserva hereda el contexto comercial
+  // completo de la cotización (v1.10.7.2.2). Sin pérdida de contexto.
+  if (origin.quotationId) {
+    const { data: q } = await supabase
+      .from("quotations")
+      .select("opportunity_id, organization_id, client_id")
+      .eq("id", origin.quotationId)
+      .maybeSingle();
+    if (q) {
+      opportunityId = opportunityId ?? q.opportunity_id ?? null;
+      organizationId = organizationId ?? q.organization_id ?? null;
+      clientId = clientId || (q.client_id ?? clientId);
+    }
+  }
+
+  // Origen oportunidad: hereda cliente y agente asignado si no vinieron.
+  if (opportunityId) {
+    const { data: opp } = await supabase
+      .from("opportunities")
+      .select("client_id, assigned_agent_id")
+      .eq("id", opportunityId)
+      .maybeSingle();
+    if (opp) {
+      clientId = clientId || opp.client_id;
+      agentId = agentId ?? opp.assigned_agent_id ?? null;
+    }
+  }
+
   const { data, error } = await supabase
     .from("bookings")
     .insert({
       ...input,
+      client_id: clientId,
+      assigned_agent_id: agentId,
+      organization_id: organizationId,
       user_id: uid,
-      opportunity_id: origin.opportunityId ?? null,
+      opportunity_id: opportunityId,
       quotation_id: origin.quotationId ?? null,
     })
     .select("id")

@@ -1,10 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationForm } from "@/components/quotation-form";
-import { formToRow, saveQuotationImages } from "@/lib/quotations";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  findOpenOpportunityForClient,
+  formToRow,
+  listMyQuotationOrganizations,
+  quotationCreateErrorMessage,
+  saveQuotationImages,
+} from "@/lib/quotations";
 import { upsertClientFromQuotation } from "@/lib/crm";
 import { ensureOpportunityForQuotation } from "@/lib/opportunities";
 
@@ -21,6 +36,15 @@ export const Route = createFileRoute("/_authenticated/quotations/new")({
 function NewQuotationPage() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [organizationId, setOrganizationId] = useState("");
+
+  const { data: organizations } = useQuery({
+    queryKey: ["my-quotation-organizations"],
+    queryFn: listMyQuotationOrganizations,
+  });
+
+  const orgs = organizations ?? [];
+  const needsOrgChoice = orgs.length > 1;
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-24">
@@ -45,6 +69,27 @@ function NewQuotationPage() {
         </p>
       </header>
 
+      {needsOrgChoice && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <Label className="text-sm">Organización propietaria</Label>
+          <Select value={organizationId} onValueChange={setOrganizationId}>
+            <SelectTrigger className="mt-2">
+              <SelectValue placeholder="Elegí la organización" />
+            </SelectTrigger>
+            <SelectContent>
+              {orgs.map((o) => (
+                <SelectItem key={o.id} value={o.id}>
+                  {o.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Pertenecés a más de una organización: indicá a cuál corresponde esta cotización.
+          </p>
+        </div>
+      )}
+
       <QuotationForm
         submitting={submitting}
         submitLabel="Generar cotización"
@@ -52,6 +97,10 @@ function NewQuotationPage() {
         onSubmit={async ({ form, newFiles }) => {
           if (!form.firstName.trim() || !form.accommodationName.trim()) {
             toast.error("Nombre del cliente y nombre del alojamiento son obligatorios.");
+            return;
+          }
+          if (needsOrgChoice && !organizationId) {
+            toast.error("Elegí la organización propietaria de la cotización.");
             return;
           }
           setSubmitting(true);
@@ -62,23 +111,43 @@ function NewQuotationPage() {
 
             const clientId = await upsertClientFromQuotation(userId, form);
 
+            // Si el cliente ya tiene una oportunidad abierta, la cotización se
+            // asocia a ella; si no, se crea después con ensureOpportunityForQuotation.
+            const existingOpportunityId = clientId
+              ? await findOpenOpportunityForClient(clientId)
+              : null;
+
             const row = formToRow(form);
             const { data: inserted, error: insertErr } = await supabase
               .from("quotations")
-              .insert({ ...row, user_id: userId, client_id: clientId, status: "draft" })
+              .insert({
+                ...row,
+                user_id: userId,
+                client_id: clientId,
+                organization_id: organizationId || (orgs.length === 1 ? orgs[0].id : null),
+                opportunity_id: existingOpportunityId,
+                status: "draft",
+              })
               .select("id")
               .single();
-            if (insertErr) throw insertErr;
+            if (insertErr) throw new Error(quotationCreateErrorMessage(insertErr));
 
-            // Cada cotización genera automáticamente una oportunidad comercial.
-            await ensureOpportunityForQuotation({
+            // Cada cotización queda relacionada a una oportunidad comercial.
+            const opportunityId = await ensureOpportunityForQuotation({
               userId,
               clientId,
               quotationId: inserted.id,
               title: row.title,
               amount: Number(row.total_amount) || 0,
               currency: row.currency,
+              opportunityId: existingOpportunityId,
             });
+            if (opportunityId && opportunityId !== existingOpportunityId) {
+              await supabase
+                .from("quotations")
+                .update({ opportunity_id: opportunityId })
+                .eq("id", inserted.id);
+            }
 
             const finalImages = await saveQuotationImages({
               quotationId: inserted.id,
