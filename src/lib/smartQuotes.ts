@@ -429,13 +429,16 @@ export type SmartQuoteItemRow = SmartQuoteItem & {
   description: string | null;
 };
 
+/**
+ * v1.12.2 (Fase 2.1) — Arquitectura de moneda única.
+ * El ítem NO define moneda: siempre hereda `smart_quotes.currency`.
+ */
 export type SmartQuoteItemInput = {
   title: string;
   description?: string | null;
   item_type: SmartQuoteItemType;
   quantity: number;
   unit_amount: number;
-  currency: string;
 };
 
 export async function listSmartQuoteItems(smartQuoteId: string): Promise<SmartQuoteItemRow[]> {
@@ -448,12 +451,36 @@ export async function listSmartQuoteItems(smartQuoteId: string): Promise<SmartQu
   return (data ?? []) as unknown as SmartQuoteItemRow[];
 }
 
+/** Moneda de la cabecera: única fuente de verdad de la cotización. */
+export async function getSmartQuoteCurrency(smartQuoteId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("smart_quotes")
+    .select("currency")
+    .eq("id", smartQuoteId)
+    .maybeSingle();
+  if (error) throw error;
+  const currency = (data?.currency ?? "").toUpperCase();
+  if (!currency) throw new Error("La cotización inteligente no tiene moneda definida.");
+  return currency;
+}
+
 /**
  * Recalcula el total de la Smart Quote como suma simple de sus ítems.
- * No es motor tarifario: sólo consolida la carga manual del agente.
+ * Al existir moneda única, la suma es aritmética directa (sin conversión).
+ * La base recalcula el total con trigger; esta función devuelve el valor
+ * consolidado y sirve de red de seguridad para registros antiguos.
  */
 export async function recalcSmartQuoteTotal(smartQuoteId: string): Promise<number> {
-  const items = await listSmartQuoteItems(smartQuoteId);
+  const [currency, items] = await Promise.all([
+    getSmartQuoteCurrency(smartQuoteId),
+    listSmartQuoteItems(smartQuoteId),
+  ]);
+  const foreign = items.find((i) => (i.currency ?? "").toUpperCase() !== currency);
+  if (foreign) {
+    throw new Error(
+      `La cotización tiene ítems en ${foreign.currency} y su moneda es ${currency}. Corregí la moneda antes de recalcular.`,
+    );
+  }
   const total = items.reduce((acc, i) => acc + Number(i.total_amount ?? 0), 0);
   const { error } = await supabase
     .from("smart_quotes")
@@ -471,6 +498,11 @@ export async function addSmartQuoteItem(
   const unit = Number(input.unit_amount) || 0;
   if (!input.title.trim()) throw new Error("El ítem necesita un nombre.");
   if (quantity <= 0) throw new Error("La cantidad debe ser mayor a cero.");
+  if (!Number.isFinite(unit) || unit < 0) {
+    throw new Error("El precio unitario debe ser cero o mayor.");
+  }
+  // Moneda única: se lee de la cabecera, nunca se acepta desde el formulario.
+  const currency = await getSmartQuoteCurrency(smartQuoteId);
   const { data, error } = await supabase
     .from("smart_quote_items")
     .insert({
@@ -481,13 +513,74 @@ export async function addSmartQuoteItem(
       quantity,
       unit_amount: unit,
       total_amount: quantity * unit,
-      currency: input.currency,
+      currency,
     })
     .select("id")
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
   return data.id as string;
+}
+
+export type SmartQuoteItemPatch = {
+  title?: string;
+  description?: string | null;
+  item_type?: SmartQuoteItemType;
+  quantity?: number;
+  unit_amount?: number;
+};
+
+/** Edición de un ítem. La moneda nunca es editable (moneda única). */
+export async function updateSmartQuoteItem(
+  smartQuoteId: string,
+  itemId: string,
+  patch: SmartQuoteItemPatch,
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  if (patch.title !== undefined) {
+    if (!patch.title.trim()) throw new Error("El ítem necesita un nombre.");
+    payload.title = patch.title.trim();
+  }
+  if (patch.description !== undefined) payload.description = patch.description?.trim() || null;
+  if (patch.item_type !== undefined) payload.item_type = patch.item_type;
+  if (patch.quantity !== undefined) {
+    const quantity = Number(patch.quantity) || 0;
+    if (quantity <= 0) throw new Error("La cantidad debe ser mayor a cero.");
+    payload.quantity = quantity;
+  }
+  if (patch.unit_amount !== undefined) {
+    const unit = Number(patch.unit_amount);
+    if (!Number.isFinite(unit) || unit < 0) {
+      throw new Error("El precio unitario debe ser cero o mayor.");
+    }
+    payload.unit_amount = unit;
+  }
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase
+    .from("smart_quote_items")
+    .update(payload)
+    .eq("id", itemId)
+    .eq("smart_quote_id", smartQuoteId);
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  await recalcSmartQuoteTotal(smartQuoteId);
+}
+
+/**
+ * Cambia la moneda de la cotización. La base propaga la nueva moneda a los
+ * ítems y a sus detalles de precio: no se convierten importes, se redenomina.
+ */
+export async function updateSmartQuoteCurrency(
+  smartQuoteId: string,
+  currency: string,
+): Promise<void> {
+  const next = currency.trim().toUpperCase();
+  if (!next) throw new Error("Indicá una moneda válida.");
+  const { error } = await supabase
+    .from("smart_quotes")
+    .update({ currency: next })
+    .eq("id", smartQuoteId);
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  await recalcSmartQuoteTotal(smartQuoteId);
 }
 
 export async function deleteSmartQuoteItem(
@@ -498,6 +591,7 @@ export async function deleteSmartQuoteItem(
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
 }
+
 
 // -------------------------------------------------------------- ciclo de vida
 
