@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMyOrganizationId } from "@/lib/tenant";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Opportunity = Tables<"opportunities">;
@@ -299,7 +300,7 @@ export async function createOpportunity(input: {
       owner_user_id: input.userId,
       client_id: input.clientId,
       quotation_id: input.quotationId ?? null,
-      organization_id: input.organizationId ?? null,
+      organization_id: await resolveMyOrganizationId(input.organizationId),
       title: input.title || "Oportunidad",
       stage: input.stage ?? "new",
       lead_source: input.leadSource ?? "other",

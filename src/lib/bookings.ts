@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMyOrganizationId } from "@/lib/tenant";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Booking = Tables<"bookings">;
@@ -199,7 +200,7 @@ export type BookingInput = {
    * envía, la base la resuelve desde el agente asignado o la única
    * organización activa del creador. Si hay ambigüedad, se bloquea el alta.
    */
-  organization_id?: string | null;
+  organization_id?: string;
   assigned_agent_id: string | null;
   status: BookingStatus;
   travel_start: string | null;
@@ -277,7 +278,7 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
       ...input,
       client_id: clientId,
       assigned_agent_id: agentId,
-      organization_id: organizationId,
+      organization_id: await resolveMyOrganizationId(organizationId),
       user_id: uid,
       opportunity_id: opportunityId,
       quotation_id: origin.quotationId ?? null,

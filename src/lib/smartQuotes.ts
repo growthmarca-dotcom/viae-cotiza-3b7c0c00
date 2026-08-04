@@ -322,7 +322,7 @@ export async function linkQuotationToSmartQuote(
     .update({
       smart_quote_id: smartQuoteId,
       opportunity_id: sq.opportunity_id ?? null,
-      organization_id: sq.organization_id ?? null,
+      ...(sq.organization_id ? { organization_id: sq.organization_id } : {}),
     })
     .eq("id", quotationId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
