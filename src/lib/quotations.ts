@@ -150,3 +150,73 @@ export async function setQuotationArchived(id: string, archived: boolean) {
   const { error } = await supabase.from("quotations").update({ archived }).eq("id", id);
   if (error) throw error;
 }
+
+// ------------------------------------------- contexto comercial (v1.10.7.2.2)
+
+/**
+ * Traduce el bloqueo del trigger `quotations_require_organization`
+ * a un mensaje comprensible para el agente.
+ */
+export function quotationCreateErrorMessage(error: {
+  message?: string;
+  hint?: string | null;
+}): string {
+  const msg = error.message ?? "No se pudo generar la cotización";
+  if (!msg.includes("Quotation requires a valid organization")) return msg;
+  switch (error.hint) {
+    case "ambiguous_organization":
+      return "Pertenecés a más de una organización: elegí la organización propietaria de la cotización.";
+    case "not_allowed_for_organization":
+      return "No tenés permisos para crear cotizaciones en esa organización.";
+    default:
+      return "La cotización necesita una organización comercial propietaria válida.";
+  }
+}
+
+export type OrganizationOption = { id: string; name: string };
+
+/**
+ * Organizaciones en las que el usuario puede crear cotizaciones
+ * (membresía activa con rol comercial u operativo).
+ */
+export async function listMyQuotationOrganizations(): Promise<OrganizationOption[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return [];
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("organization_id, role, status, organizations(id, trade_name)")
+    .eq("user_id", uid)
+    .eq("status", "active");
+  if (error) return [];
+  const allowed = ["organization_owner", "organization_admin", "operations", "agent"];
+  const rows = (data ?? []) as unknown as {
+    organization_id: string;
+    role: string;
+    organizations: { id: string; trade_name: string } | null;
+  }[];
+  return rows
+    .filter((r) => allowed.includes(r.role))
+    .map((r) => ({
+      id: r.organization_id,
+      name: r.organizations?.trade_name ?? "Organización",
+    }));
+}
+
+/**
+ * Oportunidad abierta del cliente reutilizable para una nueva cotización.
+ * Evita duplicar oportunidades por cada propuesta enviada.
+ */
+export async function findOpenOpportunityForClient(clientId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("id, stage, record_status")
+    .eq("client_id", clientId)
+    .eq("record_status", "active")
+    .not("stage", "in", "(booked,completed,lost,cancelled)")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return data?.id ?? null;
+}
