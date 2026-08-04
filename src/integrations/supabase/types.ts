@@ -2535,6 +2535,7 @@ export type Database = {
           next_action: string | null
           next_contact_date: string | null
           notes: string | null
+          organization_id: string | null
           owner_user_id: string
           probability: number
           quotation_id: string | null
@@ -2557,6 +2558,7 @@ export type Database = {
           next_action?: string | null
           next_contact_date?: string | null
           notes?: string | null
+          organization_id?: string | null
           owner_user_id: string
           probability?: number
           quotation_id?: string | null
@@ -2579,6 +2581,7 @@ export type Database = {
           next_action?: string | null
           next_contact_date?: string | null
           notes?: string | null
+          organization_id?: string | null
           owner_user_id?: string
           probability?: number
           quotation_id?: string | null
@@ -2601,6 +2604,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -6281,6 +6291,10 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      can_create_opportunity_for_organization: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_create_quotation_for_organization: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -6530,6 +6544,16 @@ export type Database = {
           _agent_id?: string
           _creator_user_id: string
           _explicit_org_id?: string
+        }
+        Returns: Json
+      }
+      resolve_opportunity_organization: {
+        Args: {
+          _assigned_agent_id?: string
+          _client_id?: string
+          _creator_user_id: string
+          _explicit_org_id?: string
+          _quotation_id?: string
         }
         Returns: Json
       }
