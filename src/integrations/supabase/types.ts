@@ -1252,7 +1252,7 @@ export type Database = {
           operations_taken_at: string | null
           operations_updated_at: string | null
           opportunity_id: string | null
-          organization_id: string | null
+          organization_id: string
           provider_id: string | null
           provider_name: string | null
           provider_notes: string | null
@@ -1297,7 +1297,7 @@ export type Database = {
           operations_taken_at?: string | null
           operations_updated_at?: string | null
           opportunity_id?: string | null
-          organization_id?: string | null
+          organization_id: string
           provider_id?: string | null
           provider_name?: string | null
           provider_notes?: string | null
@@ -1342,7 +1342,7 @@ export type Database = {
           operations_taken_at?: string | null
           operations_updated_at?: string | null
           opportunity_id?: string | null
-          organization_id?: string | null
+          organization_id?: string
           provider_id?: string | null
           provider_name?: string | null
           provider_notes?: string | null
@@ -2637,7 +2637,7 @@ export type Database = {
           next_action: string | null
           next_contact_date: string | null
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           owner_user_id: string
           position: number | null
           probability: number
@@ -2664,7 +2664,7 @@ export type Database = {
           next_action?: string | null
           next_contact_date?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           owner_user_id: string
           position?: number | null
           probability?: number
@@ -2691,7 +2691,7 @@ export type Database = {
           next_action?: string | null
           next_contact_date?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           owner_user_id?: string
           position?: number | null
           probability?: number
@@ -4547,7 +4547,7 @@ export type Database = {
           nights: number | null
           notes: string | null
           opportunity_id: string | null
-          organization_id: string | null
+          organization_id: string
           other_charges: number | null
           pax_count: number | null
           price_per_night: number | null
@@ -4584,7 +4584,7 @@ export type Database = {
           nights?: number | null
           notes?: string | null
           opportunity_id?: string | null
-          organization_id?: string | null
+          organization_id: string
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
@@ -4621,7 +4621,7 @@ export type Database = {
           nights?: number | null
           notes?: string | null
           opportunity_id?: string | null
-          organization_id?: string | null
+          organization_id?: string
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
