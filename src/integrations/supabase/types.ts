@@ -1261,6 +1261,7 @@ export type Database = {
           record_status: Database["public"]["Enums"]["record_status"]
           sale_amount: number | null
           sale_currency: string | null
+          smart_quote_id: string | null
           status: Database["public"]["Enums"]["booking_status"]
           taxes_amount: number | null
           tracking_enabled: boolean
@@ -1305,6 +1306,7 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           sale_amount?: number | null
           sale_currency?: string | null
+          smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           taxes_amount?: number | null
           tracking_enabled?: boolean
@@ -1349,6 +1351,7 @@ export type Database = {
           record_status?: Database["public"]["Enums"]["record_status"]
           sale_amount?: number | null
           sale_currency?: string | null
+          smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           taxes_amount?: number | null
           tracking_enabled?: boolean
@@ -1392,6 +1395,13 @@ export type Database = {
             columns: ["quotation_id"]
             isOneToOne: false
             referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_smart_quote_id_fkey"
+            columns: ["smart_quote_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -4431,6 +4441,7 @@ export type Database = {
           pax_count: number | null
           price_per_night: number | null
           share_token: string
+          smart_quote_id: string | null
           status: Database["public"]["Enums"]["quotation_status"]
           taxes: number | null
           title: string
@@ -4467,6 +4478,7 @@ export type Database = {
           pax_count?: number | null
           price_per_night?: number | null
           share_token?: string
+          smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["quotation_status"]
           taxes?: number | null
           title: string
@@ -4503,6 +4515,7 @@ export type Database = {
           pax_count?: number | null
           price_per_night?: number | null
           share_token?: string
+          smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["quotation_status"]
           taxes?: number | null
           title?: string
@@ -4532,6 +4545,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_smart_quote_id_fkey"
+            columns: ["smart_quote_id"]
+            isOneToOne: false
+            referencedRelation: "smart_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -5555,6 +5575,7 @@ export type Database = {
           destination_state: string | null
           end_date: string | null
           id: string
+          opportunity_id: string | null
           organization_id: string | null
           passengers_metadata: Json
           snapshot: Json
@@ -5576,6 +5597,7 @@ export type Database = {
           destination_state?: string | null
           end_date?: string | null
           id?: string
+          opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
           snapshot?: Json
@@ -5597,6 +5619,7 @@ export type Database = {
           destination_state?: string | null
           end_date?: string | null
           id?: string
+          opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
           snapshot?: Json
@@ -5621,6 +5644,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "smart_quotes_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
           {
@@ -6645,6 +6675,16 @@ export type Database = {
       }
       resolve_quotation_organization: {
         Args: {
+          _client_id?: string
+          _creator_user_id: string
+          _explicit_org_id?: string
+          _opportunity_id?: string
+        }
+        Returns: Json
+      }
+      resolve_smart_quote_organization: {
+        Args: {
+          _agent_id?: string
           _client_id?: string
           _creator_user_id: string
           _explicit_org_id?: string
