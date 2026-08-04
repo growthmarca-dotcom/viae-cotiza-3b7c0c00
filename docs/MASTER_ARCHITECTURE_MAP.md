@@ -1181,3 +1181,60 @@ pertenece a 2 organizaciones → ambiguo).
   membresías del usuario, no por dato propio.
 - RLS por organización en `quotations` sigue inactivo (solo enforcement de alta).
 - El histórico sin `organization_id` no puede backfillearse de forma determinista.
+
+---
+
+# Opportunity Ownership (v1.10.7.2.3)
+
+`opportunities` es la entidad comercial principal: cliente, cotizaciones y reservas
+cuelgan de ella, y ahora tiene organización propietaria propia.
+
+## 1. Estructura
+
+| Columna | Tipo | FK | Notas |
+| --- | --- | --- | --- |
+| `organization_id` | uuid NULL | `organizations(id) ON DELETE SET NULL` | índice `idx_opportunities_organization_id`; nullable por compatibilidad histórica |
+
+## 2. `resolve_opportunity_organization(creator, agent, quotation, client, explicit)` → jsonb
+
+Precedencia: `explicit` → `agent` (agente asignado) → `quotation`
+(`quotations.organization_id`) → `client` (usuario dueño) → `creator_membership`
+(membresía activa única). Sin candidato único → `ambiguous_organization` /
+`no_organization_found` con `candidates`.
+
+`can_create_opportunity_for_organization(user, org)`: admin global o miembro activo
+`organization_owner | organization_admin | operations | agent`.
+
+## 3. Enforcement
+
+- `opportunities_require_organization` (BEFORE INSERT): sin sesión / `service_role`
+  pasa; con organización explícita valida permiso; sin organización resuelve y
+  bloquea con `Opportunity requires a valid organization` + HINT.
+- Coherencia bidireccional: el mismo trigger bloquea `quotation_id` de otra
+  organización, y `quotations_opportunity_same_org` (AFTER INSERT/UPDATE de
+  `opportunity_id`/`organization_id`) bloquea el cruce inverso con HINT
+  `organization_mismatch`.
+- `resolve_quotation_organization` ahora prioriza `opportunities.organization_id`
+  antes que agente/creador (fuente `opportunity`).
+
+## 4. Frontend
+
+- `createOpportunity({ organizationId? })` y `ensureOpportunityForQuotation({ organizationId? })`
+  propagan la organización de la cotización; nunca crean oportunidades sin cliente.
+- `opportunityCreateErrorMessage()` traduce HINT → mensaje en español.
+- Ficha de cliente: si el usuario tiene una sola organización se usa automáticamente;
+  con varias, el bloqueo se informa como texto claro (sin cambios de UX).
+
+## 5. Backfill
+
+`opportunities.organization_id` se completó sólo desde la cotización vinculada o desde
+el agente asignado con organización determinista. Resultado real: **0 de 2**
+actualizadas — las 2 oportunidades existentes tienen cotizaciones sin
+`organization_id` y no tienen agente asignado. No se inventó ningún dato.
+
+## 6. Riesgos pendientes
+
+- `clients` sigue sin `organization_id`: la vía cliente depende de membresías.
+- RLS por organización en `opportunities` sigue inactivo (sólo enforcement de alta).
+- Histórico: 2 oportunidades y 16 cotizaciones sin organización; sólo se podrán
+  completar cuando exista una resolución determinista.
