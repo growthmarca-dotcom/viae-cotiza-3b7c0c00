@@ -1115,3 +1115,69 @@ capa de aplicación.
 - RLS por organización sigue inactivo (roles globales vigentes).
 - `quotations` y `booking_passengers` aún sin `organization_id`.
 - Doble semántica de `organization_id` en servicios/economía sin separar.
+
+---
+
+# Commercial Flow Consolidation (v1.10.7.2.2)
+
+**Regla central: la Oportunidad es la fuente de relación entre cliente, cotizaciones y reservas.**
+
+## 1. Estructura nueva en `quotations`
+
+| Columna | Tipo | FK | Notas |
+| --- | --- | --- | --- |
+| `opportunity_id` | uuid NULL | `opportunities(id) ON DELETE SET NULL` | índice `idx_quotations_opportunity_id` |
+| `organization_id` | uuid NULL | `organizations(id) ON DELETE SET NULL` | índice `idx_quotations_organization_id`; organización comercial propietaria (nunca proveedor) |
+
+Ambas nullable para preservar el histórico. Las cotizaciones nuevas **sí** exigen organización.
+
+## 2. Resolución de organización
+
+`resolve_quotation_organization(creator, opportunity_id, client_id, explicit)` → jsonb
+con orden de precedencia:
+
+1. `explicit` → organización indicada por la UI.
+2. `opportunity` → agente asignado / responsable de la oportunidad (delegando en
+   `resolve_booking_organization`).
+3. `client` → usuario dueño del cliente.
+4. `creator_membership` → membresía activa única del creador.
+5. Sin candidato único → `error: ambiguous_organization | no_organization_found`.
+
+`can_create_quotation_for_organization(user, org)` habilita admin global o miembro
+activo con rol `organization_owner | organization_admin | operations | agent`.
+
+## 3. Enforcement
+
+Trigger `quotations_require_organization` (BEFORE INSERT):
+sin sesión / `service_role` → pasa; con `organization_id` explícito → valida permiso;
+sin organización → resuelve y bloquea con
+`Quotation requires a valid organization` + HINT (`ambiguous_organization`,
+`not_allowed_for_organization`, `no_organization_found`).
+`quotationCreateErrorMessage()` traduce el HINT a mensaje para el agente.
+
+## 4. Flujo de creación (frontend)
+
+`/quotations/new`: si el usuario pertenece a más de una organización, elige la
+propietaria. Se reutiliza la oportunidad abierta del cliente
+(`findOpenOpportunityForClient`); si no existe, se crea con
+`ensureOpportunityForQuotation()` y se guarda su id en `quotations.opportunity_id`.
+
+## 5. Conversión cotización → reserva
+
+`createBooking()` hidrata desde la cotización `opportunity_id`, `organization_id` y
+`client_id`, y desde la oportunidad `client_id` y `assigned_agent_id`.
+Resultado: la reserva conserva organización, oportunidad, cotización, cliente y agente.
+
+## 6. Migración de datos (no destructiva)
+
+`UPDATE quotations SET opportunity_id = o.id FROM opportunities o WHERE o.quotation_id = q.id`.
+Resultado real: 2 de 16 cotizaciones vinculadas; 14 quedan sin oportunidad y 16 sin
+organización (histórico legítimo, no se inventó organización porque el único usuario
+pertenece a 2 organizaciones → ambiguo).
+
+## 7. Riesgos pendientes
+
+- `opportunities` y `clients` siguen sin `organization_id`: la derivación pasa por
+  membresías del usuario, no por dato propio.
+- RLS por organización en `quotations` sigue inactivo (solo enforcement de alta).
+- El histórico sin `organization_id` no puede backfillearse de forma determinista.
