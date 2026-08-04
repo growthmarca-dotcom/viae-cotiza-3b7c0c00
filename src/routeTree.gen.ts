@@ -30,7 +30,9 @@ import { Route as AuthenticatedAgreementsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedSmartQuotesIndexRouteImport } from './routes/_authenticated/smart-quotes/index'
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations/index'
+import { Route as AuthenticatedSmartQuotesIdRouteImport } from './routes/_authenticated/smart-quotes/$id'
 import { Route as AuthenticatedResourcesIdRouteImport } from './routes/_authenticated/resources_.$id'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
@@ -149,10 +151,22 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSmartQuotesIndexRoute =
+  AuthenticatedSmartQuotesIndexRouteImport.update({
+    id: '/smart-quotes/',
+    path: '/smart-quotes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedQuotationsIndexRoute =
   AuthenticatedQuotationsIndexRouteImport.update({
     id: '/quotations/',
     path: '/quotations/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSmartQuotesIdRoute =
+  AuthenticatedSmartQuotesIdRouteImport.update({
+    id: '/smart-quotes/$id',
+    path: '/smart-quotes/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedResourcesIdRoute =
@@ -249,7 +263,9 @@ export interface FileRoutesByFullPath {
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
+  '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -283,7 +299,9 @@ export interface FileRoutesByTo {
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
+  '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
+  '/smart-quotes': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRoutesById {
@@ -319,7 +337,9 @@ export interface FileRoutesById {
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/_authenticated/resources_/$id': typeof AuthenticatedResourcesIdRoute
+  '/_authenticated/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
+  '/_authenticated/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/_authenticated/quotations/$id_/edit': typeof AuthenticatedQuotationsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -355,7 +375,9 @@ export interface FileRouteTypes {
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
+    | '/smart-quotes/$id'
     | '/quotations/'
+    | '/smart-quotes/'
     | '/quotations/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -389,7 +411,9 @@ export interface FileRouteTypes {
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
+    | '/smart-quotes/$id'
     | '/quotations'
+    | '/smart-quotes'
     | '/quotations/$id/edit'
   id:
     | '__root__'
@@ -424,7 +448,9 @@ export interface FileRouteTypes {
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
     | '/_authenticated/resources_/$id'
+    | '/_authenticated/smart-quotes/$id'
     | '/_authenticated/quotations/'
+    | '/_authenticated/smart-quotes/'
     | '/_authenticated/quotations/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -585,11 +611,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/smart-quotes/': {
+      id: '/_authenticated/smart-quotes/'
+      path: '/smart-quotes'
+      fullPath: '/smart-quotes/'
+      preLoaderRoute: typeof AuthenticatedSmartQuotesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/quotations/': {
       id: '/_authenticated/quotations/'
       path: '/quotations'
       fullPath: '/quotations/'
       preLoaderRoute: typeof AuthenticatedQuotationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/smart-quotes/$id': {
+      id: '/_authenticated/smart-quotes/$id'
+      path: '/smart-quotes/$id'
+      fullPath: '/smart-quotes/$id'
+      preLoaderRoute: typeof AuthenticatedSmartQuotesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/resources_/$id': {
@@ -699,7 +739,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
   AuthenticatedResourcesIdRoute: typeof AuthenticatedResourcesIdRoute
+  AuthenticatedSmartQuotesIdRoute: typeof AuthenticatedSmartQuotesIdRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
+  AuthenticatedSmartQuotesIndexRoute: typeof AuthenticatedSmartQuotesIndexRoute
   AuthenticatedQuotationsIdEditRoute: typeof AuthenticatedQuotationsIdEditRoute
 }
 
@@ -730,7 +772,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
   AuthenticatedResourcesIdRoute: AuthenticatedResourcesIdRoute,
+  AuthenticatedSmartQuotesIdRoute: AuthenticatedSmartQuotesIdRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
+  AuthenticatedSmartQuotesIndexRoute: AuthenticatedSmartQuotesIndexRoute,
   AuthenticatedQuotationsIdEditRoute: AuthenticatedQuotationsIdEditRoute,
 }
 
