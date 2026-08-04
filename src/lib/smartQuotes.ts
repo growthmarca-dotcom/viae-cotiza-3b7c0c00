@@ -307,7 +307,9 @@ export async function createSmartQuoteFromOpportunity(
     .select("id")
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
-  return data.id as string;
+  const newId = data.id as string;
+  await recordSmartQuoteVersion(newId, "created");
+  return newId;
 }
 
 /**
@@ -529,6 +531,7 @@ export async function addSmartQuoteItem(
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_added");
   return data.id as string;
 }
 
@@ -657,6 +660,12 @@ export async function updateSmartQuoteHeader(
     throw new Error(smartQuoteCreateErrorMessage(error));
   }
   if (payload.currency !== undefined) await recalcSmartQuoteTotal(smartQuoteId);
+  const onlyCurrency =
+    Object.keys(payload).length === 1 && payload.currency !== undefined;
+  await recordSmartQuoteVersion(
+    smartQuoteId,
+    onlyCurrency ? "currency_changed" : "header_updated",
+  );
 }
 
 export type SmartQuoteItemPatch = {
@@ -706,6 +715,7 @@ export async function updateSmartQuoteItem(
     .eq("smart_quote_id", smartQuoteId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_updated");
 }
 
 /**
@@ -724,6 +734,7 @@ export async function updateSmartQuoteCurrency(
     .eq("id", smartQuoteId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "currency_changed");
 }
 
 export async function deleteSmartQuoteItem(
@@ -733,15 +744,18 @@ export async function deleteSmartQuoteItem(
   const { error } = await supabase.from("smart_quote_items").delete().eq("id", itemId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_removed");
 }
 
 
 /* =========================================================================
- * v1.12.3 (Fase 2.2) — Preparación de versionado (NO implementado)
+ * v1.12.4 (Fase 2.3) — Versionado real del historial comercial
  *
- * `smart_quote_versions` ya existe en la base. En esta fase sólo se expone la
- * lectura del histórico y la construcción del snapshot en memoria. El alta de
- * versiones, la publicación y el diff se implementan en una fase posterior.
+ * Cada cambio con impacto comercial (creación, cabecera, ítems, moneda)
+ * guarda una versión en `smart_quote_versions`: snapshot completo, número
+ * consecutivo (lo asigna la base), usuario creador, fecha y motivo.
+ * El historial es append-only: no se edita, no se borra y todavía NO se
+ * restaura. RLS de la tabla: se lee/escribe según permisos de la cotización.
  * ========================================================================= */
 
 export type SmartQuoteSnapshot = {
@@ -798,18 +812,130 @@ export function buildSmartQuoteSnapshot(
   };
 }
 
-/** Histórico de versiones (solo lectura; hoy siempre vacío). */
+/** Motivos internos de una versión (trazabilidad comercial). */
+export const SMART_QUOTE_VERSION_REASONS = {
+  created: "Creación de la cotización",
+  header_updated: "Edición de la cabecera comercial",
+  item_added: "Alta de ítem",
+  item_updated: "Edición de ítem",
+  item_removed: "Baja de ítem",
+  currency_changed: "Cambio de moneda",
+} as const;
+
+export type SmartQuoteVersionReason = keyof typeof SMART_QUOTE_VERSION_REASONS;
+
+export type SmartQuoteVersionRow = SmartQuoteVersion & {
+  reason: string | null;
+  total_amount: number;
+  currency: string | null;
+  /** Nombre del autor cuando el perfil es legible; si no, null. */
+  created_by_name?: string | null;
+};
+
+/**
+ * Guarda una versión con el estado actual completo de la cotización.
+ * El número de versión lo asigna la base (consecutivo por cotización) y
+ * `created_by` toma por defecto el usuario autenticado.
+ */
+export async function createSmartQuoteVersion(
+  smartQuoteId: string,
+  reason: SmartQuoteVersionReason | string,
+): Promise<SmartQuoteVersionRow> {
+  const [{ data: quote, error: quoteErr }, items] = await Promise.all([
+    supabase.from("smart_quotes").select("*").eq("id", smartQuoteId).maybeSingle(),
+    listSmartQuoteItems(smartQuoteId),
+  ]);
+  if (quoteErr) throw quoteErr;
+  if (!quote) throw new Error("La cotización inteligente no existe o no es accesible.");
+
+  const sq = quote as unknown as SmartQuote;
+  const snapshot = buildSmartQuoteSnapshot(sq, items);
+  const label =
+    (SMART_QUOTE_VERSION_REASONS as Record<string, string>)[reason] ?? String(reason);
+
+  const { data: userData } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("smart_quote_versions")
+    .insert({
+      smart_quote_id: smartQuoteId,
+      status: "draft",
+      snapshot: snapshot as never,
+      reason: label,
+      total_amount: snapshot.header.total_amount,
+      currency: snapshot.header.currency,
+      created_by: userData.user?.id ?? null,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  return data as unknown as SmartQuoteVersionRow;
+}
+
+/**
+ * Alta de versión "best effort": nunca hace fallar la operación comercial
+ * que la originó (el dato de negocio ya quedó guardado).
+ */
+export async function recordSmartQuoteVersion(
+  smartQuoteId: string,
+  reason: SmartQuoteVersionReason,
+): Promise<void> {
+  try {
+    await createSmartQuoteVersion(smartQuoteId, reason);
+  } catch (err) {
+    console.warn("No se pudo registrar la versión de la cotización inteligente", err);
+  }
+}
+
+/** Histórico de versiones, de la más reciente a la más antigua. */
 export async function listSmartQuoteVersions(
   smartQuoteId: string,
-): Promise<SmartQuoteVersion[]> {
+): Promise<SmartQuoteVersionRow[]> {
   const { data, error } = await supabase
     .from("smart_quote_versions")
     .select("*")
     .eq("smart_quote_id", smartQuoteId)
     .order("version", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as SmartQuoteVersion[];
+  const rows = (data ?? []) as unknown as SmartQuoteVersionRow[];
+  const ids = [...new Set(rows.map((r) => r.created_by).filter(Boolean))] as string[];
+  if (ids.length === 0) return rows;
+  // `profiles` es legible según RLS (admin o el propio usuario): si no hay
+  // acceso, se muestra el autor como desconocido sin romper el historial.
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", ids);
+  const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
+  return rows.map((r) => ({
+    ...r,
+    created_by_name: r.created_by ? (names.get(r.created_by) ?? null) : null,
+  }));
 }
+
+/** Detalle de una versión puntual (snapshot completo). */
+export async function getSmartQuoteVersion(
+  versionId: string,
+): Promise<SmartQuoteVersionRow | null> {
+  const { data, error } = await supabase
+    .from("smart_quote_versions")
+    .select("*")
+    .eq("id", versionId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as SmartQuoteVersionRow) ?? null;
+}
+
+/** Lee el snapshot tipado de una versión (tolerante con formatos antiguos). */
+export function parseSmartQuoteVersionSnapshot(
+  version: SmartQuoteVersionRow,
+): SmartQuoteSnapshot | null {
+  const snap = version.snapshot as unknown;
+  if (!snap || typeof snap !== "object") return null;
+  const candidate = snap as Partial<SmartQuoteSnapshot>;
+  if (!candidate.header || !Array.isArray(candidate.items)) return null;
+  return candidate as SmartQuoteSnapshot;
+}
+
 
 
 // -------------------------------------------------------------- ciclo de vida

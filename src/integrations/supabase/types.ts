@@ -5647,28 +5647,37 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string | null
           id: string
+          reason: string | null
           smart_quote_id: string
           snapshot: Json
           status: Database["public"]["Enums"]["smart_quote_version_status"]
+          total_amount: number
           version: number
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           id?: string
+          reason?: string | null
           smart_quote_id: string
           snapshot?: Json
           status?: Database["public"]["Enums"]["smart_quote_version_status"]
+          total_amount?: number
           version?: number
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string | null
           id?: string
+          reason?: string | null
           smart_quote_id?: string
           snapshot?: Json
           status?: Database["public"]["Enums"]["smart_quote_version_status"]
+          total_amount?: number
           version?: number
         }
         Relationships: [

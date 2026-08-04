@@ -2,3 +2,4 @@
 - [Saneamiento multi-tenant v1.12.1](mem://features/multitenant-cleanup-v1121.md) — organization_id NOT NULL en opportunities/quotations/bookings, agencia ViaE Travel, resolveMyOrganizationId, alta directa de oportunidad
 - [Smart Quote moneda única v1.12.2](mem://features/smart-quote-single-currency-v1122.md) — smart_quotes.currency única fuente, herencia y bloqueo por trigger en items/pricing, recálculo de totales en base
 - [Smart Quote edición comercial v1.12.3](mem://features/smart-quote-editing-v1123.md) — cabecera editable con notas y pasajeros, edición inline de ítems, snapshot de versionado preparado sin activar
+- [Smart Quote versionado real v1.12.4](mem://features/smart-quote-versioning-v1124.md) — snapshots automáticos append-only con motivo/autor/total y panel de historial sin restauración
