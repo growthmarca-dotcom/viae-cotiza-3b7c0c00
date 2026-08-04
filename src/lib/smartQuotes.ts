@@ -307,7 +307,9 @@ export async function createSmartQuoteFromOpportunity(
     .select("id")
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
-  return data.id as string;
+  const newId = data.id as string;
+  await recordSmartQuoteVersion(newId, "created");
+  return newId;
 }
 
 /**
@@ -529,6 +531,7 @@ export async function addSmartQuoteItem(
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_added");
   return data.id as string;
 }
 
@@ -657,6 +660,12 @@ export async function updateSmartQuoteHeader(
     throw new Error(smartQuoteCreateErrorMessage(error));
   }
   if (payload.currency !== undefined) await recalcSmartQuoteTotal(smartQuoteId);
+  const onlyCurrency =
+    Object.keys(payload).length === 1 && payload.currency !== undefined;
+  await recordSmartQuoteVersion(
+    smartQuoteId,
+    onlyCurrency ? "currency_changed" : "header_updated",
+  );
 }
 
 export type SmartQuoteItemPatch = {
@@ -706,6 +715,7 @@ export async function updateSmartQuoteItem(
     .eq("smart_quote_id", smartQuoteId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_updated");
 }
 
 /**
@@ -724,6 +734,7 @@ export async function updateSmartQuoteCurrency(
     .eq("id", smartQuoteId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "currency_changed");
 }
 
 export async function deleteSmartQuoteItem(
@@ -733,6 +744,7 @@ export async function deleteSmartQuoteItem(
   const { error } = await supabase.from("smart_quote_items").delete().eq("id", itemId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
   await recalcSmartQuoteTotal(smartQuoteId);
+  await recordSmartQuoteVersion(smartQuoteId, "item_removed");
 }
 
 
