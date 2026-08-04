@@ -9,6 +9,8 @@
  * del cálculo realizado (snapshots inmutables).
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type SmartQuoteSource = "manual" | "orchestrator" | "package" | "external";
 
 export type SmartQuoteStatus =
