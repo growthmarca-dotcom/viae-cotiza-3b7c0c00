@@ -5338,6 +5338,7 @@ export type Database = {
           availability_snapshot: Json
           created_at: string
           currency: string
+          description: string | null
           id: string
           item_type: Database["public"]["Enums"]["smart_quote_item_type"]
           package_id: string | null
@@ -5346,6 +5347,7 @@ export type Database = {
           product_variant_id: string | null
           quantity: number
           smart_quote_id: string
+          title: string
           total_amount: number
           unit_amount: number
         }
@@ -5353,6 +5355,7 @@ export type Database = {
           availability_snapshot?: Json
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
           package_id?: string | null
@@ -5361,6 +5364,7 @@ export type Database = {
           product_variant_id?: string | null
           quantity?: number
           smart_quote_id: string
+          title: string
           total_amount?: number
           unit_amount?: number
         }
@@ -5368,6 +5372,7 @@ export type Database = {
           availability_snapshot?: Json
           created_at?: string
           currency?: string
+          description?: string | null
           id?: string
           item_type?: Database["public"]["Enums"]["smart_quote_item_type"]
           package_id?: string | null
@@ -5376,6 +5381,7 @@ export type Database = {
           product_variant_id?: string | null
           quantity?: number
           smart_quote_id?: string
+          title?: string
           total_amount?: number
           unit_amount?: number
         }

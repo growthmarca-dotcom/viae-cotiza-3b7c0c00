@@ -327,3 +327,286 @@ export async function linkQuotationToSmartQuote(
     .eq("id", quotationId);
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
 }
+
+/* =========================================================================
+ * v1.10.9.2 — Smart Quote MVP Comercial (Fase B4 parcial)
+ *
+ * Listado, detalle, constructor manual de ítems, ciclo de vida controlado y
+ * generación de la cotización de presentación (`quotations`) desde la Smart
+ * Quote. Sin motor de cálculo, disponibilidad, tarifas ni orquestador.
+ * ========================================================================= */
+
+export type SmartQuoteListRow = SmartQuote & {
+  clients: { id: string; full_name: string | null; last_name: string | null } | null;
+  opportunities: { id: string; title: string } | null;
+  agents: { id: string; first_name: string | null; last_name: string | null } | null;
+};
+
+export type SmartQuoteFilters = {
+  status?: SmartQuoteStatus | "all";
+  agentId?: string | "all";
+  search?: string;
+};
+
+const LIST_SELECT =
+  "*, clients(id, full_name, last_name), opportunities(id, title), agents(id, first_name, last_name)";
+
+export function smartQuoteClientLabel(row: Pick<SmartQuoteListRow, "clients">): string {
+  const c = row.clients;
+  if (!c) return "Sin cliente";
+  return [c.full_name, c.last_name].filter(Boolean).join(" ").trim() || "Cliente";
+}
+
+export function smartQuoteAgentLabel(row: Pick<SmartQuoteListRow, "agents">): string {
+  const a = row.agents;
+  if (!a) return "Sin agente";
+  return [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || "Agente";
+}
+
+export function smartQuoteStatusClasses(status: string | null): string {
+  switch (status) {
+    case "accepted":
+      return "bg-primary/10 text-primary border-primary/30";
+    case "sent":
+    case "ready":
+      return "bg-gold/15 text-foreground border-gold/40";
+    case "rejected":
+    case "expired":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+}
+
+/** Listado de Smart Quotes visibles para el usuario (RLS decide el alcance). */
+export async function listSmartQuotes(
+  filters: SmartQuoteFilters = {},
+): Promise<SmartQuoteListRow[]> {
+  let q = supabase.from("smart_quotes").select(LIST_SELECT).order("created_at", {
+    ascending: false,
+  });
+  if (filters.status && filters.status !== "all") q = q.eq("status", filters.status);
+  if (filters.agentId && filters.agentId !== "all") q = q.eq("agent_id", filters.agentId);
+  const { data, error } = await q;
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as SmartQuoteListRow[];
+  const term = filters.search?.trim().toLowerCase();
+  if (!term) return rows;
+  return rows.filter((r) =>
+    [r.title, smartQuoteClientLabel(r), r.destination_city, r.destination_country]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(term)),
+  );
+}
+
+export async function getSmartQuote(id: string): Promise<SmartQuoteListRow | null> {
+  const { data, error } = await supabase
+    .from("smart_quotes")
+    .select(LIST_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as unknown as SmartQuoteListRow) ?? null;
+}
+
+/** Smart Quotes de una oportunidad (vínculo del Pipeline Comercial). */
+export async function listSmartQuotesByOpportunity(
+  opportunityId: string,
+): Promise<SmartQuote[]> {
+  const { data, error } = await supabase
+    .from("smart_quotes")
+    .select("*")
+    .eq("opportunity_id", opportunityId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as SmartQuote[];
+}
+
+// -------------------------------------------------------- constructor manual
+
+export type SmartQuoteItemRow = SmartQuoteItem & {
+  title: string;
+  description: string | null;
+};
+
+export type SmartQuoteItemInput = {
+  title: string;
+  description?: string | null;
+  item_type: SmartQuoteItemType;
+  quantity: number;
+  unit_amount: number;
+  currency: string;
+};
+
+export async function listSmartQuoteItems(smartQuoteId: string): Promise<SmartQuoteItemRow[]> {
+  const { data, error } = await supabase
+    .from("smart_quote_items")
+    .select("*")
+    .eq("smart_quote_id", smartQuoteId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as SmartQuoteItemRow[];
+}
+
+/**
+ * Recalcula el total de la Smart Quote como suma simple de sus ítems.
+ * No es motor tarifario: sólo consolida la carga manual del agente.
+ */
+export async function recalcSmartQuoteTotal(smartQuoteId: string): Promise<number> {
+  const items = await listSmartQuoteItems(smartQuoteId);
+  const total = items.reduce((acc, i) => acc + Number(i.total_amount ?? 0), 0);
+  const { error } = await supabase
+    .from("smart_quotes")
+    .update({ total_amount: total })
+    .eq("id", smartQuoteId);
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  return total;
+}
+
+export async function addSmartQuoteItem(
+  smartQuoteId: string,
+  input: SmartQuoteItemInput,
+): Promise<string> {
+  const quantity = Number(input.quantity) || 0;
+  const unit = Number(input.unit_amount) || 0;
+  if (!input.title.trim()) throw new Error("El ítem necesita un nombre.");
+  if (quantity <= 0) throw new Error("La cantidad debe ser mayor a cero.");
+  const { data, error } = await supabase
+    .from("smart_quote_items")
+    .insert({
+      smart_quote_id: smartQuoteId,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      item_type: input.item_type,
+      quantity,
+      unit_amount: unit,
+      total_amount: quantity * unit,
+      currency: input.currency,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  await recalcSmartQuoteTotal(smartQuoteId);
+  return data.id as string;
+}
+
+export async function deleteSmartQuoteItem(
+  smartQuoteId: string,
+  itemId: string,
+): Promise<void> {
+  const { error } = await supabase.from("smart_quote_items").delete().eq("id", itemId);
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  await recalcSmartQuoteTotal(smartQuoteId);
+}
+
+// -------------------------------------------------------------- ciclo de vida
+
+/**
+ * Cambio de estado controlado: sólo transiciones permitidas por
+ * SMART_QUOTE_STATUS_FLOW. La UI nunca escribe `status` directamente.
+ */
+export async function updateSmartQuoteStatus(
+  smartQuoteId: string,
+  next: SmartQuoteStatus,
+): Promise<void> {
+  const { data: current, error: readErr } = await supabase
+    .from("smart_quotes")
+    .select("status")
+    .eq("id", smartQuoteId)
+    .maybeSingle();
+  if (readErr) throw readErr;
+  if (!current) throw new Error("La cotización inteligente no existe o no es accesible.");
+  const from = current.status as SmartQuoteStatus;
+  if (from === next) return;
+  if (!SMART_QUOTE_STATUS_FLOW[from]?.includes(next)) {
+    throw new Error(
+      `Transición no permitida: ${SMART_QUOTE_STATUS_LABELS[from]} → ${SMART_QUOTE_STATUS_LABELS[next]}.`,
+    );
+  }
+  const { error } = await supabase
+    .from("smart_quotes")
+    .update({ status: next })
+    .eq("id", smartQuoteId);
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+}
+
+/** Estados a los que se puede pasar desde el estado actual. */
+export function allowedSmartQuoteTransitions(status: SmartQuoteStatus): SmartQuoteStatus[] {
+  return SMART_QUOTE_STATUS_FLOW[status] ?? [];
+}
+
+// ------------------------------------------------- generar propuesta (quotation)
+
+/**
+ * Genera la cotización de presentación (capa cliente: PDF + enlace público)
+ * a partir de la Smart Quote, conservando organization_id, opportunity_id,
+ * client_id y agent_id. Reutiliza `quotations` tal como está: no duplica
+ * lógica de PDF ni de enlace público.
+ */
+export async function createQuotationFromSmartQuote(smartQuoteId: string): Promise<string> {
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error("Sesión no válida");
+
+  const sq = await getSmartQuote(smartQuoteId);
+  if (!sq) throw new Error("La cotización inteligente no existe o no es accesible.");
+  if (!sq.organization_id) {
+    throw new Error(
+      "La cotización inteligente no tiene organización propietaria: no se puede generar la propuesta.",
+    );
+  }
+
+  const items = await listSmartQuoteItems(smartQuoteId);
+  const total =
+    Number(sq.total_amount ?? 0) ||
+    items.reduce((acc, i) => acc + Number(i.total_amount ?? 0), 0);
+
+  const client = sq.clients;
+  const firstName = (client?.full_name ?? "").replace(client?.last_name ?? "", "").trim();
+  const destination =
+    [sq.destination_city, sq.destination_state, sq.destination_country]
+      .filter(Boolean)
+      .join(", ") || null;
+  const description = items
+    .map((i) => {
+      const detail = i.description ? ` — ${i.description}` : "";
+      return `• ${i.title} (x${Number(i.quantity)})${detail}`;
+    })
+    .join("\n");
+
+  const { data, error } = await supabase
+    .from("quotations")
+    .insert({
+      user_id: uid,
+      smart_quote_id: sq.id,
+      opportunity_id: sq.opportunity_id,
+      organization_id: sq.organization_id,
+      client_id: sq.client_id,
+      title: sq.title,
+      status: "draft",
+      destination,
+      travel_start: sq.start_date,
+      travel_end: sq.end_date,
+      guest_first_name: firstName || client?.full_name || null,
+      guest_last_name: client?.last_name ?? null,
+      accommodation_name: sq.title,
+      accommodation_description: description || null,
+      total_amount: total,
+      currency: sq.currency,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(smartQuoteCreateErrorMessage(error));
+  return data.id as string;
+}
+
+/** Cotizaciones de presentación generadas desde una Smart Quote. */
+export async function listQuotationsBySmartQuote(smartQuoteId: string) {
+  const { data, error } = await supabase
+    .from("quotations")
+    .select("id, title, status, total_amount, currency, created_at, share_token")
+    .eq("smart_quote_id", smartQuoteId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}

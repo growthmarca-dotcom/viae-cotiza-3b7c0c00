@@ -8,6 +8,7 @@ import {
   History,
   Loader2,
   PencilLine,
+  Sparkles,
   Target,
   TicketCheck,
   UserRound,
@@ -24,12 +25,18 @@ import {
 } from "@/components/ui/select";
 import { BookingCreateDialog } from "@/components/booking-create-dialog";
 import { OpportunityTrackingDialog } from "@/components/opportunity-tracking-dialog";
+import { SmartQuoteCreateDialog } from "@/components/smart-quote-create-dialog";
 import { useAccount } from "@/hooks/use-account";
 import { supabase } from "@/integrations/supabase/client";
 import { agentFullName, getAgent, type Agent } from "@/lib/agents";
 import { getBookingByOpportunity, type Booking } from "@/lib/bookings";
 import { getClient, type Client } from "@/lib/clients";
 import { formatMoney } from "@/lib/currency";
+import {
+  SMART_QUOTE_STATUS_LABELS,
+  listSmartQuotesByOpportunity,
+  type SmartQuote,
+} from "@/lib/smartQuotes";
 import {
   listOpportunityHistory,
   listStageConfig,
@@ -94,6 +101,8 @@ function OpportunityDetailPage() {
   const [moving, setMoving] = useState(false);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [smartQuotes, setSmartQuotes] = useState<SmartQuote[]>([]);
+  const [smartQuoteOpen, setSmartQuoteOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -104,16 +113,18 @@ function OpportunityDetailPage() {
         toast.error("Oportunidad no encontrada o sin acceso");
         return;
       }
-      const [cfg, hist, agentId, bk] = await Promise.all([
+      const [cfg, hist, agentId, bk, sqs] = await Promise.all([
         listStageConfig(),
         listOpportunityHistory(id).catch(() => []),
         currentAgentId(),
         getBookingByOpportunity(id).catch(() => null),
+        listSmartQuotesByOpportunity(id).catch(() => []),
       ]);
       setStageConfig(cfg);
       setHistory(hist);
       setMyAgentId(agentId);
       setBooking(bk);
+      setSmartQuotes(sqs);
 
       setClient(o.client_id ? await getClient(o.client_id).catch(() => null) : null);
       setAgent(o.assigned_agent_id ? await getAgent(o.assigned_agent_id).catch(() => null) : null);
@@ -351,6 +362,38 @@ function OpportunityDetailPage() {
         <section className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="font-display text-lg font-semibold">Relaciones y acciones</h2>
 
+          {/* v1.10.9.2 — Smart Quotes de la oportunidad (motor comercial). */}
+          {smartQuotes.length > 0 ? (
+            <div className="space-y-2">
+              {smartQuotes.map((sq) => (
+                <div key={sq.id} className="rounded-xl border border-border bg-background p-3">
+                  <p className="truncate text-sm font-medium">{sq.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {SMART_QUOTE_STATUS_LABELS[sq.status]}
+                    {sq.total_amount != null
+                      ? ` · ${formatMoney(sq.currency, Number(sq.total_amount))}`
+                      : ""}
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="mt-2 w-full">
+                    <Link to="/smart-quotes/$id" params={{ id: sq.id }}>
+                      <Sparkles className="mr-2 h-4 w-4" /> Abrir Smart Quote
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            disabled={!editable}
+            onClick={() => setSmartQuoteOpen(true)}
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> Crear Smart Quote
+          </Button>
+
           {quotation ? (
             <div className="rounded-xl border border-border bg-background p-3">
               <p className="text-sm font-medium">{quotation.title || "Cotización"}</p>
@@ -406,6 +449,19 @@ function OpportunityDetailPage() {
         onOpenChange={setTrackingOpen}
         onSaved={load}
       />
+
+      <SmartQuoteCreateDialog
+        open={smartQuoteOpen}
+        onOpenChange={setSmartQuoteOpen}
+        opportunityId={opportunity.id}
+        organizationId={opportunity.organization_id ?? null}
+        defaults={{ title: opportunity.title, currency: opportunity.currency }}
+        onCreated={(smartQuoteId) =>
+          navigate({ to: "/smart-quotes/$id", params: { id: smartQuoteId } })
+        }
+      />
+
+
 
       <BookingCreateDialog
         open={bookingOpen}
