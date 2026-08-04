@@ -192,6 +192,12 @@ export type BookingOrigin = {
 
 export type BookingInput = {
   client_id: string;
+  /**
+   * Organización comercial propietaria (v1.10.7.2.1.4). Opcional: si no se
+   * envía, la base la resuelve desde el agente asignado o la única
+   * organización activa del creador. Si hay ambigüedad, se bloquea el alta.
+   */
+  organization_id?: string | null;
   assigned_agent_id: string | null;
   status: BookingStatus;
   travel_start: string | null;
