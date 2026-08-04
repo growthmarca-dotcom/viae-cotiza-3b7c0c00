@@ -602,13 +602,29 @@ export async function updateSmartQuoteHeader(
   smartQuoteId: string,
   patch: SmartQuoteHeaderPatch,
 ): Promise<void> {
-  const payload: Record<string, unknown> = {};
+  const payload: {
+    title?: string;
+    destination_country?: string | null;
+    destination_state?: string | null;
+    destination_city?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    passengers_metadata?: SmartQuotePassengers;
+    notes?: string | null;
+    currency?: string;
+  } = {};
   if (patch.title !== undefined) {
     if (!patch.title.trim()) throw new Error("La cotización necesita un título.");
     payload.title = patch.title.trim();
   }
-  for (const key of ["destination_country", "destination_state", "destination_city"] as const) {
-    if (patch[key] !== undefined) payload[key] = patch[key]?.trim() || null;
+  if (patch.destination_country !== undefined) {
+    payload.destination_country = patch.destination_country?.trim() || null;
+  }
+  if (patch.destination_state !== undefined) {
+    payload.destination_state = patch.destination_state?.trim() || null;
+  }
+  if (patch.destination_city !== undefined) {
+    payload.destination_city = patch.destination_city?.trim() || null;
   }
   if (patch.start_date !== undefined) payload.start_date = patch.start_date || null;
   if (patch.end_date !== undefined) payload.end_date = patch.end_date || null;
