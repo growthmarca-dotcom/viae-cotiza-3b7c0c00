@@ -177,9 +177,13 @@ function ClientDetailPage() {
     try {
       const { data: userData, error } = await supabase.auth.getUser();
       if (error || !userData.user) throw new Error("Sesión no válida.");
+      // Si el usuario pertenece a una sola organización, se usa como propietaria;
+      // con varias, la resolución la valida la base de datos (v1.10.7.2.3).
+      const orgs = await listMyQuotationOrganizations();
       await createOpportunity({
         userId: userData.user.id,
         clientId: id,
+        organizationId: orgs.length === 1 ? orgs[0].id : null,
         title: `Oportunidad ${new Date().toLocaleDateString()}`,
       });
       toast.success("Oportunidad creada");
