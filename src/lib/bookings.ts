@@ -212,8 +212,10 @@ export type BookingInput = {
 };
 
 export async function createBooking(origin: BookingOrigin, input: BookingInput): Promise<string> {
-  if (!origin.opportunityId && !origin.quotationId) {
-    throw new Error("Una reserva sólo puede crearse desde una oportunidad o una cotización.");
+  if (!origin.opportunityId && !origin.quotationId && !origin.smartQuoteId) {
+    throw new Error(
+      "Una reserva sólo puede crearse desde una oportunidad, una cotización o una cotización inteligente.",
+    );
   }
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
@@ -223,19 +225,36 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   let organizationId = input.organization_id ?? null;
   let clientId = input.client_id;
   let agentId = input.assigned_agent_id;
+  let smartQuoteId = origin.smartQuoteId ?? null;
 
   // Conversión cotización -> reserva: la reserva hereda el contexto comercial
   // completo de la cotización (v1.10.7.2.2). Sin pérdida de contexto.
   if (origin.quotationId) {
     const { data: q } = await supabase
       .from("quotations")
-      .select("opportunity_id, organization_id, client_id")
+      .select("opportunity_id, organization_id, client_id, smart_quote_id")
       .eq("id", origin.quotationId)
       .maybeSingle();
     if (q) {
       opportunityId = opportunityId ?? q.opportunity_id ?? null;
       organizationId = organizationId ?? q.organization_id ?? null;
       clientId = clientId || (q.client_id ?? clientId);
+      smartQuoteId = smartQuoteId ?? q.smart_quote_id ?? null;
+    }
+  }
+
+  // Origen Smart Quote (v1.10.9.1): completa contexto comercial faltante.
+  if (smartQuoteId) {
+    const { data: sq } = await supabase
+      .from("smart_quotes")
+      .select("opportunity_id, organization_id, client_id, agent_id")
+      .eq("id", smartQuoteId)
+      .maybeSingle();
+    if (sq) {
+      opportunityId = opportunityId ?? sq.opportunity_id ?? null;
+      organizationId = organizationId ?? sq.organization_id ?? null;
+      clientId = clientId || (sq.client_id ?? clientId);
+      agentId = agentId ?? sq.agent_id ?? null;
     }
   }
 
@@ -262,6 +281,7 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
       user_id: uid,
       opportunity_id: opportunityId,
       quotation_id: origin.quotationId ?? null,
+      smart_quote_id: smartQuoteId,
     })
     .select("id")
     .single();
