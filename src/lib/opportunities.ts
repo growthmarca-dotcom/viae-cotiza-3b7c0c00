@@ -151,6 +151,29 @@ export async function updateOpportunity(id: string, patch: OpportunityPatch) {
   if (error) throw error;
 }
 
+/**
+ * Traduce el bloqueo del trigger `opportunities_require_organization`
+ * a un mensaje comprensible para el agente.
+ */
+export function opportunityCreateErrorMessage(error: {
+  message?: string;
+  hint?: string | null;
+}): string {
+  const msg = error.message ?? "No se pudo crear la oportunidad";
+  if (msg.includes("different organizations")) {
+    return "La oportunidad y la cotización pertenecen a organizaciones distintas.";
+  }
+  if (!msg.includes("Opportunity requires a valid organization")) return msg;
+  switch (error.hint) {
+    case "ambiguous_organization":
+      return "Pertenecés a más de una organización: elegí la organización propietaria de la oportunidad.";
+    case "not_allowed_for_organization":
+      return "No tenés permisos para crear oportunidades en esa organización.";
+    default:
+      return "La oportunidad necesita una organización comercial propietaria válida.";
+  }
+}
+
 export async function createOpportunity(input: {
   userId: string;
   clientId: string;
@@ -161,6 +184,11 @@ export async function createOpportunity(input: {
   estimatedValue?: number;
   currency?: string;
   probability?: number;
+  /**
+   * Organización comercial propietaria. Si se omite, la resuelve el motor
+   * `resolve_opportunity_organization()` en la base de datos (v1.10.7.2.3).
+   */
+  organizationId?: string | null;
 }) {
   const { data, error } = await supabase
     .from("opportunities")
@@ -169,6 +197,7 @@ export async function createOpportunity(input: {
       owner_user_id: input.userId,
       client_id: input.clientId,
       quotation_id: input.quotationId ?? null,
+      organization_id: input.organizationId ?? null,
       title: input.title || "Oportunidad",
       stage: input.stage ?? "new",
       lead_source: input.leadSource ?? "other",
@@ -178,14 +207,15 @@ export async function createOpportunity(input: {
     })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throw new Error(opportunityCreateErrorMessage(error));
   return data.id as string;
 }
 
 /**
- * Cada cotización genera automáticamente una oportunidad comercial.
- * Si la cotización ya tiene una, sólo se actualiza el valor estimado.
- * Nunca debe bloquear la creación de la cotización.
+ * Cada cotización queda relacionada a una oportunidad comercial.
+ * - Conserva la oportunidad existente (pasada o vinculada a la cotización).
+ * - Al crear una nueva hereda la organización de la cotización.
+ * - Nunca crea oportunidades huérfanas (sin cliente) ni bloquea la cotización.
  */
 export async function ensureOpportunityForQuotation(args: {
   userId: string;
@@ -194,8 +224,10 @@ export async function ensureOpportunityForQuotation(args: {
   title: string;
   amount: number;
   currency: string;
-  /** Oportunidad ya existente a la que pertenece la cotización. */
+  /** Oportunidad ya identificada para esta cotización. */
   opportunityId?: string | null;
+  /** Organización propietaria de la cotización. */
+  organizationId?: string | null;
 }): Promise<string | null> {
   if (!args.clientId) return null;
   try {
@@ -221,11 +253,22 @@ export async function ensureOpportunityForQuotation(args: {
       return existing.id;
     }
 
+    // La organización de la nueva oportunidad debe coincidir con la de la cotización.
+    let organizationId = args.organizationId ?? null;
+    if (!organizationId) {
+      const { data: q } = await supabase
+        .from("quotations")
+        .select("organization_id")
+        .eq("id", args.quotationId)
+        .maybeSingle();
+      organizationId = q?.organization_id ?? null;
+    }
 
     return await createOpportunity({
       userId: args.userId,
       clientId: args.clientId,
       quotationId: args.quotationId,
+      organizationId,
       title: args.title,
       stage: "quoted",
       leadSource: "other",
