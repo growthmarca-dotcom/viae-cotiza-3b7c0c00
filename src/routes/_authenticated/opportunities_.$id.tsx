@@ -450,6 +450,19 @@ function OpportunityDetailPage() {
         onSaved={load}
       />
 
+      <SmartQuoteCreateDialog
+        open={smartQuoteOpen}
+        onOpenChange={setSmartQuoteOpen}
+        opportunityId={opportunity.id}
+        organizationId={opportunity.organization_id ?? null}
+        defaults={{ title: opportunity.title, currency: opportunity.currency }}
+        onCreated={(smartQuoteId) =>
+          navigate({ to: "/smart-quotes/$id", params: { id: smartQuoteId } })
+        }
+      />
+
+
+
       <BookingCreateDialog
         open={bookingOpen}
         onOpenChange={setBookingOpen}
