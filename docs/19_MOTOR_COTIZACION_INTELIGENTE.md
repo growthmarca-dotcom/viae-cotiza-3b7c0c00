@@ -163,3 +163,38 @@ recursión de políticas. Todas las tablas tienen `GRANT` explícito a
 - reservas y bloqueo de inventario
 - IA generativa
 - cálculo automático de precios y validación real de cupos
+
+## v1.10.9.2 — Smart Quote MVP Comercial (Fase B4 parcial)
+
+Primera experiencia usable. Sin motor de cálculo, disponibilidad, tarifas dinámicas,
+inventario ni orquestador.
+
+### Base de datos
+- `smart_quote_items.title` (NOT NULL, no vacío) y `smart_quote_items.description`
+  para carga manual de servicios. RLS sin cambios.
+
+### Rutas
+- `/smart-quotes` — listado con filtros por estado, agente y búsqueda de cliente.
+- `/smart-quotes/$id` — detalle: contexto comercial, constructor de ítems, propuestas.
+
+### Componentes
+- `src/components/smart-quote-create-dialog.tsx`
+- `src/components/smart-quote-items-panel.tsx`
+
+### Helpers (`src/lib/smartQuotes.ts`)
+- `listSmartQuotes`, `getSmartQuote`, `listSmartQuotesByOpportunity`
+- `listSmartQuoteItems`, `addSmartQuoteItem`, `deleteSmartQuoteItem`, `recalcSmartQuoteTotal`
+- `updateSmartQuoteStatus`, `allowedSmartQuoteTransitions`
+- `createQuotationFromSmartQuote`, `listQuotationsBySmartQuote`
+
+### Reglas de negocio
+1. La Smart Quote nace **sólo** desde una oportunidad con organización válida.
+2. El estado cambia únicamente por `updateSmartQuoteStatus()` respetando
+   `SMART_QUOTE_STATUS_FLOW`.
+3. `total_amount` es la suma simple de los ítems cargados manualmente.
+4. "Generar propuesta" crea una `quotations` con `smart_quote_id`, `opportunity_id`,
+   `organization_id` y `client_id`, reutilizando el PDF y el enlace público existentes.
+5. El booking conserva smart_quote_id, quotation_id, opportunity_id, organization_id,
+   client_id y agent_id (`createBooking`, v1.10.9.1).
+6. Permisos: Admin y Operaciones gestionan todo; el agente sólo sus Smart Quotes.
+   Organización, oportunidad, cliente y agente permanecen inmutables.
