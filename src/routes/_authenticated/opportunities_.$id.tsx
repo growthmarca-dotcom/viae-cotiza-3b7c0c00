@@ -8,6 +8,7 @@ import {
   History,
   Loader2,
   PencilLine,
+  Sparkles,
   Target,
   TicketCheck,
   UserRound,
@@ -24,12 +25,18 @@ import {
 } from "@/components/ui/select";
 import { BookingCreateDialog } from "@/components/booking-create-dialog";
 import { OpportunityTrackingDialog } from "@/components/opportunity-tracking-dialog";
+import { SmartQuoteCreateDialog } from "@/components/smart-quote-create-dialog";
 import { useAccount } from "@/hooks/use-account";
 import { supabase } from "@/integrations/supabase/client";
 import { agentFullName, getAgent, type Agent } from "@/lib/agents";
 import { getBookingByOpportunity, type Booking } from "@/lib/bookings";
 import { getClient, type Client } from "@/lib/clients";
 import { formatMoney } from "@/lib/currency";
+import {
+  SMART_QUOTE_STATUS_LABELS,
+  listSmartQuotesByOpportunity,
+  type SmartQuote,
+} from "@/lib/smartQuotes";
 import {
   listOpportunityHistory,
   listStageConfig,
