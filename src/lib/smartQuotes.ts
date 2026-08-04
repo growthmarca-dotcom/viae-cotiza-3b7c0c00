@@ -233,6 +233,14 @@ export function smartQuoteCreateErrorMessage(error: { message?: string; hint?: s
   if (hint.includes("opportunity_mismatch")) {
     return "La cotización y la cotización inteligente apuntan a oportunidades distintas.";
   }
+  if (hint.includes("currency_mismatch") || message.includes("must match")) {
+    return "La moneda del ítem debe coincidir con la moneda de la cotización inteligente.";
+  }
+  if (hint.includes("smart_quote_currency_missing")) {
+    return "La cotización inteligente necesita una moneda definida.";
+  }
+  if (hint.includes("invalid_quantity")) return "La cantidad debe ser mayor a cero.";
+  if (hint.includes("invalid_unit_amount")) return "El precio unitario debe ser cero o mayor.";
   if (hint.includes("structural_field_locked")) {
     return "No podés cambiar la organización, oportunidad, cliente ni agente de esta cotización inteligente.";
   }
@@ -536,7 +544,13 @@ export async function updateSmartQuoteItem(
   itemId: string,
   patch: SmartQuoteItemPatch,
 ): Promise<void> {
-  const payload: Record<string, unknown> = {};
+  const payload: {
+    title?: string;
+    description?: string | null;
+    item_type?: SmartQuoteItemType;
+    quantity?: number;
+    unit_amount?: number;
+  } = {};
   if (patch.title !== undefined) {
     if (!patch.title.trim()) throw new Error("El ítem necesita un nombre.");
     payload.title = patch.title.trim();

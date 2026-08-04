@@ -59,7 +59,6 @@ export function SmartQuoteItemsPanel({
         item_type: itemType,
         quantity: Number(quantity),
         unit_amount: Number(unitAmount),
-        currency,
       });
       setTitle("");
       setDescription("");
@@ -90,7 +89,13 @@ export function SmartQuoteItemsPanel({
   return (
     <section className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold">Ítems de la cotización</h2>
+        <div>
+          <h2 className="font-display text-lg font-semibold">Ítems de la cotización</h2>
+          <p className="text-xs text-muted-foreground">
+            Moneda única de la cotización: <span className="font-medium">{currency}</span>. Todos los
+            ítems se cargan en esta moneda.
+          </p>
+        </div>
         <p className="text-sm text-muted-foreground">
           Total: <span className="font-medium text-foreground">{formatMoney(currency, total)}</span>
         </p>
