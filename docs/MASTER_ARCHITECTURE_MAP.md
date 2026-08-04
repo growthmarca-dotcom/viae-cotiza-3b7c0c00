@@ -1238,3 +1238,95 @@ actualizadas — las 2 oportunidades existentes tienen cotizaciones sin
 - RLS por organización en `opportunities` sigue inactivo (sólo enforcement de alta).
 - Histórico: 2 oportunidades y 16 cotizaciones sin organización; sólo se podrán
   completar cuando exista una resolución determinista.
+
+---
+
+# Pipeline Comercial — Modelo (v1.10.8.1)
+
+Preparación del modelo para un Kanban profesional. **No incluye pantalla ni rutas nuevas.**
+
+## 1. Normalización de estados
+
+- `opportunities.stage` (`opportunity_stage`) es la **única** fuente de estado comercial.
+- `opportunity_status` queda **DEPRECATED**: no se usa en ninguna tabla y no se migran datos.
+  Marcado con `COMMENT ON TYPE`. No usar en código nuevo.
+
+## 2. `opportunity_stage_config`
+
+| Columna | Notas |
+| --- | --- |
+| `stage` | `opportunity_stage`, único |
+| `display_name` | etiqueta visible (ES) |
+| `sort_order` | orden de columnas del Kanban (10..90) |
+| `pipeline_group` | `open` \| `won` \| `lost` (CHECK) |
+| `default_probability` | 0–100 (CHECK) |
+| `is_active` | permite ocultar etapas sin borrarlas |
+
+Carga inicial: new 10/open/10, contacted 20/open/20, quoted 30/open/40,
+following_up 40/open/55, negotiating 50/open/70, booked 60/won/100,
+completed 70/won/100, lost 80/lost/0, cancelled 90/lost/0.
+
+RLS: lectura para todo autenticado; escritura solo `admin`.
+`OPPORTUNITY_STAGES` del frontend se conserva como fallback durante la migración;
+`listStageConfig()` es la fuente preferida.
+
+## 3. `opportunity_history` (append-only)
+
+`opportunity_id` FK CASCADE, `from_stage`, `to_stage`, `changed_by`, `changed_at`, `notes`.
+
+- `trg_opportunity_history` (AFTER INSERT OR UPDATE OF stage, SECURITY DEFINER)
+  registra el alta (`from_stage NULL`) y cada cambio de etapa; `lost_reason` se copia como nota.
+- `trg_opportunity_history_append_only` bloquea UPDATE/DELETE.
+- RLS de lectura: admin, dueño (`user_id`/`owner_user_id`) y agente asignado.
+- `audit_log` se mantiene intacto (no reemplazado).
+
+## 4. Campos nuevos en `opportunities`
+
+`stage_changed_at timestamptz`, `expected_close_date date`, `lost_reason text`,
+`position integer` (orden Kanban, múltiplos de 100).
+Índice `idx_opportunities_stage_position (stage, position, created_at DESC)`.
+`trg_opportunity_stage_stamp` sella `stage_changed_at` en alta y en cada cambio de etapa.
+
+## 5. `moveOpportunityStage()`
+
+`src/lib/opportunities.ts`: valida existencia/acceso (lectura por RLS), aplica `stage`,
+`position` y `lost_reason` cuando el grupo destino es `lost`. El sello y el historial
+los hace la base. Sin reglas de transición todavía. Errores traducidos por
+`opportunityUpdateErrorMessage()`.
+
+## 6. Permisos de UPDATE
+
+- Política nueva `assigned agent updates opportunities`: el agente asignado y aprobado
+  puede actualizar la fila.
+- `trg_opportunity_guard_update` (BEFORE UPDATE, SECURITY DEFINER) limita al agente
+  asignado (que no sea dueño ni admin) a `stage`, `next_action`, `notes`,
+  `expected_close_date`, `position`, `probability`, `title`, `next_contact_date`,
+  `lost_reason`. Bloquea `organization_id`, `owner_user_id`, `user_id`,
+  `assigned_agent_id`, `client_id`, `quotation_id`, `record_status`,
+  `estimated_value`, `currency`, `lead_source` con HINT `agent_field_not_allowed`.
+- Admin y dueño conservan sus permisos anteriores.
+
+## 7. Multi-tenant en UPDATE
+
+El mismo trigger valida permiso sobre la organización destino y bloquea cruces contra
+la **cotización vinculada** y contra **cualquier reserva** con esa oportunidad
+(HINT `organization_mismatch`). `service_role` y las sesiones sin `auth.uid()` quedan exentas,
+igual que en bookings y quotations.
+
+## 8. Backfill (resultado real)
+
+- `stage_changed_at = created_at`: **2 de 2** oportunidades.
+- `position` por antigüedad dentro de cada etapa: **2 de 2**.
+- Historial inicial de registros preexistentes: **2 filas** con nota
+  `Registro histórico (backfill v1.10.8.1)`.
+- Nada inventado, nada borrado.
+
+## 9. Riesgos pendientes
+
+- Las rutas de UPDATE con sesión real (agente vs dueño) no se pueden ejercitar desde el
+  entorno de pruebas SQL (sin `auth.uid()` y sin GRANT de UPDATE): validadas por revisión
+  de lógica, no en ejecución.
+- Ninguna cotización tiene `organization_id` aún, por lo que el cruce oportunidad↔cotización
+  sólo está verificado con datos sintéticos.
+- Sin reglas de transición de etapa ni normalización de `position` (rebalanceo).
+- `currency` sigue siendo texto libre: los totales por columna necesitarán conversión.
