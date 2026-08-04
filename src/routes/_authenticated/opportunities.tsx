@@ -12,7 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { OpportunityKanban } from "@/components/opportunity-kanban";
+import { OpportunityCreateDialog } from "@/components/opportunity-create-dialog";
 import { OpportunityTrackingDialog } from "@/components/opportunity-tracking-dialog";
+
 import { useAccount } from "@/hooks/use-account";
 import { agentFullName, listAgents, type Agent } from "@/lib/agents";
 import { listClients, type Client } from "@/lib/clients";
