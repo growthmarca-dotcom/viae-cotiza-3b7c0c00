@@ -1377,3 +1377,63 @@ Admin total, operaciones gestiona, dueño (`user_id`) gestiona, agente asignado 
 
 Sin backfill: `smart_quotes` estaba vacía; las 16 cotizaciones y 3 reservas históricas quedan con
 `smart_quote_id = NULL`. No hay relación determinista que permita inferirlo.
+
+---
+
+# Financial Core (v1.12 — arquitectura base)
+
+Infraestructura financiera reutilizable por todo ViaE Core. Esta fase construye
+solo la base: **no** integra APIs externas, **no** reemplaza lógica existente y
+**no** modifica cálculos de Smart Quotes ni Bookings.
+
+## Tablas
+
+| Tabla | Contenido |
+| --- | --- |
+| `currencies` | Catálogo: `iso_code`, `name`, `symbol`, `decimal_places`, `is_active`. Semillas: ARS, USD, EUR, BRL, CLP, UYU |
+| `currency_exchange_rates` | Cotizaciones históricas: `from_currency_id`, `to_currency_id`, `exchange_rate`, `rate_type`, `source`, `valid_from`, `valid_until`. Append-only por diseño |
+
+`organizations` incorpora `base_currency_id` (moneda de operación) y
+`analysis_currency_id` (moneda de análisis). Ambos opcionales: no hay migración
+automática de datos.
+
+La tabla legacy `exchange_rates` (v1.6, dólar operativo manual) **se conserva
+intacta** y sigue alimentando la economía de transporte.
+
+## Validaciones
+
+- `exchange_rate > 0` (CHECK + trigger).
+- Monedas de origen y destino deben estar activas.
+- Prohibidos períodos superpuestos para el mismo par + `rate_type` + `source`.
+- `valid_until` posterior a `valid_from`.
+- Monedas distintas entre sí.
+
+## Funciones
+
+- `public.currency_rate_at(from_iso, to_iso, at, rate_type)` — tasa vigente a una
+  fecha (histórica o actual); resuelve también el par inverso.
+- `src/lib/money.ts` — Money Service: `convertMoney()`, `roundMoney()`,
+  `formatMoney()`, `getExchangeRate()`, más `listCurrencies()`,
+  `listExchangeRateHistory()`, `saveExchangeRate()`, `sumMoney()`.
+
+Regla: toda conversión monetaria futura debe pasar por `src/lib/money.ts`.
+Nunca se asume el tipo de cambio vigente cuando se pide una fecha histórica; si
+no hay cotización, `convertMoney()` falla en lugar de inventar una tasa.
+
+## Módulos que usarán este servicio
+
+- Smart Quotes
+- Quotations
+- Bookings
+- Commissions
+- Accounting
+- Reports
+- Marketplace
+- Payments
+
+## Preparado para el futuro (no implementado)
+
+- Sincronización automática con APIs de cotización.
+- Múltiples fuentes simultáneas (`source`) y tipos de cambio (`rate_type`:
+  operational, official, buy, sell, mid, custom).
+- Auditoría de cargas (`created_by`, `created_at`, histórico inmutable).
