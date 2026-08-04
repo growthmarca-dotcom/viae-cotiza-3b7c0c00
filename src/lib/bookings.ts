@@ -188,6 +188,8 @@ export async function listBookingPayments(bookingId: string): Promise<BookingPay
 export type BookingOrigin = {
   opportunityId?: string | null;
   quotationId?: string | null;
+  /** v1.10.9.1 — Smart Quote origen (motor de cálculo), si existe. */
+  smartQuoteId?: string | null;
 };
 
 export type BookingInput = {
