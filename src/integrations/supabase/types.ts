@@ -1980,6 +1980,96 @@ export type Database = {
         }
         Relationships: []
       }
+      currencies: {
+        Row: {
+          created_at: string
+          decimal_places: number
+          id: string
+          is_active: boolean
+          iso_code: string
+          name: string
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decimal_places?: number
+          id?: string
+          is_active?: boolean
+          iso_code: string
+          name: string
+          symbol?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decimal_places?: number
+          id?: string
+          is_active?: boolean
+          iso_code?: string
+          name?: string
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      currency_exchange_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          exchange_rate: number
+          from_currency_id: string
+          id: string
+          note: string | null
+          rate_type: string
+          source: string
+          to_currency_id: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          exchange_rate: number
+          from_currency_id: string
+          id?: string
+          note?: string | null
+          rate_type?: string
+          source?: string
+          to_currency_id: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          exchange_rate?: number
+          from_currency_id?: string
+          id?: string
+          note?: string | null
+          rate_type?: string
+          source?: string
+          to_currency_id?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "currency_exchange_rates_from_currency_id_fkey"
+            columns: ["from_currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "currency_exchange_rates_to_currency_id_fkey"
+            columns: ["to_currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates: {
         Row: {
           base_currency: string
@@ -2960,6 +3050,8 @@ export type Database = {
       organizations: {
         Row: {
           address: string | null
+          analysis_currency_id: string | null
+          base_currency_id: string | null
           city: string | null
           contact_name: string | null
           country: string | null
@@ -2984,6 +3076,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          analysis_currency_id?: string | null
+          base_currency_id?: string | null
           city?: string | null
           contact_name?: string | null
           country?: string | null
@@ -3008,6 +3102,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          analysis_currency_id?: string | null
+          base_currency_id?: string | null
           city?: string | null
           contact_name?: string | null
           country?: string | null
@@ -3030,7 +3126,22 @@ export type Database = {
           website?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_analysis_currency_id_fkey"
+            columns: ["analysis_currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_base_currency_id_fkey"
+            columns: ["base_currency_id"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       package_components: {
         Row: {
@@ -6516,6 +6627,15 @@ export type Database = {
           _visibility?: Database["public"]["Enums"]["timeline_visibility"]
         }
         Returns: string
+      }
+      currency_rate_at: {
+        Args: {
+          _at?: string
+          _from_iso: string
+          _rate_type?: string
+          _to_iso: string
+        }
+        Returns: number
       }
       current_agent_id: { Args: never; Returns: string }
       current_driver_resource_ids: { Args: never; Returns: string[] }
