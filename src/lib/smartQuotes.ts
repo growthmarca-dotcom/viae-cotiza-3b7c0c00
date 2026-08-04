@@ -584,7 +584,7 @@ export function smartQuotePassengersLabel(
 export type SmartQuoteHeaderPatch = {
   title?: string;
   destination_country?: string | null;
-  destination_state?: string | null
+  destination_state?: string | null;
   destination_city?: string | null;
   start_date?: string | null;
   end_date?: string | null;
