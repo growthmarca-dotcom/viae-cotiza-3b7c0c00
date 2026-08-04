@@ -1044,3 +1044,74 @@ humana antes de cualquier backfill.
 4. **`quotations` y `booking_passengers`** aún sin `organization_id`.
 5. **RLS por organización sigue inactivo** en el núcleo operativo: el aislamiento SaaS
    real depende de las fases 2–4 de la auditoría v1.10.7.2.1.2.
+
+---
+
+# Booking Creation Ownership Rules (v1.10.7.2.1.4)
+
+**Regla central: una booking nueva siempre nace con organización propietaria.**
+`bookings.organization_id` sigue siendo la fuente de verdad y sigue significando
+*organización comercial responsable de la operación turística* (nunca proveedor,
+prestador, empresa externa ni organización del servicio).
+
+## 1. Caminos de creación auditados
+
+| Camino | Estado |
+| --- | --- |
+| Frontend `createBooking()` (`src/lib/bookings.ts`) → `INSERT public.bookings` | único punto de alta de la app (dialogo `booking-create-dialog.tsx`, desde oportunidad o cotización) |
+| RPC de creación de bookings | no existe |
+| Server functions / edge functions de alta | no existen |
+| Triggers previos en `bookings` | `bookings_number`, `bookings_status_history`, `booking_operations_*`, `bookings_audit`, `trg_seed_booking_checklist`, `trg_timeline_bookings` (ninguno resolvía organización) |
+| Migraciones / `service_role` | exentos por diseño |
+
+## 2. Enforcement implementado
+
+`tg_booking_require_organization()` — trigger `bookings_require_organization`
+BEFORE INSERT ON `public.bookings`:
+
+1. Si no hay `auth.uid()` o el rol es `service_role` → **pasa** (procesos
+   administrativos controlados, migraciones, backfills).
+2. Si viene `organization_id` explícito → valida permiso con
+   `can_create_booking_for_organization(auth.uid(), organization_id)`.
+3. Si viene NULL → resuelve con `resolve_booking_organization(user_id, assigned_agent_id, NULL)`
+   (agente asignado → única organización activa del creador) y valida permiso.
+4. Ambigüedad o ausencia → **bloqueo**.
+
+Mensaje único de error: `Booking requires a valid organization`, con `HINT`
+diagnóstico: `ambiguous_organization`, `no_organization_found`,
+`organization_not_found` o `not_allowed_for_organization`. El frontend lo
+traduce en `bookingCreateErrorMessage()`.
+
+## 3. `can_create_booking_for_organization(_user_id uuid, _org_id uuid) → boolean`
+
+`SECURITY DEFINER`, `search_path = public`, sin `EXECUTE` para `anon`.
+Devuelve `true` si el usuario es admin global (`has_role(_user_id,'admin')`) o
+miembro **activo** de esa organización con rol
+`organization_owner | organization_admin | operations | agent`.
+
+## 4. Pruebas ejecutadas (todas en transacciones con ROLLBACK)
+
+| Caso | Resultado |
+| --- | --- |
+| Usuario con una organización, sin especificar | OK, `organization_id` resuelto automáticamente |
+| Usuario con dos organizaciones, sin especificar | bloqueado (`ambiguous_organization`) |
+| Usuario intenta crear en organización ajena | bloqueado (`not_allowed_for_organization`) |
+| Admin global con organización explícita | OK |
+| Datos existentes (3 bookings con `organization_id` NULL) | sin cambios |
+
+## 5. Log de eventos
+
+`audit_log` existe pero un `RAISE EXCEPTION` en el trigger **revierte** cualquier
+insert de auditoría en la misma transacción. Por eso los intentos bloqueados
+**no se registran todavía**. Fase futura: registrar usuario, fecha, organización
+solicitada y motivo desde una función `SECURITY DEFINER` con canal fuera de la
+transacción (p. ej. `pg_net` a un endpoint interno) o validación previa en la
+capa de aplicación.
+
+## 6. Riesgos pendientes
+
+- 3 bookings históricas siguen con `organization_id` NULL (sin backfill).
+- La columna sigue **nullable**: `NOT NULL` recién cuando el backfill termine.
+- RLS por organización sigue inactivo (roles globales vigentes).
+- `quotations` y `booking_passengers` aún sin `organization_id`.
+- Doble semántica de `organization_id` en servicios/economía sin separar.
