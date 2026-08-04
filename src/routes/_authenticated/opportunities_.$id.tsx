@@ -101,6 +101,8 @@ function OpportunityDetailPage() {
   const [moving, setMoving] = useState(false);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [smartQuotes, setSmartQuotes] = useState<SmartQuote[]>([]);
+  const [smartQuoteOpen, setSmartQuoteOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -111,16 +113,18 @@ function OpportunityDetailPage() {
         toast.error("Oportunidad no encontrada o sin acceso");
         return;
       }
-      const [cfg, hist, agentId, bk] = await Promise.all([
+      const [cfg, hist, agentId, bk, sqs] = await Promise.all([
         listStageConfig(),
         listOpportunityHistory(id).catch(() => []),
         currentAgentId(),
         getBookingByOpportunity(id).catch(() => null),
+        listSmartQuotesByOpportunity(id).catch(() => []),
       ]);
       setStageConfig(cfg);
       setHistory(hist);
       setMyAgentId(agentId);
       setBooking(bk);
+      setSmartQuotes(sqs);
 
       setClient(o.client_id ? await getClient(o.client_id).catch(() => null) : null);
       setAgent(o.assigned_agent_id ? await getAgent(o.assigned_agent_id).catch(() => null) : null);
