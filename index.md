@@ -1,1 +1,2 @@
 - [Financial Core v1.12](mem://features/financial-core-v112.md) — currencies + currency_exchange_rates históricas, base_currency_id en organizations, Money Service src/lib/money.ts (toda conversión debe usarlo)
+- [Saneamiento multi-tenant v1.12.1](mem://features/multitenant-cleanup-v1121.md) — organization_id NOT NULL en opportunities/quotations/bookings, agencia ViaE Travel, resolveMyOrganizationId, alta directa de oportunidad

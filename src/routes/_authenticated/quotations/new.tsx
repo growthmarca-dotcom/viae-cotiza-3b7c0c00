@@ -21,6 +21,7 @@ import {
   saveQuotationImages,
 } from "@/lib/quotations";
 import { upsertClientFromQuotation } from "@/lib/crm";
+import { resolveMyOrganizationId } from "@/lib/tenant";
 import { ensureOpportunityForQuotation } from "@/lib/opportunities";
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({
@@ -124,7 +125,7 @@ function NewQuotationPage() {
                 ...row,
                 user_id: userId,
                 client_id: clientId,
-                organization_id: organizationId || (orgs.length === 1 ? orgs[0].id : null),
+                organization_id: await resolveMyOrganizationId(organizationId || null),
                 opportunity_id: existingOpportunityId,
                 status: "draft",
               })
