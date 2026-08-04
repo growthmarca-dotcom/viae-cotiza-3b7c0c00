@@ -194,9 +194,19 @@ export async function ensureOpportunityForQuotation(args: {
   title: string;
   amount: number;
   currency: string;
+  /** Oportunidad ya existente a la que pertenece la cotización. */
+  opportunityId?: string | null;
 }): Promise<string | null> {
   if (!args.clientId) return null;
   try {
+    if (args.opportunityId) {
+      await updateOpportunity(args.opportunityId, {
+        estimated_value: args.amount,
+        currency: args.currency,
+      });
+      return args.opportunityId;
+    }
+
     const { data: existing } = await supabase
       .from("opportunities")
       .select("id")
@@ -210,6 +220,7 @@ export async function ensureOpportunityForQuotation(args: {
       });
       return existing.id;
     }
+
 
     return await createOpportunity({
       userId: args.userId,
