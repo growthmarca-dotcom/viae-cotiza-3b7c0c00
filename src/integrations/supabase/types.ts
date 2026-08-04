@@ -5692,6 +5692,7 @@ export type Database = {
           destination_state: string | null
           end_date: string | null
           id: string
+          notes: string | null
           opportunity_id: string | null
           organization_id: string | null
           passengers_metadata: Json
@@ -5714,6 +5715,7 @@ export type Database = {
           destination_state?: string | null
           end_date?: string | null
           id?: string
+          notes?: string | null
           opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
@@ -5736,6 +5738,7 @@ export type Database = {
           destination_state?: string | null
           end_date?: string | null
           id?: string
+          notes?: string | null
           opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
