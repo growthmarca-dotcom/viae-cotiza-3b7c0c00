@@ -4329,6 +4329,8 @@ export type Database = {
           images: string[]
           nights: number | null
           notes: string | null
+          opportunity_id: string | null
+          organization_id: string | null
           other_charges: number | null
           pax_count: number | null
           price_per_night: number | null
@@ -4363,6 +4365,8 @@ export type Database = {
           images?: string[]
           nights?: number | null
           notes?: string | null
+          opportunity_id?: string | null
+          organization_id?: string | null
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
@@ -4397,6 +4401,8 @@ export type Database = {
           images?: string[]
           nights?: number | null
           notes?: string | null
+          opportunity_id?: string | null
+          organization_id?: string | null
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
@@ -4416,6 +4422,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -6261,6 +6281,10 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      can_create_quotation_for_organization: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_manage_availability_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -6506,6 +6530,15 @@ export type Database = {
           _agent_id?: string
           _creator_user_id: string
           _explicit_org_id?: string
+        }
+        Returns: Json
+      }
+      resolve_quotation_organization: {
+        Args: {
+          _client_id?: string
+          _creator_user_id: string
+          _explicit_org_id?: string
+          _opportunity_id?: string
         }
         Returns: Json
       }
