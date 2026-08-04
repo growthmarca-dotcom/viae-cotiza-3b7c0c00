@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { SmartQuoteHeaderForm } from "@/components/smart-quote-header-form";
 import { SmartQuoteItemsPanel } from "@/components/smart-quote-items-panel";
+import { SmartQuoteVersionsPanel } from "@/components/smart-quote-versions-panel";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney } from "@/lib/currency";
 import { currentAgentId } from "@/lib/pipeline";
@@ -308,6 +309,14 @@ function SmartQuoteDetailPage() {
             items={items}
             editable={editable}
             onChanged={load}
+          />
+        </div>
+
+        <div className="lg:col-span-3">
+          <SmartQuoteVersionsPanel
+            smartQuoteId={quote.id}
+            refreshKey={`${quote.updated_at}-${items.length}-${quote.total_amount ?? 0}`}
+            fallbackCurrency={quote.currency}
           />
         </div>
       </div>
