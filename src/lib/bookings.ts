@@ -192,6 +192,12 @@ export type BookingOrigin = {
 
 export type BookingInput = {
   client_id: string;
+  /**
+   * Organización comercial propietaria (v1.10.7.2.1.4). Opcional: si no se
+   * envía, la base la resuelve desde el agente asignado o la única
+   * organización activa del creador. Si hay ambigüedad, se bloquea el alta.
+   */
+  organization_id?: string | null;
   assigned_agent_id: string | null;
   status: BookingStatus;
   travel_start: string | null;
@@ -221,8 +227,25 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throw new Error(bookingCreateErrorMessage(error));
   return data.id as string;
+}
+
+/**
+ * Traduce el bloqueo de organización propietaria (trigger
+ * `bookings_require_organization`) a un mensaje comprensible.
+ */
+export function bookingCreateErrorMessage(error: { message?: string; hint?: string | null }): string {
+  const msg = error.message ?? "No se pudo crear la reserva";
+  if (!msg.includes("Booking requires a valid organization")) return msg;
+  switch (error.hint) {
+    case "ambiguous_organization":
+      return "Pertenecés a más de una organización: indicá explícitamente la organización propietaria de la reserva.";
+    case "not_allowed_for_organization":
+      return "No tenés permisos para crear reservas en esa organización.";
+    default:
+      return "La reserva necesita una organización comercial propietaria válida.";
+  }
 }
 
 export async function updateBooking(id: string, input: Partial<BookingInput>) {
