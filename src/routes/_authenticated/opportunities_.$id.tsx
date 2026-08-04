@@ -351,6 +351,38 @@ function OpportunityDetailPage() {
         <section className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="font-display text-lg font-semibold">Relaciones y acciones</h2>
 
+          {/* v1.10.9.2 — Smart Quotes de la oportunidad (motor comercial). */}
+          {smartQuotes.length > 0 ? (
+            <div className="space-y-2">
+              {smartQuotes.map((sq) => (
+                <div key={sq.id} className="rounded-xl border border-border bg-background p-3">
+                  <p className="truncate text-sm font-medium">{sq.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {SMART_QUOTE_STATUS_LABELS[sq.status]}
+                    {sq.total_amount != null
+                      ? ` · ${formatMoney(sq.currency, Number(sq.total_amount))}`
+                      : ""}
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="mt-2 w-full">
+                    <Link to="/smart-quotes/$id" params={{ id: sq.id }}>
+                      <Sparkles className="mr-2 h-4 w-4" /> Abrir Smart Quote
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            disabled={!editable}
+            onClick={() => setSmartQuoteOpen(true)}
+          >
+            <Sparkles className="mr-2 h-4 w-4" /> Crear Smart Quote
+          </Button>
+
           {quotation ? (
             <div className="rounded-xl border border-border bg-background p-3">
               <p className="text-sm font-medium">{quotation.title || "Cotización"}</p>
