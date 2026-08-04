@@ -292,7 +292,7 @@ export async function createSmartQuoteFromOpportunity(
       destination_city: input.destination_city ?? null,
       start_date: input.start_date ?? null,
       end_date: input.end_date ?? null,
-      passengers_metadata: input.passengers_metadata ?? {},
+      passengers_metadata: (input.passengers_metadata ?? {}) as never,
     })
     .select("id")
     .single();
