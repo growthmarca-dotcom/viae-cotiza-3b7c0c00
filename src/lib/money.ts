@@ -120,12 +120,13 @@ export async function getExchangeRate(
     ? new Date(options.at).toISOString()
     : new Date().toISOString();
 
-  const { data, error } = await supabase.rpc("currency_rate_at", {
+  const args: { _from_iso: string; _to_iso: string; _at: string; _rate_type?: string } = {
     _from_iso: fromIso,
     _to_iso: toIso,
     _at: at,
-    _rate_type: options.rateType ?? null,
-  });
+  };
+  if (options.rateType) args._rate_type = options.rateType;
+  const { data, error } = await supabase.rpc("currency_rate_at", args);
   if (error) throw error;
   const rate = data == null ? null : Number(data);
   return rate != null && Number.isFinite(rate) && rate > 0 ? rate : null;
