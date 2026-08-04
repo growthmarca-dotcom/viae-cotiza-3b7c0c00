@@ -164,7 +164,9 @@ function OpportunitiesPage() {
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
+          <OpportunityCreateDialog clients={clients} stages={stages} onCreated={load} />
           <Button
+
             variant={view === "kanban" ? "default" : "outline"}
             size="sm"
             onClick={() => setView("kanban")}
