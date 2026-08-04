@@ -105,9 +105,10 @@ export interface SmartQuote {
   id: string;
   user_id: string;
   organization_id: string | null;
+  /** v1.10.9.1 — oportunidad origen del flujo Opportunity → Smart Quote → Quotation → Booking. */
+  opportunity_id: string | null;
   agent_id: string | null;
   client_id: string | null;
-  source: SmartQuoteSource;
   status: SmartQuoteStatus;
   title: string;
   destination_country: string | null;
