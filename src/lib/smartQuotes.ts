@@ -109,6 +109,7 @@ export interface SmartQuote {
   opportunity_id: string | null;
   agent_id: string | null;
   client_id: string | null;
+  source: SmartQuoteSource;
   status: SmartQuoteStatus;
   title: string;
   destination_country: string | null;
