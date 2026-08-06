@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeguimientoTokenRouteImport } from './routes/seguimiento.$token'
+import { Route as PropuestaTokenRouteImport } from './routes/propuesta.$token'
 import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedTransportRouteImport } from './routes/_authenticated/transport'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -62,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
 const SeguimientoTokenRoute = SeguimientoTokenRouteImport.update({
   id: '/seguimiento/$token',
   path: '/seguimiento/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropuestaTokenRoute = PropuestaTokenRouteImport.update({
+  id: '/propuesta/$token',
+  path: '/propuesta/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CotizacionTokenRoute = CotizacionTokenRouteImport.update({
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/propuesta/$token': typeof PropuestaTokenRoute
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/propuesta/$token': typeof PropuestaTokenRoute
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
+  '/propuesta/$token': typeof PropuestaTokenRoute
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/_authenticated/agents_/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/transport'
     | '/cotizacion/$token'
+    | '/propuesta/$token'
     | '/seguimiento/$token'
     | '/agents/$id'
     | '/bookings/$id'
@@ -400,6 +410,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/transport'
     | '/cotizacion/$token'
+    | '/propuesta/$token'
     | '/seguimiento/$token'
     | '/agents/$id'
     | '/bookings/$id'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/transport'
     | '/cotizacion/$token'
+    | '/propuesta/$token'
     | '/seguimiento/$token'
     | '/_authenticated/agents_/$id'
     | '/_authenticated/bookings_/$id'
@@ -459,6 +471,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CotizacionTokenRoute: typeof CotizacionTokenRoute
+  PropuestaTokenRoute: typeof PropuestaTokenRoute
   SeguimientoTokenRoute: typeof SeguimientoTokenRoute
 }
 
@@ -490,6 +503,13 @@ declare module '@tanstack/react-router' {
       path: '/seguimiento/$token'
       fullPath: '/seguimiento/$token'
       preLoaderRoute: typeof SeguimientoTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/propuesta/$token': {
+      id: '/propuesta/$token'
+      path: '/propuesta/$token'
+      fullPath: '/propuesta/$token'
+      preLoaderRoute: typeof PropuestaTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cotizacion/$token': {
@@ -786,6 +806,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CotizacionTokenRoute: CotizacionTokenRoute,
+  PropuestaTokenRoute: PropuestaTokenRoute,
   SeguimientoTokenRoute: SeguimientoTokenRoute,
 }
 export const routeTree = rootRouteImport

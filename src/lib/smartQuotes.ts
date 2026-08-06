@@ -125,6 +125,10 @@ export interface SmartQuote {
   currency: string;
   total_amount: number | null;
   snapshot: Record<string, unknown>;
+  /** v1.13 — enlace público de la propuesta (Fase 3.0). */
+  share_token: string | null;
+  shared_at: string | null;
+  share_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1048,4 +1052,49 @@ export async function listQuotationsBySmartQuote(smartQuoteId: string) {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+/* =========================================================================
+ * v1.13 Fase 3.0 — Enlace público de la Smart Quote
+ *
+ * El token se genera en la base (`smart_quote_share_token`) y sólo puede
+ * crearlo/revocarlo quien puede gestionar la cotización. La lectura pública
+ * pasa por la server function `getPublicSmartQuote`: no hay política `anon`.
+ * ========================================================================= */
+
+/** Crea o renueva el enlace público y devuelve el token. */
+export async function shareSmartQuote(
+  smartQuoteId: string,
+  days = 30,
+): Promise<string> {
+  const { data, error } = await supabase.rpc("smart_quote_share_token", {
+    _smart_quote_id: smartQuoteId,
+    _days: days,
+  });
+  if (error) {
+    if ((error.message ?? "").includes("not_authorized")) {
+      throw new Error("No tenés permisos para compartir esta cotización.");
+    }
+    throw error;
+  }
+  return data as unknown as string;
+}
+
+/** Revoca el enlace público (el cliente deja de poder abrirlo). */
+export async function revokeSmartQuoteShare(smartQuoteId: string): Promise<void> {
+  const { error } = await supabase.rpc("smart_quote_share_revoke", {
+    _smart_quote_id: smartQuoteId,
+  });
+  if (error) {
+    if ((error.message ?? "").includes("not_authorized")) {
+      throw new Error("No tenés permisos para revocar este enlace.");
+    }
+    throw error;
+  }
+}
+
+/** URL absoluta de la propuesta pública. */
+export function smartQuotePublicUrl(token: string): string {
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return `${origin}/propuesta/${token}`;
 }

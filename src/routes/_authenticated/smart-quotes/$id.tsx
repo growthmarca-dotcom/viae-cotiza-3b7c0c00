@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { SmartQuoteHeaderForm } from "@/components/smart-quote-header-form";
 import { SmartQuoteItemsPanel } from "@/components/smart-quote-items-panel";
+import { SmartQuoteSharePanel } from "@/components/smart-quote-share-panel";
 import { SmartQuoteVersionsPanel } from "@/components/smart-quote-versions-panel";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney } from "@/lib/currency";
@@ -257,6 +258,10 @@ function SmartQuoteDetailPage() {
             </div>
           )}
         </section>
+
+        <div className="lg:col-span-1">
+          <SmartQuoteSharePanel quote={quote} editable={editable} onChanged={load} />
+        </div>
 
         <section className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h2 className="font-display text-lg font-semibold">Propuestas al cliente</h2>
