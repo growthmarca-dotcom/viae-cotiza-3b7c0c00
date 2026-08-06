@@ -198,3 +198,32 @@ inventario ni orquestador.
    client_id y agent_id (`createBooking`, v1.10.9.1).
 6. Permisos: Admin y Operaciones gestionan todo; el agente sólo sus Smart Quotes.
    Organización, oportunidad, cliente y agente permanecen inmutables.
+
+## v1.13 Fase 3.0 — Vista pública de Smart Quote
+
+La propuesta al cliente ya **no depende de `quotations`**: se renderiza desde
+`smart_quotes` + `smart_quote_items`.
+
+### Base de datos
+- `smart_quotes.share_token` (único, hex 32-64), `shared_at`, `share_expires_at`.
+- `smart_quote_share_token(uuid, integer)` — crea/renueva el token (30 días por
+  defecto) validando `can_manage_smart_quote`.
+- `smart_quote_share_revoke(uuid)` — anula el enlace.
+- Sin políticas `anon`: la lectura pública pasa sólo por server function.
+
+### Rutas y archivos
+- `/propuesta/$token` — `src/routes/propuesta.$token.tsx`.
+- `src/lib/public-smart-quote.functions.ts` — `getPublicSmartQuote`.
+- `src/components/smart-quote-share-panel.tsx` — generar/copiar/renovar/revocar.
+- Helpers en `src/lib/smartQuotes.ts`: `shareSmartQuote`,
+  `revokeSmartQuoteShare`, `smartQuotePublicUrl`.
+
+### Reglas
+1. El enlace sólo abre si el estado es `ready | sent | accepted | calculating`
+   y el token no está vencido ni revocado.
+2. Campos publicados: branding de la organización, destino, fechas, noches,
+   pasajeros, servicios (título, descripción, cantidad, unitario, subtotal),
+   moneda única y total.
+3. Nunca se publican costos, márgenes, proveedores, notas internas, agente,
+   `user_id` ni identificadores de oportunidad.
+4. `quotations` sigue existiendo para el circuito legacy (PDF y aceptación).
