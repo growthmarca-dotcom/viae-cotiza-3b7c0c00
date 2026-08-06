@@ -5705,6 +5705,9 @@ export type Database = {
           opportunity_id: string | null
           organization_id: string | null
           passengers_metadata: Json
+          share_expires_at: string | null
+          share_token: string | null
+          shared_at: string | null
           snapshot: Json
           source: Database["public"]["Enums"]["smart_quote_source"]
           start_date: string | null
@@ -5728,6 +5731,9 @@ export type Database = {
           opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
+          share_expires_at?: string | null
+          share_token?: string | null
+          shared_at?: string | null
           snapshot?: Json
           source?: Database["public"]["Enums"]["smart_quote_source"]
           start_date?: string | null
@@ -5751,6 +5757,9 @@ export type Database = {
           opportunity_id?: string | null
           organization_id?: string | null
           passengers_metadata?: Json
+          share_expires_at?: string | null
+          share_token?: string | null
+          shared_at?: string | null
           snapshot?: Json
           source?: Database["public"]["Enums"]["smart_quote_source"]
           start_date?: string | null
@@ -6837,6 +6846,14 @@ export type Database = {
       simulate_commission_transport: {
         Args: { _transport_service_id: string }
         Returns: Json
+      }
+      smart_quote_share_revoke: {
+        Args: { _smart_quote_id: string }
+        Returns: undefined
+      }
+      smart_quote_share_token: {
+        Args: { _days?: number; _smart_quote_id: string }
+        Returns: string
       }
       sync_booking_client_status: {
         Args: { _booking_id: string }
