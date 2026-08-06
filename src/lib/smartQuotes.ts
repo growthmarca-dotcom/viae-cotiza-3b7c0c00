@@ -125,6 +125,10 @@ export interface SmartQuote {
   currency: string;
   total_amount: number | null;
   snapshot: Record<string, unknown>;
+  /** v1.13 — enlace público de la propuesta (Fase 3.0). */
+  share_token: string | null;
+  shared_at: string | null;
+  share_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
