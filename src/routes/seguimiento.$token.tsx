@@ -25,6 +25,8 @@ export const Route = createFileRoute("/seguimiento/$token")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      // Seguimiento privado por token: no debe indexarse.
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 });

@@ -17,6 +17,8 @@ export const Route = createFileRoute("/cotizacion/$token")({
       { name: "description", content: "Detalle de tu propuesta de viaje." },
       { property: "og:title", content: "Tu cotización de viaje" },
       { property: "og:description", content: "Detalle de tu propuesta de viaje." },
+      // Cotización privada compartida por enlace: no debe indexarse.
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 });
