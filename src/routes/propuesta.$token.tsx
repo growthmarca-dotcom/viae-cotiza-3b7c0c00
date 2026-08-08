@@ -19,6 +19,8 @@ export const Route = createFileRoute("/propuesta/$token")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      // Propuesta privada compartida por enlace: no debe indexarse.
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
 });

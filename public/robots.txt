@@ -1,14 +1,31 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Contenido comercial privado compartido por enlace único: accesible con el
+# enlace, pero nunca indexable (precios, pasajeros y datos de contacto).
+Disallow: /cotizacion/
+Disallow: /propuesta/
+Disallow: /seguimiento/
+
+# Paneles internos (requieren sesión; se excluyen del índice igualmente)
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /quotations
+Disallow: /smart-quotes
+Disallow: /bookings
+Disallow: /opportunities
+Disallow: /clients
+Disallow: /leads
+Disallow: /providers
+Disallow: /organizations
+Disallow: /agents
+Disallow: /resources
+Disallow: /transport
+Disallow: /agenda
+Disallow: /operations
+Disallow: /driver
+Disallow: /agreements
+Disallow: /admin
+Disallow: /settings
+
+Sitemap: https://sales.viaetravel.com/sitemap.xml
