@@ -222,6 +222,44 @@ export function ServiceEconomicsPanel({
             </Button>
           </div>
 
+          {fare && (
+            <div className="mt-4 rounded-xl border border-gold/40 bg-gold/5 p-3 text-xs">
+              <p className="font-medium">Precio sugerido al pasajero (NQN Movilidad)</p>
+              <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                <span className="text-muted-foreground">
+                  Neto del recurso: {formatMoney(form.cost_currency, fare.precio_base_taxi)}
+                </span>
+                <span className="text-muted-foreground">
+                  Comisión NQN ({(fare.nqn_commission_rate * 100).toFixed(2)}%):{" "}
+                  {formatMoney(form.cost_currency, fare.nqn_commission_amount)}
+                </span>
+                <span className="text-muted-foreground">
+                  Costo de cobro ({(fare.mercado_pago_fee_rate * 100).toFixed(3)}%):{" "}
+                  {formatMoney(form.cost_currency, fare.mercado_pago_fee_amount)}
+                </span>
+                <span className="font-medium">
+                  Total pasajero: {formatMoney(form.cost_currency, fare.total_pasajero)}
+                </span>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-3"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    sale_amount: String(fare.total_pasajero),
+                    sale_currency: f.cost_currency,
+                  }))
+                }
+              >
+                Usar como precio de venta
+              </Button>
+            </div>
+          )}
+
+
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <Metric
               label={`Venta (${analysisCurrency})`}
