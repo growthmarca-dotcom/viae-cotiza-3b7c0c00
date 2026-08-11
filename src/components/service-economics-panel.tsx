@@ -87,6 +87,15 @@ export function ServiceEconomicsPanel({
 
   const margin = marginOf(service, analysisCurrency);
 
+  /**
+   * Precio sugerido al pasajero según el motor de cálculo de cobro
+   * (src/lib/fare-pricing.ts): costo neto del recurso + comisión NQN,
+   * con el costo estimado de Mercado Pago trasladado por tasa inversa.
+   * Sólo es una sugerencia visual: no persiste ni altera el flujo de cobro.
+   */
+  const fare = fareFromNetCostInput(form.cost_amount);
+
+
   async function save() {
     setSaving(true);
     try {
