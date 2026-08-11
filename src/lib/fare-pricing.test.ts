@@ -4,6 +4,7 @@ import {
   fareCalculationFields,
   DEFAULT_MERCADO_PAGO_FEE_RATE,
   DEFAULT_NQN_COMMISSION_RATE,
+  fareFromNetCostInput,
 } from "./fare-pricing";
 
 describe("motor de cálculo de cobro NQN Movilidad", () => {
@@ -53,5 +54,23 @@ describe("motor de cálculo de cobro NQN Movilidad", () => {
     expect(() => calculateFare({ precioTaxi: 100, mercadoPagoFeeRate: 1 })).toThrow();
     expect(DEFAULT_NQN_COMMISSION_RATE).toBe(0.05);
     expect(DEFAULT_MERCADO_PAGO_FEE_RATE).toBe(0.07986);
+  });
+});
+
+describe("integración con el flujo de cotización/precio", () => {
+  it("calcula desde el costo neto ingresado como texto", () => {
+    expect(fareFromNetCostInput("100000")?.total_pasajero).toBe(114113.07);
+    expect(fareFromNetCostInput(" 1000000 ")?.total_pasajero).toBe(1141130.7);
+    expect(fareFromNetCostInput(500000)?.total_pasajero).toBeCloseTo(570565.35, 0);
+  });
+
+  it("devuelve null cuando no hay un costo utilizable", () => {
+    expect(fareFromNetCostInput("")).toBeNull();
+    expect(fareFromNetCostInput("   ")).toBeNull();
+    expect(fareFromNetCostInput(null)).toBeNull();
+    expect(fareFromNetCostInput(undefined)).toBeNull();
+    expect(fareFromNetCostInput("abc")).toBeNull();
+    expect(fareFromNetCostInput(0)).toBeNull();
+    expect(fareFromNetCostInput(-5)).toBeNull();
   });
 });

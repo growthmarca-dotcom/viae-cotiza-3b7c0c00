@@ -92,3 +92,19 @@ export function fareCalculationFields(calc: FareCalculation) {
     total_pasajero: calc.total_pasajero,
   };
 }
+
+/**
+ * Adaptador para el flujo de cotización/precio del servicio.
+ *
+ * Recibe el costo neto del recurso (lo que debe recibir el taxi) tal como se
+ * ingresa en el formulario (string) y devuelve el cálculo del motor, o `null`
+ * si el valor no es utilizable. No persiste nada ni toca el flujo de cobro.
+ */
+export function fareFromNetCostInput(input: string | number | null | undefined): FareCalculation | null {
+  if (input == null) return null;
+  const raw = typeof input === "number" ? input : input.trim();
+  if (raw === "") return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return calculateFare({ precioTaxi: value });
+}
