@@ -31,6 +31,8 @@ import {
   type SettlementStatus,
 } from "@/lib/transport-economics";
 import type { TransportService } from "@/lib/transport";
+import { fareFromNetCostInput } from "@/lib/fare-pricing";
+
 
 /**
  * Economía del servicio de transporte (v1.6).
