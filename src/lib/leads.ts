@@ -293,10 +293,12 @@ export async function createLead(input: LeadInput) {
   const { data, error } = await supabase
     .from("leads")
     .insert({ ...toPayload(input), user_id: uid })
-    .select("id")
+    .select("*")
     .single();
   if (error) throw error;
-  return data.id as string;
+  // Toda Consulta nueva entra al Pipeline comercial como oportunidad (v1.13.1).
+  await ensureOpportunityForLead(data as Lead);
+  return (data as Lead).id;
 }
 
 export async function updateLead(id: string, input: LeadInput) {
@@ -307,7 +309,9 @@ export async function updateLead(id: string, input: LeadInput) {
 export async function setLeadStatus(id: string, status: LeadStatus) {
   const { error } = await supabase.from("leads").update({ status }).eq("id", id);
   if (error) throw error;
+  await syncOpportunityStageFromLead(id, status);
 }
+
 
 export async function assignLead(id: string, agentId: string | null) {
   const { error } = await supabase.from("leads").update({ assigned_agent_id: agentId }).eq("id", id);
