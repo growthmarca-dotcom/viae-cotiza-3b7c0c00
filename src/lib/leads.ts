@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import type { LeadSource } from "@/lib/opportunities";
+import type { LeadSource, OpportunityStage } from "@/lib/opportunities";
+import { createOpportunity, moveOpportunityStage } from "@/lib/opportunities";
+
 import type { Agent } from "@/lib/agents";
 
 /**
