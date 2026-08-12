@@ -135,7 +135,19 @@ function LeadDetailPage() {
     }
   }
 
+  /** Abre la oportunidad de Pipeline de esta Consulta (la crea si aún no existe). */
+  async function handlePipeline() {
+    if (!lead) return;
+    const opportunityId = await ensureOpportunityForLead(lead);
+    if (!opportunityId) {
+      toast.error("No se pudo vincular la consulta al pipeline");
+      return;
+    }
+    navigate({ to: "/opportunities/$id", params: { id: opportunityId } });
+  }
+
   async function handleConvert() {
+
     if (!lead) return;
     try {
       const clientId = await convertLeadToClient(lead);
