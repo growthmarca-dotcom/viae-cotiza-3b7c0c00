@@ -496,9 +496,11 @@ export async function ensureOpportunityForLead(lead: Lead): Promise<string | nul
       currency: lead.budget_currency ?? "USD",
     });
 
-    const patch: Record<string, unknown> = { lead_id: lead.id };
-    if (lead.assigned_agent_id) patch.assigned_agent_id = lead.assigned_agent_id;
-    await supabase.from("opportunities").update(patch).eq("id", opportunityId);
+    await supabase
+      .from("opportunities")
+      .update({ lead_id: lead.id, assigned_agent_id: lead.assigned_agent_id ?? null })
+      .eq("id", opportunityId);
+
 
     return opportunityId;
   } catch (err) {
