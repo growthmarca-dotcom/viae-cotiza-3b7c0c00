@@ -220,6 +220,10 @@ function LeadDetailPage() {
             <Button variant="outline" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" /> Editar
             </Button>
+            <Button variant="outline" onClick={handlePipeline}>
+              <Target className="mr-2 h-4 w-4" /> Ver en Pipeline
+            </Button>
+
             {isAdmin && (
               <Button variant="ghost" onClick={handleArchive}>
                 <Archive className="mr-2 h-4 w-4" /> Archivar
