@@ -436,6 +436,88 @@ export async function convertLeadToClient(lead: Lead): Promise<string> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Consulta → Pipeline comercial (v1.13.1)                             */
+/* ------------------------------------------------------------------ */
+
+/** Etapa del pipeline equivalente al estado de la Consulta. */
+function stageForLeadStatus(status: string): OpportunityStage {
+  switch (status) {
+    case "contacted":
+      return "contacted";
+    case "quoted":
+      return "quoted";
+    case "following_up":
+      return "following_up";
+    case "won":
+      return "booked";
+    case "lost":
+      return "lost";
+    default:
+      return "new";
+  }
+}
+
+/** Oportunidad ya vinculada a la Consulta, si existe. */
+export async function getOpportunityIdForLead(leadId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("id")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (error) return null;
+  return (data?.id as string | undefined) ?? null;
+}
+
+/**
+ * Garantiza una única oportunidad de Pipeline por Consulta (idempotente).
+ * No duplica registros: si ya existe la devuelve tal cual.
+ * Nunca bloquea la gestión de la Consulta si algo falla.
+ */
+export async function ensureOpportunityForLead(lead: Lead): Promise<string | null> {
+  try {
+    const existing = await getOpportunityIdForLead(lead.id);
+    if (existing) return existing;
+
+    const clientId = lead.client_id ?? (await convertLeadToClient(lead));
+    if (!clientId) return null;
+
+    const title =
+      [leadFullName(lead), lead.destination].filter(Boolean).join(" — ") || "Consulta comercial";
+
+    const opportunityId = await createOpportunity({
+      userId: lead.user_id,
+      clientId,
+      title,
+      stage: stageForLeadStatus(lead.status),
+      leadSource: (lead.source as LeadSource) ?? "other",
+      estimatedValue: lead.budget_amount != null ? Number(lead.budget_amount) : 0,
+      currency: lead.budget_currency ?? "USD",
+    });
+
+    const patch: Record<string, unknown> = { lead_id: lead.id };
+    if (lead.assigned_agent_id) patch.assigned_agent_id = lead.assigned_agent_id;
+    await supabase.from("opportunities").update(patch).eq("id", opportunityId);
+
+    return opportunityId;
+  } catch (err) {
+    console.error("No se pudo vincular la consulta al pipeline comercial", err);
+    return null;
+  }
+}
+
+/** Refleja el estado de la Consulta en la etapa del Pipeline (sin crear registros). */
+export async function syncOpportunityStageFromLead(leadId: string, status: LeadStatus) {
+  try {
+    const opportunityId = await getOpportunityIdForLead(leadId);
+    if (!opportunityId) return;
+    await moveOpportunityStage({ id: opportunityId, stage: stageForLeadStatus(status) });
+  } catch (err) {
+    console.error("No se pudo sincronizar la etapa del pipeline", err);
+  }
+}
+
+
+/* ------------------------------------------------------------------ */
 /* Asignación de agentes                                               */
 /* ------------------------------------------------------------------ */
 
