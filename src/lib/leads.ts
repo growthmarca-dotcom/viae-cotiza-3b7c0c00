@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import type { LeadSource } from "@/lib/opportunities";
+import type { LeadSource, OpportunityStage } from "@/lib/opportunities";
+import { createOpportunity, moveOpportunityStage } from "@/lib/opportunities";
+
 import type { Agent } from "@/lib/agents";
 
 /**
@@ -293,10 +295,12 @@ export async function createLead(input: LeadInput) {
   const { data, error } = await supabase
     .from("leads")
     .insert({ ...toPayload(input), user_id: uid })
-    .select("id")
+    .select("*")
     .single();
   if (error) throw error;
-  return data.id as string;
+  // Toda Consulta nueva entra al Pipeline comercial como oportunidad (v1.13.1).
+  await ensureOpportunityForLead(data as Lead);
+  return (data as Lead).id;
 }
 
 export async function updateLead(id: string, input: LeadInput) {
@@ -307,7 +311,9 @@ export async function updateLead(id: string, input: LeadInput) {
 export async function setLeadStatus(id: string, status: LeadStatus) {
   const { error } = await supabase.from("leads").update({ status }).eq("id", id);
   if (error) throw error;
+  await syncOpportunityStageFromLead(id, status);
 }
+
 
 export async function assignLead(id: string, agentId: string | null) {
   const { error } = await supabase.from("leads").update({ assigned_agent_id: agentId }).eq("id", id);
@@ -430,6 +436,90 @@ export async function convertLeadToClient(lead: Lead): Promise<string> {
 
   return clientId;
 }
+
+/* ------------------------------------------------------------------ */
+/* Consulta → Pipeline comercial (v1.13.1)                             */
+/* ------------------------------------------------------------------ */
+
+/** Etapa del pipeline equivalente al estado de la Consulta. */
+function stageForLeadStatus(status: string): OpportunityStage {
+  switch (status) {
+    case "contacted":
+      return "contacted";
+    case "quoted":
+      return "quoted";
+    case "following_up":
+      return "following_up";
+    case "won":
+      return "booked";
+    case "lost":
+      return "lost";
+    default:
+      return "new";
+  }
+}
+
+/** Oportunidad ya vinculada a la Consulta, si existe. */
+export async function getOpportunityIdForLead(leadId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("id")
+    .eq("lead_id", leadId)
+    .maybeSingle();
+  if (error) return null;
+  return (data?.id as string | undefined) ?? null;
+}
+
+/**
+ * Garantiza una única oportunidad de Pipeline por Consulta (idempotente).
+ * No duplica registros: si ya existe la devuelve tal cual.
+ * Nunca bloquea la gestión de la Consulta si algo falla.
+ */
+export async function ensureOpportunityForLead(lead: Lead): Promise<string | null> {
+  try {
+    const existing = await getOpportunityIdForLead(lead.id);
+    if (existing) return existing;
+
+    const clientId = lead.client_id ?? (await convertLeadToClient(lead));
+    if (!clientId) return null;
+
+    const title =
+      [leadFullName(lead), lead.destination].filter(Boolean).join(" — ") || "Consulta comercial";
+
+    const opportunityId = await createOpportunity({
+      userId: lead.user_id,
+      clientId,
+      title,
+      stage: stageForLeadStatus(lead.status),
+      leadSource: (lead.source as LeadSource) ?? "other",
+      estimatedValue: lead.budget_amount != null ? Number(lead.budget_amount) : 0,
+      currency: lead.budget_currency ?? "USD",
+    });
+
+    await supabase
+      .from("opportunities")
+      .update({ lead_id: lead.id, assigned_agent_id: lead.assigned_agent_id ?? null })
+      .eq("id", opportunityId);
+
+
+    return opportunityId;
+  } catch (err) {
+    console.error("No se pudo vincular la consulta al pipeline comercial", err);
+    return null;
+  }
+}
+
+/** Refleja el estado de la Consulta en la etapa del Pipeline (sin crear registros). */
+export async function syncOpportunityStageFromLead(leadId: string, status: LeadStatus) {
+  try {
+    const opportunityId = await getOpportunityIdForLead(leadId);
+    if (!opportunityId) return;
+    await moveOpportunityStage({ id: opportunityId, stage: stageForLeadStatus(status) });
+  } catch (err) {
+    console.error("No se pudo sincronizar la etapa del pipeline", err);
+  }
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Asignación de agentes                                               */

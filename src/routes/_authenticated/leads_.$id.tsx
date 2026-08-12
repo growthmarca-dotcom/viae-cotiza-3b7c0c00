@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Archive, Loader2, MessageSquarePlus, Pencil, UserCheck } from "lucide-react";
+import { ArrowLeft, Archive, Loader2, MessageSquarePlus, Pencil, Target, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +20,7 @@ import {
   addLeadComment,
   assignLead,
   convertLeadToClient,
+  ensureOpportunityForLead,
   getLead,
   historyActionLabel,
   LEAD_STATUSES,
@@ -135,7 +136,19 @@ function LeadDetailPage() {
     }
   }
 
+  /** Abre la oportunidad de Pipeline de esta Consulta (la crea si aún no existe). */
+  async function handlePipeline() {
+    if (!lead) return;
+    const opportunityId = await ensureOpportunityForLead(lead);
+    if (!opportunityId) {
+      toast.error("No se pudo vincular la consulta al pipeline");
+      return;
+    }
+    navigate({ to: "/opportunities/$id", params: { id: opportunityId } });
+  }
+
   async function handleConvert() {
+
     if (!lead) return;
     try {
       const clientId = await convertLeadToClient(lead);
@@ -220,6 +233,10 @@ function LeadDetailPage() {
             <Button variant="outline" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" /> Editar
             </Button>
+            <Button variant="outline" onClick={handlePipeline}>
+              <Target className="mr-2 h-4 w-4" /> Ver en Pipeline
+            </Button>
+
             {isAdmin && (
               <Button variant="ghost" onClick={handleArchive}>
                 <Archive className="mr-2 h-4 w-4" /> Archivar

@@ -2632,6 +2632,7 @@ export type Database = {
           estimated_value: number
           expected_close_date: string | null
           id: string
+          lead_id: string | null
           lead_source: Database["public"]["Enums"]["lead_source"]
           lost_reason: string | null
           next_action: string | null
@@ -2659,6 +2660,7 @@ export type Database = {
           estimated_value?: number
           expected_close_date?: string | null
           id?: string
+          lead_id?: string | null
           lead_source?: Database["public"]["Enums"]["lead_source"]
           lost_reason?: string | null
           next_action?: string | null
@@ -2686,6 +2688,7 @@ export type Database = {
           estimated_value?: number
           expected_close_date?: string | null
           id?: string
+          lead_id?: string | null
           lead_source?: Database["public"]["Enums"]["lead_source"]
           lost_reason?: string | null
           next_action?: string | null
@@ -2716,6 +2719,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
           {

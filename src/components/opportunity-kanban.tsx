@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarClock, Clock, Loader2, PencilLine, UserRound } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Inbox,
+  Loader2,
+  PencilLine,
+  UserRound,
+} from "lucide-react";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,61 +54,87 @@ export function OpportunityKanban({
   onChanged,
   onEditTracking,
 }: Props) {
-  return (
-    <div className="-mx-4 overflow-x-auto px-4 pb-4">
-      <div className="flex min-w-max gap-4">
-        {stages.map((stage) => {
-          const items = opportunities.filter((o) => o.stage === stage.stage);
-          const totals = sumByCurrency(items);
-          return (
-            <section
-              key={stage.stage}
-              className="flex w-[290px] shrink-0 flex-col rounded-2xl border border-border bg-secondary/40"
-            >
-              <header className="border-b border-border px-4 py-3">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                  <h2 className="truncate font-display text-sm font-semibold">{stage.label}</h2>
-                  <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium">
-                    {items.length}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {PIPELINE_GROUP_LABEL[stage.group] ?? stage.group}
-                </p>
-                <p className="mt-1 text-xs font-medium text-foreground">
-                  {totals.length === 0
-                    ? "Sin valor estimado"
-                    : totals.map((t) => formatMoney(t.currency, t.total)).join(" · ")}
-                </p>
-              </header>
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
-              <div className="flex-1 space-y-3 p-3">
-                {items.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                    Sin oportunidades
+  function scrollBy(direction: -1 | 1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * Math.max(280, el.clientWidth * 0.8), behavior: "smooth" });
+  }
+
+  return (
+    <div className="relative w-full min-w-0 max-w-full">
+      <div className="mb-2 flex justify-end gap-2">
+        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => scrollBy(-1)}>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">Etapas anteriores</span>
+        </Button>
+        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => scrollBy(1)}>
+          <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">Etapas siguientes</span>
+        </Button>
+      </div>
+
+      {/* Área horizontal desplazable: el scroll pertenece al Pipeline, no a la página. */}
+      <div
+        ref={scrollerRef}
+        className="w-full min-w-0 max-w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain pb-4"
+      >
+        <div className="flex w-max flex-nowrap items-start gap-4">
+          {stages.map((stage) => {
+            const items = opportunities.filter((o) => o.stage === stage.stage);
+            const totals = sumByCurrency(items);
+            return (
+              <section
+                key={stage.stage}
+                className="flex w-[268px] shrink-0 grow-0 basis-[268px] snap-start flex-col rounded-2xl border border-border bg-secondary/40 sm:w-[290px] sm:basis-[290px]"
+              >
+                <header className="border-b border-border px-4 py-3">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <h2 className="truncate font-display text-sm font-semibold">{stage.label}</h2>
+                    <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium">
+                      {items.length}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {PIPELINE_GROUP_LABEL[stage.group] ?? stage.group}
                   </p>
-                ) : (
-                  items.map((o) => (
-                    <OpportunityKanbanCard
-                      key={o.id}
-                      opportunity={o}
-                      stages={stages}
-                      clientName={clientName}
-                      agentName={agentName}
-                      editable={canEdit(o)}
-                      onChanged={onChanged}
-                      onEditTracking={onEditTracking}
-                    />
-                  ))
-                )}
-              </div>
-            </section>
-          );
-        })}
+                  <p className="mt-1 text-xs font-medium text-foreground">
+                    {totals.length === 0
+                      ? "Sin valor estimado"
+                      : totals.map((t) => formatMoney(t.currency, t.total)).join(" · ")}
+                  </p>
+                </header>
+
+                <div className="max-h-[65vh] flex-1 space-y-3 overflow-y-auto p-3">
+                  {items.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
+                      Sin oportunidades
+                    </p>
+                  ) : (
+                    items.map((o) => (
+                      <OpportunityKanbanCard
+                        key={o.id}
+                        opportunity={o}
+                        stages={stages}
+                        clientName={clientName}
+                        agentName={agentName}
+                        editable={canEdit(o)}
+                        onChanged={onChanged}
+                        onEditTracking={onEditTracking}
+                      />
+                    ))
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
+
 
 function OpportunityKanbanCard({
   opportunity: o,
@@ -143,6 +179,12 @@ function OpportunityKanbanCard({
         {o.title}
       </Link>
       <p className="mt-1 truncate text-xs text-muted-foreground">{clientName(o.client_id)}</p>
+      {o.lead_id ? (
+        <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          <Inbox className="h-3 w-3" /> Consulta
+        </span>
+      ) : null}
+
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span className="text-sm font-semibold">
