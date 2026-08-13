@@ -4534,6 +4534,83 @@ export type Database = {
           },
         ]
       }
+      quotation_items: {
+        Row: {
+          category: Database["public"]["Enums"]["quotation_item_category"]
+          created_at: string
+          description: string | null
+          destination: string | null
+          details: Json
+          end_date: string | null
+          id: string
+          notes: string | null
+          origin: string | null
+          pax_count: number | null
+          position: number
+          provider_name: string | null
+          quantity: number
+          quotation_id: string
+          service_date: string | null
+          taxes: number
+          time_label: string | null
+          title: string
+          unit_amount: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["quotation_item_category"]
+          created_at?: string
+          description?: string | null
+          destination?: string | null
+          details?: Json
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          origin?: string | null
+          pax_count?: number | null
+          position?: number
+          provider_name?: string | null
+          quantity?: number
+          quotation_id: string
+          service_date?: string | null
+          taxes?: number
+          time_label?: string | null
+          title: string
+          unit_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["quotation_item_category"]
+          created_at?: string
+          description?: string | null
+          destination?: string | null
+          details?: Json
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          origin?: string | null
+          pax_count?: number | null
+          position?: number
+          provider_name?: string | null
+          quantity?: number
+          quotation_id?: string
+          service_date?: string | null
+          taxes?: number
+          time_label?: string | null
+          title?: string
+          unit_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotations: {
         Row: {
           accommodation_address: string | null
@@ -4554,6 +4631,7 @@ export type Database = {
           guest_whatsapp: string | null
           id: string
           images: string[]
+          lead_id: string | null
           nights: number | null
           notes: string | null
           opportunity_id: string | null
@@ -4591,6 +4669,7 @@ export type Database = {
           guest_whatsapp?: string | null
           id?: string
           images?: string[]
+          lead_id?: string | null
           nights?: number | null
           notes?: string | null
           opportunity_id?: string | null
@@ -4628,6 +4707,7 @@ export type Database = {
           guest_whatsapp?: string | null
           id?: string
           images?: string[]
+          lead_id?: string | null
           nights?: number | null
           notes?: string | null
           opportunity_id?: string | null
@@ -4652,6 +4732,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
           {
@@ -7230,6 +7317,14 @@ export type Database = {
         | "air"
         | "ground"
         | "other"
+      quotation_item_category:
+        | "accommodation"
+        | "excursion"
+        | "vehicle_rental"
+        | "transfer"
+        | "insurance"
+        | "flight"
+        | "other"
       quotation_status:
         | "draft"
         | "sent"
@@ -7896,6 +7991,15 @@ export const Constants = {
         "nautical",
         "air",
         "ground",
+        "other",
+      ],
+      quotation_item_category: [
+        "accommodation",
+        "excursion",
+        "vehicle_rental",
+        "transfer",
+        "insurance",
+        "flight",
         "other",
       ],
       quotation_status: [
