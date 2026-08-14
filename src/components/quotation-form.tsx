@@ -356,6 +356,8 @@ export function QuotationForm({
         </Field>
       </Section>
 
+      {summarySlot}
+
       <div className="flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center">
         {onCancel && (
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onCancel}>
