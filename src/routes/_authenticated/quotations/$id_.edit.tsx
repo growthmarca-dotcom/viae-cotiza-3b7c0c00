@@ -5,6 +5,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QuotationForm, type QuotationFormState, type ExistingImage } from "@/components/quotation-form";
 import { formToRow, rowToForm, saveQuotationImages, signImageUrls } from "@/lib/quotations";
+import { QuotationItemsTabs } from "@/components/quotation-items-tabs";
+import { QuotationItemsSummary } from "@/components/quotation-items-summary";
+import {
+  itemsTotal as sumItems,
+  listQuotationItems,
+  rowToDraft,
+  saveQuotationItems,
+  type QuotationItemDraft,
+} from "@/lib/quotationItems";
 import { upsertClientFromQuotation } from "@/lib/crm";
 
 export const Route = createFileRoute("/_authenticated/quotations/$id_/edit")({
@@ -24,6 +33,7 @@ function EditQuotationPage() {
   const [images, setImages] = useState<ExistingImage[]>([]);
   const [previousPaths, setPreviousPaths] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [items, setItems] = useState<QuotationItemDraft[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -38,6 +48,13 @@ function EditQuotationPage() {
       setPreviousPaths(paths);
       const urls = await signImageUrls(paths);
       setImages(paths.map((p, i) => ({ path: p, url: urls[i] ?? "" })));
+      // Servicios de la cotización integral (v1.14).
+      try {
+        const rows = await listQuotationItems(id);
+        setItems(rows.map(rowToDraft));
+      } catch {
+        setItems([]);
+      }
     })();
   }, [id, navigate]);
 
@@ -65,10 +82,15 @@ function EditQuotationPage() {
         existingImages={images}
         submitting={submitting}
         submitLabel="Guardar cambios"
+        itemsTotal={sumItems(items)}
+        itemsSlot={(currency) => (
+          <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
+        )}
+        summarySlot={(currency) => <QuotationItemsSummary currency={currency} items={items} />}
         onCancel={() => navigate({ to: "/quotations/$id", params: { id } })}
         onSubmit={async ({ form, newFiles, keptPaths }) => {
-          if (!form.firstName.trim() || !form.accommodationName.trim()) {
-            toast.error("Nombre del cliente y nombre del alojamiento son obligatorios.");
+          if (!form.firstName.trim() || (!form.accommodationName.trim() && items.length === 0)) {
+            toast.error("Nombre del cliente y al menos un servicio son obligatorios.");
             return;
           }
           setSubmitting(true);
@@ -92,6 +114,8 @@ function EditQuotationPage() {
               .update({ ...formToRow(form), images: finalImages, ...(clientId ? { client_id: clientId } : {}) })
               .eq("id", id);
             if (updErr) throw updErr;
+
+            await saveQuotationItems(id, items);
 
             toast.success("Cotización actualizada");
             navigate({ to: "/quotations/$id", params: { id } });

@@ -73,6 +73,14 @@ type Props = {
   existingImages?: ExistingImage[];
   submitting: boolean;
   submitLabel: string;
+  /** Suma de los servicios de otras categorías (cotización integral). */
+  itemsTotal?: number;
+  /** Constructor de servicios por categoría (recibe la moneda de la cabecera). */
+  itemsSlot?: (currency: string) => React.ReactNode;
+  /** Resumen general de la cotización (recibe la moneda de la cabecera). */
+  summarySlot?: (currency: string) => React.ReactNode;
+  /** Bloque informativo (datos precargados desde la consulta). */
+  headerSlot?: React.ReactNode;
   onSubmit: (args: {
     form: QuotationFormState;
     newFiles: File[];
@@ -86,6 +94,10 @@ export function QuotationForm({
   existingImages = [],
   submitting,
   submitLabel,
+  itemsTotal = 0,
+  itemsSlot,
+  summarySlot,
+  headerSlot,
   onSubmit,
   onCancel,
 }: Props) {
@@ -123,9 +135,10 @@ export function QuotationForm({
     const n = Number(form.nights) || 0;
     const t = Number(form.taxes) || 0;
     const oc = Number(form.otherCharges) || 0;
-    if (pn === 0 && n === 0 && t === 0 && oc === 0) return "";
-    return String(Math.round((pn * n + t + oc) * 100) / 100);
-  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges]);
+    const it = Number(itemsTotal) || 0;
+    if (pn === 0 && n === 0 && t === 0 && oc === 0 && it === 0) return "";
+    return String(Math.round((pn * n + t + oc + it) * 100) / 100);
+  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges, itemsTotal]);
 
   // El total se mantiene sincronizado con precio por noche, noches, impuestos y otros cargos.
   useEffect(() => {
@@ -162,6 +175,8 @@ export function QuotationForm({
       }}
       className="space-y-6"
     >
+      {headerSlot}
+
       <Section title="Datos del cliente">
         <Field label="Nombre" required>
           <Input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required maxLength={80} />
@@ -212,6 +227,8 @@ export function QuotationForm({
           <Textarea rows={3} value={form.cancellationPolicy} onChange={(e) => set("cancellationPolicy", e.target.value)} maxLength={1000} />
         </Field>
       </Section>
+
+      {itemsSlot?.(form.currency)}
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -338,6 +355,8 @@ export function QuotationForm({
           <Textarea rows={4} value={form.observations} onChange={(e) => set("observations", e.target.value)} placeholder="Cualquier detalle que quieras dejar registrado." maxLength={2000} />
         </Field>
       </Section>
+
+      {summarySlot?.(form.currency)}
 
       <div className="flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center">
         {onCancel && (

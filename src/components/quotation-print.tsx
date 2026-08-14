@@ -1,5 +1,28 @@
 import type { CompanyInfo } from "@/lib/company";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import {
+  CATEGORY_LABELS,
+  QUOTATION_ITEM_CATEGORIES,
+  type QuotationItemCategory,
+} from "@/lib/quotationItems";
+
+/** Servicio de la cotización integral tal como se imprime (sin datos internos). */
+export type PrintQuotationItem = {
+  category: string;
+  title: string | null;
+  description: string | null;
+  provider_name?: string | null;
+  service_date: string | null;
+  end_date: string | null;
+  time_label: string | null;
+  origin: string | null;
+  destination: string | null;
+  quantity: number | null;
+  pax_count: number | null;
+  unit_amount: number | null;
+  taxes: number | null;
+  notes: string | null;
+};
 
 
 export type PrintQuotation = {
@@ -36,8 +59,10 @@ export function QuotationPrintDocument({
   quotation: q,
   company,
   imageUrls = [],
+  items = [],
 }: {
   quotation: PrintQuotation;
+  items?: PrintQuotationItem[];
   // El documento del cliente nunca lleva ajustes internos (moneda de análisis
   // ni marca del desarrollador).
   company: Omit<CompanyInfo, "analysisCurrency" | "showDeveloperBranding">;
@@ -48,6 +73,27 @@ export function QuotationPrintDocument({
     `${q.currency} ${Number(v ?? 0).toLocaleString()}`;
   const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate ?? null);
 
+
+  const itemAmount = (i: PrintQuotationItem) =>
+    Number(i.quantity ?? 1) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0);
+  const groups = QUOTATION_ITEM_CATEGORIES.map((c) => ({
+    category: c.value as QuotationItemCategory,
+    label: c.label,
+    list: items.filter((i) => i.category === c.value),
+  })).filter((g) => g.list.length > 0);
+  const detail = (i: PrintQuotationItem) =>
+    [
+      i.provider_name,
+      i.service_date && i.end_date
+        ? `${i.service_date} → ${i.end_date}`
+        : (i.service_date ?? i.end_date),
+      i.time_label,
+      i.origin && i.destination ? `${i.origin} → ${i.destination}` : (i.origin ?? i.destination),
+      i.pax_count != null ? `${i.pax_count} pax` : null,
+      i.quantity != null && Number(i.quantity) > 1 ? `x${Number(i.quantity)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
   const contact = [company.whatsapp, company.email, company.website].filter(Boolean);
   const socials = [
@@ -124,6 +170,21 @@ export function QuotationPrintDocument({
         </PrintBlock>
       ) : null}
 
+      {groups.map((g) => (
+        <PrintBlock key={g.category} title={g.label} color={company.primaryColor}>
+          {g.list.map((i, idx) => (
+            <div key={`${g.category}-${idx}`} className="print-line">
+              <span>
+                {i.title || CATEGORY_LABELS[g.category]}
+                {detail(i) ? ` — ${detail(i)}` : ""}
+                {i.description ? ` · ${i.description}` : ""}
+              </span>
+              <span>{money(itemAmount(i))}</span>
+            </div>
+          ))}
+        </PrintBlock>
+      ))}
+
       <PrintBlock title="Inversión" color={company.primaryColor}>
         {q.price_per_night != null ? (
           <PrintLine label="Precio por noche" value={money(q.price_per_night)} />
@@ -132,6 +193,13 @@ export function QuotationPrintDocument({
         {q.other_charges != null ? (
           <PrintLine label="Otros cargos" value={money(q.other_charges)} />
         ) : null}
+        {groups.map((g) => (
+          <PrintLine
+            key={`sub-${g.category}`}
+            label={g.label}
+            value={money(g.list.reduce((a, i) => a + itemAmount(i), 0))}
+          />
+        ))}
         <div className="print-total" style={{ borderTop: `2px solid ${company.accentColor}` }}>
           <span>Total</span>
           <strong style={{ color: company.primaryColor }}>{money(q.total_amount)}</strong>
