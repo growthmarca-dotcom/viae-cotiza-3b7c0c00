@@ -73,6 +73,14 @@ type Props = {
   existingImages?: ExistingImage[];
   submitting: boolean;
   submitLabel: string;
+  /** Suma de los servicios de otras categorías (cotización integral). */
+  itemsTotal?: number;
+  /** Constructor de servicios por categoría. */
+  itemsSlot?: React.ReactNode;
+  /** Resumen general de la cotización. */
+  summarySlot?: React.ReactNode;
+  /** Bloque informativo (datos precargados desde la consulta). */
+  headerSlot?: React.ReactNode;
   onSubmit: (args: {
     form: QuotationFormState;
     newFiles: File[];
@@ -86,6 +94,10 @@ export function QuotationForm({
   existingImages = [],
   submitting,
   submitLabel,
+  itemsTotal = 0,
+  itemsSlot,
+  summarySlot,
+  headerSlot,
   onSubmit,
   onCancel,
 }: Props) {
