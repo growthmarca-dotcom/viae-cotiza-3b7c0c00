@@ -75,10 +75,10 @@ type Props = {
   submitLabel: string;
   /** Suma de los servicios de otras categorías (cotización integral). */
   itemsTotal?: number;
-  /** Constructor de servicios por categoría. */
-  itemsSlot?: React.ReactNode;
-  /** Resumen general de la cotización. */
-  summarySlot?: React.ReactNode;
+  /** Constructor de servicios por categoría (recibe la moneda de la cabecera). */
+  itemsSlot?: (currency: string) => React.ReactNode;
+  /** Resumen general de la cotización (recibe la moneda de la cabecera). */
+  summarySlot?: (currency: string) => React.ReactNode;
   /** Bloque informativo (datos precargados desde la consulta). */
   headerSlot?: React.ReactNode;
   onSubmit: (args: {
@@ -228,7 +228,7 @@ export function QuotationForm({
         </Field>
       </Section>
 
-      {itemsSlot}
+      {itemsSlot?.(form.currency)}
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -356,7 +356,7 @@ export function QuotationForm({
         </Field>
       </Section>
 
-      {summarySlot}
+      {summarySlot?.(form.currency)}
 
       <div className="flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center">
         {onCancel && (

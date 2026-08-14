@@ -172,13 +172,9 @@ function NewQuotationPage() {
             </div>
           ) : null
         }
-        itemsSlot={
-          <QuotationItemsTabs
-            currency={initial?.currency ?? "USD"}
-            items={items}
-            onChange={setItems}
-          />
-        }
+        itemsSlot={(currency) => (
+          <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
+        )}
         onCancel={() => navigate({ to: "/dashboard" })}
         onSubmit={async ({ form, newFiles }) => {
           if (!form.firstName.trim()) {
@@ -264,9 +260,9 @@ function NewQuotationPage() {
             setSubmitting(false);
           }
         }}
-        summarySlot={
-          <QuotationItemsSummary currency={initial?.currency ?? "USD"} items={items} />
-        }
+        summarySlot={(currency) => (
+          <QuotationItemsSummary currency={currency} items={items} />
+        )}
       />
     </div>
   );
