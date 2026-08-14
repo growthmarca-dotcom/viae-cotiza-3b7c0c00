@@ -27,6 +27,23 @@ type PublicQuotation = {
   created_at: string;
 };
 
+/** Servicio publicado al cliente: nunca incluye proveedor ni datos internos. */
+export type PublicQuotationItem = {
+  category: string;
+  title: string | null;
+  description: string | null;
+  service_date: string | null;
+  end_date: string | null;
+  time_label: string | null;
+  origin: string | null;
+  destination: string | null;
+  quantity: number | null;
+  pax_count: number | null;
+  unit_amount: number | null;
+  taxes: number | null;
+  notes: string | null;
+};
+
 export type PublicCompany = {
   companyName: string | null;
   logoUrl: string | null;
@@ -53,7 +70,12 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
   .handler(
     async ({
       data,
-    }): Promise<{ quotation: PublicQuotation; imageUrls: string[]; company: PublicCompany }> => {
+    }): Promise<{
+      quotation: PublicQuotation;
+      items: PublicQuotationItem[];
+      imageUrls: string[];
+      company: PublicCompany;
+    }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
       const { data: q, error } = await supabaseAdmin
@@ -79,6 +101,16 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       if (expires_at && new Date(expires_at) < new Date()) {
         throw new Error("Cotización no encontrada");
       }
+
+      // Servicios de la cotización integral (sin proveedor ni costos internos).
+      const { data: itemRows } = await supabaseAdmin
+        .from("quotation_items")
+        .select(
+          "category, title, description, service_date, end_date, time_label, origin, destination, quantity, pax_count, unit_amount, taxes, notes",
+        )
+        .eq("quotation_id", quotation.id)
+        .order("position", { ascending: true });
+      const items = (itemRows ?? []) as unknown as PublicQuotationItem[];
 
       let imageUrls: string[] = [];
       if (images && images.length > 0) {
@@ -120,7 +152,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         footerText: settings?.footer_text ?? null,
       };
 
-      return { quotation, imageUrls, company };
+      return { quotation, items, imageUrls, company };
     },
   );
 
