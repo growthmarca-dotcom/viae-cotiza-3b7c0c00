@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import {
+  CATEGORY_LABELS,
+  QUOTATION_ITEM_CATEGORIES,
+  type QuotationItemCategory,
+} from "@/lib/quotationItems";
 
 
 
@@ -55,6 +60,26 @@ function PublicQuotationPage() {
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
   const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
+  const items = data.items ?? [];
+  const itemAmount = (i: (typeof items)[number]) =>
+    Number(i.quantity ?? 1) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0);
+  const groups = QUOTATION_ITEM_CATEGORIES.map((c) => ({
+    category: c.value as QuotationItemCategory,
+    label: c.label,
+    list: items.filter((i) => i.category === c.value),
+  })).filter((g) => g.list.length > 0);
+  const itemDetail = (i: (typeof items)[number]) =>
+    [
+      i.service_date && i.end_date
+        ? `${i.service_date} → ${i.end_date}`
+        : (i.service_date ?? i.end_date),
+      i.time_label,
+      i.origin && i.destination ? `${i.origin} → ${i.destination}` : (i.origin ?? i.destination),
+      i.pax_count != null ? `${i.pax_count} pax` : null,
+      i.quantity != null && Number(i.quantity) > 1 ? `x${Number(i.quantity)}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
 
   const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
     Boolean,
@@ -167,6 +192,43 @@ function PublicQuotationPage() {
           </section>
         )}
 
+        {groups.map((g) => (
+          <section
+            key={g.category}
+            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+          >
+            <h2 className="font-display text-2xl font-semibold">{g.label}</h2>
+            <ul className="mt-4 space-y-3 text-sm">
+              {g.list.map((i, idx) => (
+                <li
+                  key={`${g.category}-${idx}`}
+                  className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 pb-3 last:border-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{i.title || CATEGORY_LABELS[g.category]}</p>
+                    {itemDetail(i) && (
+                      <p className="text-xs text-muted-foreground">{itemDetail(i)}</p>
+                    )}
+                    {i.description && (
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                        {i.description}
+                      </p>
+                    )}
+                    {i.notes && (
+                      <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                        {i.notes}
+                      </p>
+                    )}
+                  </div>
+                  <span className="font-medium">
+                    {formatMoney(q.currency, itemAmount(i))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+
         <section
           className="rounded-2xl border p-6"
           style={{ borderColor: `${company.accentColor}66`, background: `${company.primaryColor}0D` }}
@@ -184,6 +246,16 @@ function PublicQuotationPage() {
             {q.other_charges != null && (
               <Line label="Otros cargos" value={`${q.currency} ${Number(q.other_charges).toLocaleString()}`} />
             )}
+            {groups.map((g) => (
+              <Line
+                key={`sub-${g.category}`}
+                label={g.label}
+                value={formatMoney(
+                  q.currency,
+                  g.list.reduce((a, i) => a + itemAmount(i), 0),
+                )}
+              />
+            ))}
             <div
               className="mt-3 flex items-baseline justify-between border-t pt-3"
               style={{ borderTopColor: `${company.accentColor}66` }}
