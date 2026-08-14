@@ -21,6 +21,13 @@ import { duplicateQuotation, setQuotationArchived, signImageUrls } from "@/lib/q
 import { DEFAULT_COMPANY, fetchCompany, type CompanyInfo } from "@/lib/company";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
+import { QuotationItemsSummary } from "@/components/quotation-items-summary";
+import {
+  listQuotationItems,
+  rowToDraft,
+  rowsTotal,
+  type QuotationItemRow,
+} from "@/lib/quotationItems";
 import { BookingCreateDialog } from "@/components/booking-create-dialog";
 import { getBookingByQuotation, type Booking } from "@/lib/bookings";
 
@@ -71,6 +78,7 @@ function QuotationDetailPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [items, setItems] = useState<QuotationItemRow[]>([]);
 
   async function loadBooking() {
     try {
@@ -102,6 +110,11 @@ function QuotationDetailPage() {
       setQ(data as Q);
       const signed = await signImageUrls(data.images ?? []);
       setUrls(signed);
+      try {
+        setItems(await listQuotationItems(id));
+      } catch {
+        setItems([]);
+      }
       const { info } = await fetchCompany();
       setCompany(info);
       await loadHistory();
@@ -169,7 +182,7 @@ function QuotationDetailPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} />
     <div className="mx-auto max-w-4xl space-y-6 pb-24 print-screen-hide">
       <Link to="/quotations" data-print-hide className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver a cotizaciones
@@ -316,6 +329,24 @@ function QuotationDetailPage() {
         <Row label="Fecha de la cotización" value={new Date(q.created_at).toLocaleDateString()} />
       </Card>
 
+
+      {items.length > 0 && (
+        <QuotationItemsSummary
+          currency={q.currency}
+          items={items.map(rowToDraft)}
+          extraLines={
+            Number(q.total_amount ?? 0) - rowsTotal(items) !== 0
+              ? [
+                  {
+                    label: q.accommodation_name ?? "Alojamiento y cargos",
+                    amount: Number(q.total_amount ?? 0) - rowsTotal(items),
+                  },
+                ]
+              : []
+          }
+          title="Resumen general de la cotización"
+        />
+      )}
 
       {q.notes && (
         <Card title="Observaciones">
