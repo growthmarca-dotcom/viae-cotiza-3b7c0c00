@@ -135,9 +135,10 @@ export function QuotationForm({
     const n = Number(form.nights) || 0;
     const t = Number(form.taxes) || 0;
     const oc = Number(form.otherCharges) || 0;
-    if (pn === 0 && n === 0 && t === 0 && oc === 0) return "";
-    return String(Math.round((pn * n + t + oc) * 100) / 100);
-  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges]);
+    const it = Number(itemsTotal) || 0;
+    if (pn === 0 && n === 0 && t === 0 && oc === 0 && it === 0) return "";
+    return String(Math.round((pn * n + t + oc + it) * 100) / 100);
+  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges, itemsTotal]);
 
   // El total se mantiene sincronizado con precio por noche, noches, impuestos y otros cargos.
   useEffect(() => {
