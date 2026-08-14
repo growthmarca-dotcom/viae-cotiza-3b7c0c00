@@ -175,6 +175,8 @@ export function QuotationForm({
       }}
       className="space-y-6"
     >
+      {headerSlot}
+
       <Section title="Datos del cliente">
         <Field label="Nombre" required>
           <Input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required maxLength={80} />
