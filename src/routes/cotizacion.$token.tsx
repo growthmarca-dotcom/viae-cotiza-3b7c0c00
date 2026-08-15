@@ -93,7 +93,7 @@ function PublicQuotationPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} />
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} />
     <div
       className="min-h-screen bg-background print-screen-hide"
       style={
