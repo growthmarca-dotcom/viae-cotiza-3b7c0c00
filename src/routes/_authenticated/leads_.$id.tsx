@@ -236,6 +236,12 @@ function LeadDetailPage() {
             <Button variant="outline" onClick={handlePipeline}>
               <Target className="mr-2 h-4 w-4" /> Ver en Pipeline
             </Button>
+            {/* Cotización integral: precarga cliente, viaje y requerimientos. */}
+            <Button
+              onClick={() => navigate({ to: "/quotations/new", search: { leadId: id } })}
+            >
+              <FileText className="mr-2 h-4 w-4" /> Generar cotización
+            </Button>
 
             {isAdmin && (
               <Button variant="ghost" onClick={handleArchive}>

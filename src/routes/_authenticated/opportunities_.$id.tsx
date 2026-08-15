@@ -409,7 +409,7 @@ function OpportunityDetailPage() {
             </div>
           ) : (
             <Button asChild size="sm" variant="outline" className="w-full">
-              <Link to="/quotations/new">
+              <Link to="/quotations/new" search={{ opportunityId: id }}>
                 <FileText className="mr-2 h-4 w-4" /> Crear cotización
               </Link>
             </Button>
