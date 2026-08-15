@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Archive, Loader2, MessageSquarePlus, Pencil, Target, UserCheck } from "lucide-react";
+import { ArrowLeft, Archive, FileText, Loader2, MessageSquarePlus, Pencil, Target, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
