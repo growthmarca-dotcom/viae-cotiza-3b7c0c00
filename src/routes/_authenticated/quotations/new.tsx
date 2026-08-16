@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { QuotationForm, type QuotationFormState } from "@/components/quotation-form";
+import { QuotationForm } from "@/components/quotation-form";
 import { QuotationItemsTabs } from "@/components/quotation-items-tabs";
 import { QuotationItemsSummary } from "@/components/quotation-items-summary";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,9 @@ import { getLead, ensureOpportunityForLead, serviceLabels, leadFullName } from "
 import { upsertClientFromQuotation } from "@/lib/crm";
 import { resolveMyOrganizationId } from "@/lib/tenant";
 import { ensureOpportunityForQuotation } from "@/lib/opportunities";
+import { getOpportunity } from "@/lib/pipeline";
+import { getClient } from "@/lib/clients";
+import { quotationInitialFromContext } from "@/lib/quotationPrefill";
 
 type Search = { leadId?: string; opportunityId?: string };
 
@@ -73,28 +76,38 @@ function NewQuotationPage() {
     queryFn: listMyQuotationOrganizations,
   });
 
-  // Precarga desde la Consulta: datos del cliente, viaje y requerimientos.
-  const { data: lead, isLoading: leadLoading } = useQuery({
-    queryKey: ["lead-for-quotation", leadId],
-    queryFn: () => getLead(leadId as string),
-    enabled: Boolean(leadId),
+  // Contexto del Pipeline: la oportunidad aporta el lead_id y el cliente.
+  const { data: opportunity, isLoading: opportunityLoading } = useQuery({
+    queryKey: ["opportunity-for-quotation", opportunityIdParam],
+    queryFn: () => getOpportunity(opportunityIdParam as string),
+    enabled: Boolean(opportunityIdParam),
   });
 
-  const initial = useMemo<Partial<QuotationFormState> | undefined>(() => {
-    if (!lead) return undefined;
-    return {
-      firstName: lead.first_name ?? "",
-      lastName: lead.last_name ?? "",
-      email: lead.email ?? "",
-      whatsapp: lead.whatsapp ?? "",
-      destination: lead.destination ?? "",
-      travelStart: lead.travel_date ?? "",
-      nights: lead.nights_count != null ? String(lead.nights_count) : "",
-      pax: lead.pax_count != null ? String(lead.pax_count) : "",
-      currency: lead.budget_currency ?? "USD",
-      observations: [lead.notes, lead.commercial_notes].filter(Boolean).join("\n"),
-    };
-  }, [lead]);
+  const effectiveLeadId = leadId ?? opportunity?.lead_id ?? null;
+
+  // Precarga desde la Consulta: datos del cliente, viaje y requerimientos.
+  const { data: lead, isLoading: leadLoading } = useQuery({
+    queryKey: ["lead-for-quotation", effectiveLeadId],
+    queryFn: () => getLead(effectiveLeadId as string),
+    enabled: Boolean(effectiveLeadId),
+  });
+
+  // Si la oportunidad no viene de una Consulta, usamos su cliente como contexto.
+  const { data: contextClient, isLoading: clientLoading } = useQuery({
+    queryKey: ["client-for-quotation", opportunity?.client_id],
+    queryFn: () => getClient(opportunity?.client_id as string),
+    enabled: Boolean(opportunity?.client_id) && !effectiveLeadId,
+  });
+
+  const initial = useMemo(
+    () =>
+      quotationInitialFromContext({
+        lead,
+        opportunity: opportunity ?? null,
+        client: contextClient ?? null,
+      }),
+    [lead, opportunity, contextClient],
+  );
 
   if (lead && !itemsSeeded) {
     setItemsSeeded(true);
@@ -105,9 +118,15 @@ function NewQuotationPage() {
   const needsOrgChoice = orgs.length > 1;
   const total = sumItems(items);
 
-  if (leadId && leadLoading) {
+  const loadingContext =
+    (Boolean(opportunityIdParam) && opportunityLoading) ||
+    (Boolean(effectiveLeadId) && leadLoading) ||
+    clientLoading;
+
+  if (loadingContext) {
     return <p className="py-16 text-center text-sm text-muted-foreground">Cargando consulta...</p>;
   }
+
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-24">
