@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { QuotationForm, type QuotationFormState } from "@/components/quotation-form";
+import { QuotationForm } from "@/components/quotation-form";
 import { QuotationItemsTabs } from "@/components/quotation-items-tabs";
 import { QuotationItemsSummary } from "@/components/quotation-items-summary";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,9 @@ import { getLead, ensureOpportunityForLead, serviceLabels, leadFullName } from "
 import { upsertClientFromQuotation } from "@/lib/crm";
 import { resolveMyOrganizationId } from "@/lib/tenant";
 import { ensureOpportunityForQuotation } from "@/lib/opportunities";
+import { getOpportunity } from "@/lib/pipeline";
+import { getClient } from "@/lib/clients";
+import { quotationInitialFromContext } from "@/lib/quotationPrefill";
 
 type Search = { leadId?: string; opportunityId?: string };
 
