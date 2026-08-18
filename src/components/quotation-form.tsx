@@ -228,13 +228,14 @@ export function QuotationForm({
         </Field>
       </Section>
 
-      {itemsSlot?.(form.currency)}
+
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-semibold">Imágenes</h2>
+            <h2 className="font-display text-xl font-semibold">Imágenes del alojamiento</h2>
             <p className="text-sm text-muted-foreground">Hasta {MAX_IMAGES} fotografías del alojamiento.</p>
+
           </div>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             {totalCount} / {MAX_IMAGES}
@@ -291,7 +292,7 @@ export function QuotationForm({
         )}
       </div>
 
-      <Section title="Precios">
+      <Section title="Precio del alojamiento">
         <Field label="Precio por noche">
           <Input type="number" min={0} step="0.01" value={form.pricePerNight} onChange={(e) => set("pricePerNight", e.target.value)} />
         </Field>
@@ -349,6 +350,9 @@ export function QuotationForm({
         )}
       </Section>
 
+      {itemsSlot?.(form.currency)}
+
+      {summarySlot?.(form.currency)}
 
       <Section title="Observaciones" cols={1}>
         <Field label="Notas adicionales">
@@ -356,7 +360,6 @@ export function QuotationForm({
         </Field>
       </Section>
 
-      {summarySlot?.(form.currency)}
 
       <div className="flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center">
         {onCancel && (
