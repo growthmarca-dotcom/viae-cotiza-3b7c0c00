@@ -86,7 +86,10 @@ function EditQuotationPage() {
         itemsSlot={(currency) => (
           <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
         )}
-        summarySlot={(currency) => <QuotationItemsSummary currency={currency} items={items} />}
+        summarySlot={(currency) => (
+          <QuotationItemsSummary currency={currency} items={items} title="Resumen de la cotización" />
+        )}
+
         onCancel={() => navigate({ to: "/quotations/$id", params: { id } })}
         onSubmit={async ({ form, newFiles, keptPaths }) => {
           if (!form.firstName.trim() || (!form.accommodationName.trim() && items.length === 0)) {

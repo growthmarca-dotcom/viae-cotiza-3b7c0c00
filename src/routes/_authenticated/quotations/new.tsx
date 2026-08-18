@@ -194,6 +194,14 @@ function NewQuotationPage() {
         itemsSlot={(currency) => (
           <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
         )}
+        summarySlot={(currency) => (
+          <QuotationItemsSummary
+            currency={currency}
+            items={items}
+            title="Resumen de la cotización"
+          />
+        )}
+
         onCancel={() => navigate({ to: "/dashboard" })}
         onSubmit={async ({ form, newFiles }) => {
           if (!form.firstName.trim()) {
@@ -279,9 +287,6 @@ function NewQuotationPage() {
             setSubmitting(false);
           }
         }}
-        summarySlot={(currency) => (
-          <QuotationItemsSummary currency={currency} items={items} />
-        )}
       />
     </div>
   );
