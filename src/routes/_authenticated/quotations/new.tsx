@@ -287,9 +287,6 @@ function NewQuotationPage() {
             setSubmitting(false);
           }
         }}
-        summarySlot={(currency) => (
-          <QuotationItemsSummary currency={currency} items={items} />
-        )}
       />
     </div>
   );
