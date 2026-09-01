@@ -17,7 +17,6 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
-  Sparkles,
   TicketCheck,
   Target,
   LogOut,
