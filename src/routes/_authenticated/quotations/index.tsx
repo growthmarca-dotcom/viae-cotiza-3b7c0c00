@@ -53,26 +53,18 @@ type Row = {
   total_amount: number | null;
   currency: string;
   archived: boolean;
-  status: "draft" | "sent" | "pending" | "accepted" | "rejected" | "expired";
+  status: QuotationStatus;
 };
 
-const STATUS_LABEL: Record<Row["status"], string> = {
-  draft: "Borrador",
-  sent: "Enviada",
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-  expired: "Vencida",
-};
-
-const STATUS_STYLE: Record<Row["status"], string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-secondary text-secondary-foreground",
-  pending: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  accepted: "bg-primary/15 text-primary",
-  rejected: "bg-destructive/15 text-destructive",
-  expired: "bg-muted text-muted-foreground line-through",
-};
+const STATUS_FILTERS: { value: "all" | QuotationStatus; label: string }[] = [
+  { value: "all", label: "Todos los estados" },
+  { value: "draft", label: STATUS_LABEL.draft },
+  { value: "sent", label: STATUS_LABEL.sent },
+  { value: "pending", label: STATUS_LABEL.pending },
+  { value: "accepted", label: STATUS_LABEL.accepted },
+  { value: "rejected", label: STATUS_LABEL.rejected },
+  { value: "expired", label: STATUS_LABEL.expired },
+];
 
 function QuotationsPage() {
   const navigate = useNavigate();
@@ -80,8 +72,11 @@ function QuotationsPage() {
   const [toDelete, setToDelete] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | QuotationStatus>("all");
 
   async function load() {
+    // Expiración perezosa antes de listar: los estados mostrados son reales.
+    await expireDueQuotations();
     const { data, error } = await supabase
       .from("quotations")
       .select("id, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status, archived")
@@ -99,6 +94,11 @@ function QuotationsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArchived]);
+
+  const visibleRows = (rows ?? []).filter(
+    (r) => statusFilter === "all" || r.status === statusFilter,
+  );
+
 
 
   async function handleDelete() {
