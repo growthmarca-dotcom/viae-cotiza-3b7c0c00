@@ -4613,6 +4613,8 @@ export type Database = {
       }
       quotations: {
         Row: {
+          accepted_at: string | null
+          accepted_by: string | null
           accommodation_address: string | null
           accommodation_description: string | null
           accommodation_name: string | null
@@ -4624,6 +4626,7 @@ export type Database = {
           currency: string
           destination: string | null
           exchange_rate: number | null
+          expired_at: string | null
           expires_at: string | null
           guest_email: string | null
           guest_first_name: string | null
@@ -4639,6 +4642,10 @@ export type Database = {
           other_charges: number | null
           pax_count: number | null
           price_per_night: number | null
+          rejected_at: string | null
+          rejected_by: string | null
+          sent_at: string | null
+          sent_by: string | null
           share_token: string
           smart_quote_id: string | null
           status: Database["public"]["Enums"]["quotation_status"]
@@ -4651,6 +4658,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           accommodation_address?: string | null
           accommodation_description?: string | null
           accommodation_name?: string | null
@@ -4662,6 +4671,7 @@ export type Database = {
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          expired_at?: string | null
           expires_at?: string | null
           guest_email?: string | null
           guest_first_name?: string | null
@@ -4677,6 +4687,10 @@ export type Database = {
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
           share_token?: string
           smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["quotation_status"]
@@ -4689,6 +4703,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           accommodation_address?: string | null
           accommodation_description?: string | null
           accommodation_name?: string | null
@@ -4700,6 +4716,7 @@ export type Database = {
           currency?: string
           destination?: string | null
           exchange_rate?: number | null
+          expired_at?: string | null
           expires_at?: string | null
           guest_email?: string | null
           guest_first_name?: string | null
@@ -4715,6 +4732,10 @@ export type Database = {
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
           share_token?: string
           smart_quote_id?: string | null
           status?: Database["public"]["Enums"]["quotation_status"]
@@ -6778,6 +6799,7 @@ export type Database = {
         Args: { _provider_id: string }
         Returns: string
       }
+      expire_due_quotations: { Args: never; Returns: number }
       expire_stale_invitations: { Args: never; Returns: number }
       has_org_role: {
         Args: { _org_id: string; _role: string; _user_id: string }
@@ -6843,6 +6865,13 @@ export type Database = {
       org_identity_can_write: { Args: { _org_id: string }; Returns: boolean }
       provider_in_package_template: {
         Args: { _template_id: string }
+        Returns: boolean
+      }
+      quotation_status_can_transition: {
+        Args: {
+          _from: Database["public"]["Enums"]["quotation_status"]
+          _to: Database["public"]["Enums"]["quotation_status"]
+        }
         Returns: boolean
       }
       rate_at: {
