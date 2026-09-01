@@ -37,7 +37,9 @@ const baseNav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/leads", label: "Consultas", icon: Inbox },
   { to: "/opportunities", label: "Pipeline comercial", icon: Target },
-  { to: "/smart-quotes", label: "Cotizaciones inteligentes", icon: Sparkles },
+  // Smart Quotes queda fuera del menú principal en V1 (quotations es el cotizador
+  // operativo). La ruta, las tablas y el código siguen intactos para fases futuras.
+  // { to: "/smart-quotes", label: "Cotizaciones inteligentes", icon: Sparkles },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },

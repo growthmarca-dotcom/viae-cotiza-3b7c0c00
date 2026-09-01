@@ -9,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { expireDueQuotations } from "@/lib/quotationStatus";
 import { Button } from "@/components/ui/button";
 import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
@@ -42,6 +43,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 type Stats = {
   total: number;
+  draft: number;
+  rejected: number;
   accepted: number;
   pending: number;
   expired: number;
@@ -59,10 +62,13 @@ function Dashboard() {
   const { data: stats } = useQuery<Stats>({
     queryKey: ["quotation-stats"],
     queryFn: async () => {
+      await expireDueQuotations();
       const { data } = await supabase.from("quotations").select("status");
       const rows = data ?? [];
       return {
         total: rows.length,
+        draft: rows.filter((r) => r.status === "draft").length,
+        rejected: rows.filter((r) => r.status === "rejected").length,
         accepted: rows.filter((r) => r.status === "accepted").length,
         pending: rows.filter((r) => r.status === "pending" || r.status === "sent")
           .length,
@@ -85,7 +91,7 @@ function Dashboard() {
       tint: "bg-primary/10 text-primary",
     },
     {
-      label: "Pendientes",
+      label: "Enviadas / pendientes",
       value: stats?.pending ?? 0,
       icon: Clock,
       tint: "bg-gold/20 text-gold-foreground",
