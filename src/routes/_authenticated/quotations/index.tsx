@@ -148,7 +148,19 @@ function QuotationsPage() {
           <h1 className="truncate font-display text-3xl font-semibold sm:text-4xl">Cotizaciones</h1>
           <p className="mt-1 text-sm text-muted-foreground">Administra tus propuestas y su estado.</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | QuotationStatus)}
+            aria-label="Filtrar por estado"
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {STATUS_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
           <Button variant="outline" onClick={() => setShowArchived((v) => !v)}>
             <Archive className="mr-2 h-4 w-4" />
             {showArchived ? "Ver activas" : "Ver archivadas"}
@@ -168,12 +180,14 @@ function QuotationsPage() {
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Cargando...
         </div>
-      ) : rows.length === 0 ? (
+      ) : visibleRows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary">
             <FileText className="h-6 w-6" />
           </div>
-          <h2 className="mt-4 font-display text-xl font-semibold">Aún no tienes cotizaciones</h2>
+          <h2 className="mt-4 font-display text-xl font-semibold">
+            {statusFilter === "all" ? "Aún no tienes cotizaciones" : "Sin cotizaciones en este estado"}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Crea tu primera cotización y compártela con tu cliente por un enlace único.
           </p>
@@ -198,7 +212,7 @@ function QuotationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {visibleRows.map((r) => (
                   <tr key={r.id} className="border-t border-border/60 hover:bg-secondary/20">
                     <td className="px-4 py-3">
                       <button
@@ -237,7 +251,7 @@ function QuotationsPage() {
 
           {/* Mobile cards */}
           <div className="grid gap-3 md:hidden">
-            {rows.map((r) => (
+            {visibleRows.map((r) => (
               <div key={r.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
