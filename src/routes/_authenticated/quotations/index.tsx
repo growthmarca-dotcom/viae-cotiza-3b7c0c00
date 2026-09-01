@@ -17,6 +17,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { duplicateQuotation, setQuotationArchived } from "@/lib/quotations";
 import {
+  expireDueQuotations,
+  STATUS_LABEL,
+  STATUS_STYLE,
+  type QuotationStatus,
+} from "@/lib/quotationStatus";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,26 +59,18 @@ type Row = {
   total_amount: number | null;
   currency: string;
   archived: boolean;
-  status: "draft" | "sent" | "pending" | "accepted" | "rejected" | "expired";
+  status: QuotationStatus;
 };
 
-const STATUS_LABEL: Record<Row["status"], string> = {
-  draft: "Borrador",
-  sent: "Enviada",
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  rejected: "Rechazada",
-  expired: "Vencida",
-};
-
-const STATUS_STYLE: Record<Row["status"], string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-secondary text-secondary-foreground",
-  pending: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  accepted: "bg-primary/15 text-primary",
-  rejected: "bg-destructive/15 text-destructive",
-  expired: "bg-muted text-muted-foreground line-through",
-};
+const STATUS_FILTERS: { value: "all" | QuotationStatus; label: string }[] = [
+  { value: "all", label: "Todos los estados" },
+  { value: "draft", label: STATUS_LABEL.draft },
+  { value: "sent", label: STATUS_LABEL.sent },
+  { value: "pending", label: STATUS_LABEL.pending },
+  { value: "accepted", label: STATUS_LABEL.accepted },
+  { value: "rejected", label: STATUS_LABEL.rejected },
+  { value: "expired", label: STATUS_LABEL.expired },
+];
 
 function QuotationsPage() {
   const navigate = useNavigate();
@@ -80,8 +78,11 @@ function QuotationsPage() {
   const [toDelete, setToDelete] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | QuotationStatus>("all");
 
   async function load() {
+    // Expiración perezosa antes de listar: los estados mostrados son reales.
+    await expireDueQuotations();
     const { data, error } = await supabase
       .from("quotations")
       .select("id, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status, archived")
@@ -99,6 +100,11 @@ function QuotationsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showArchived]);
+
+  const visibleRows = (rows ?? []).filter(
+    (r) => statusFilter === "all" || r.status === statusFilter,
+  );
+
 
 
   async function handleDelete() {
@@ -142,7 +148,19 @@ function QuotationsPage() {
           <h1 className="truncate font-display text-3xl font-semibold sm:text-4xl">Cotizaciones</h1>
           <p className="mt-1 text-sm text-muted-foreground">Administra tus propuestas y su estado.</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "all" | QuotationStatus)}
+            aria-label="Filtrar por estado"
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {STATUS_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
           <Button variant="outline" onClick={() => setShowArchived((v) => !v)}>
             <Archive className="mr-2 h-4 w-4" />
             {showArchived ? "Ver activas" : "Ver archivadas"}
@@ -162,12 +180,14 @@ function QuotationsPage() {
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Cargando...
         </div>
-      ) : rows.length === 0 ? (
+      ) : visibleRows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary">
             <FileText className="h-6 w-6" />
           </div>
-          <h2 className="mt-4 font-display text-xl font-semibold">Aún no tienes cotizaciones</h2>
+          <h2 className="mt-4 font-display text-xl font-semibold">
+            {statusFilter === "all" ? "Aún no tienes cotizaciones" : "Sin cotizaciones en este estado"}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Crea tu primera cotización y compártela con tu cliente por un enlace único.
           </p>
@@ -192,7 +212,7 @@ function QuotationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {visibleRows.map((r) => (
                   <tr key={r.id} className="border-t border-border/60 hover:bg-secondary/20">
                     <td className="px-4 py-3">
                       <button
@@ -231,7 +251,7 @@ function QuotationsPage() {
 
           {/* Mobile cards */}
           <div className="grid gap-3 md:hidden">
-            {rows.map((r) => (
+            {visibleRows.map((r) => (
               <div key={r.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
