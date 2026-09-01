@@ -30,6 +30,13 @@ import {
 } from "@/lib/quotationItems";
 import { BookingCreateDialog } from "@/components/booking-create-dialog";
 import { getBookingByQuotation, type Booking } from "@/lib/bookings";
+import {
+  canTransition,
+  setQuotationStatus,
+  STATUS_LABEL,
+  STATUS_STYLE,
+  type QuotationStatus,
+} from "@/lib/quotationStatus";
 
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -79,6 +86,7 @@ function QuotationDetailPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [items, setItems] = useState<QuotationItemRow[]>([]);
+  const [statusBusy, setStatusBusy] = useState<QuotationStatus | null>(null);
 
   async function loadBooking() {
     try {
@@ -168,6 +176,22 @@ function QuotationDetailPage() {
   }
 
 
+  async function changeStatus(to: QuotationStatus) {
+    if (!q) return;
+    setStatusBusy(to);
+    try {
+      await setQuotationStatus(q.id, q.status, to);
+      const { data } = await supabase.from("quotations").select("*").eq("id", q.id).maybeSingle();
+      if (data) setQ(data as Q);
+      toast.success(`Cotización marcada como ${STATUS_LABEL[to].toLowerCase()}`);
+      loadHistory();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo cambiar el estado");
+    } finally {
+      setStatusBusy(null);
+    }
+  }
+
   async function handleDelete() {
     setDeleting(true);
     const { error } = await supabase.from("quotations").delete().eq("id", id);
@@ -239,6 +263,48 @@ function QuotationDetailPage() {
           </Button>
         </div>
       </header>
+
+      {/* Ciclo comercial de la cotización */}
+      <div data-print-hide className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-display text-lg font-semibold">Estado comercial</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[q.status]}`}>
+                {STATUS_LABEL[q.status]}
+              </span>
+              {q.sent_at && <span>Enviada {new Date(q.sent_at).toLocaleString()}</span>}
+              {q.accepted_at && <span>Aceptada {new Date(q.accepted_at).toLocaleString()}</span>}
+              {q.rejected_at && <span>Rechazada {new Date(q.rejected_at).toLocaleString()}</span>}
+              {q.expires_at && <span>Válida hasta {new Date(q.expires_at).toLocaleDateString()}</span>}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(["sent", "accepted", "rejected"] as QuotationStatus[]).map((to) => (
+              <Button
+                key={to}
+                size="sm"
+                variant={to === "rejected" ? "outline" : to === "accepted" ? "default" : "outline"}
+                disabled={!canTransition(q.status, to) || q.status === to || statusBusy !== null}
+                onClick={() => changeStatus(to)}
+                className={to === "rejected" ? "text-destructive hover:text-destructive" : undefined}
+              >
+                {statusBusy === to && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {to === "sent"
+                  ? "Marcar como enviada"
+                  : to === "accepted"
+                    ? "Marcar como aceptada"
+                    : "Marcar como rechazada"}
+              </Button>
+            ))}
+          </div>
+        </div>
+        {q.status === "accepted" && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Una cotización aceptada es definitiva: no puede volver a borrador ni cambiar de estado.
+          </p>
+        )}
+      </div>
 
       {q.client_id && (
         <BookingCreateDialog
