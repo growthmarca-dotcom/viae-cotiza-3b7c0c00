@@ -1,7 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Download, Loader2, MapPin, Calendar, Users, Moon } from "lucide-react";
+import {
+  Compass,
+  Copy,
+  Download,
+  Link2,
+  Loader2,
+  MapPin,
+  Calendar,
+  Users,
+  Moon,
+  MessageCircle,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getPublicQuotation } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
@@ -27,6 +39,21 @@ export const Route = createFileRoute("/cotizacion/$token")({
     ],
   }),
 });
+
+/** Número de WhatsApp en formato wa.me (solo dígitos, sin + ni separadores). */
+function whatsappDigits(raw: string | null): string | null {
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, "");
+  return digits.length >= 8 ? digits : null;
+}
+
+/** URL absoluta de la web configurada (acepta valores sin protocolo). */
+function websiteHref(raw: string | null): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value) return null;
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
 
 function PublicQuotationPage() {
   const { token } = Route.useParams();
@@ -84,6 +111,32 @@ function PublicQuotationPage() {
   const contactLines = [company.whatsapp, company.email, company.website, company.address].filter(
     Boolean,
   ) as string[];
+  // Enlace de esta cotización (dinámico, incluye el número/token de la cotización).
+  const quotationUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/cotizacion/${token}`
+      : `/cotizacion/${token}`;
+
+  const agentPhone = whatsappDigits(company.whatsapp);
+  const whatsappMessage = [
+    `Hola${company.companyName ? ` ${company.companyName}` : ""}, te escribo por la cotización "${q.title}"`,
+    q.destination ? ` a ${q.destination}` : "",
+    `. Enlace: ${quotationUrl}`,
+  ].join("");
+  const whatsappHref = agentPhone
+    ? `https://wa.me/${agentPhone}?text=${encodeURIComponent(whatsappMessage)}`
+    : null;
+  const siteHref = websiteHref(company.website);
+
+  async function copyQuotationUrl() {
+    try {
+      await navigator.clipboard.writeText(quotationUrl);
+      toast.success("Enlace copiado");
+    } catch {
+      toast.error("No se pudo copiar el enlace");
+    }
+  }
+
   const socialLines = [
     company.instagram && `Instagram: ${company.instagram}`,
     company.facebook && `Facebook: ${company.facebook}`,
@@ -138,9 +191,18 @@ function PublicQuotationPage() {
               ) : null}
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Download className="mr-2 h-4 w-4" /> Descargar PDF
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {whatsappHref && (
+              <a href={whatsappHref} target="_blank" rel="noreferrer">
+                <Button size="sm" style={{ background: company.primaryColor }}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Contactar agente
+                </Button>
+              </a>
+            )}
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Download className="mr-2 h-4 w-4" /> Descargar PDF
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -304,6 +366,43 @@ function PublicQuotationPage() {
           </section>
         )}
 
+        <section
+          data-print-hide
+          className="rounded-2xl border bg-card p-5 shadow-sm"
+          style={{ borderColor: `${company.accentColor}66` }}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div
+                className="flex items-center gap-2 font-display text-lg font-semibold"
+                style={{ color: company.primaryColor }}
+              >
+                <Link2 className="h-4 w-4" /> Enlace de esta cotización
+              </div>
+              <a
+                href={quotationUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 block truncate text-sm text-muted-foreground underline-offset-4 hover:underline"
+              >
+                {quotationUrl}
+              </a>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button variant="outline" size="sm" onClick={copyQuotationUrl}>
+                <Copy className="mr-2 h-4 w-4" /> Copiar enlace
+              </Button>
+              {whatsappHref && (
+                <a href={whatsappHref} target="_blank" rel="noreferrer">
+                  <Button size="sm" style={{ background: company.primaryColor }}>
+                    <MessageCircle className="mr-2 h-4 w-4" /> Contactar agente
+                  </Button>
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+
         <footer
           className="mt-4 space-y-2 border-t pt-6 text-center text-xs text-muted-foreground"
           style={{ borderTopColor: `${company.accentColor}66` }}
@@ -313,7 +412,28 @@ function PublicQuotationPage() {
               {company.companyName}
             </div>
           ) : null}
-          {contactLines.length > 0 && <div>{contactLines.join(" · ")}</div>}
+          {contactLines.length > 0 && (
+            <div>
+              {contactLines.map((line, i) => (
+                <span key={`${line}-${i}`}>
+                  {i > 0 ? " · " : ""}
+                  {siteHref && line === company.website ? (
+                    <a
+                      href={siteHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline-offset-4 hover:underline"
+                      style={{ color: company.primaryColor }}
+                    >
+                      {line}
+                    </a>
+                  ) : (
+                    line
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
           {socialLines.length > 0 && <div>{socialLines.join(" · ")}</div>}
           <div>
             {company.footerText ?? "Cotización sin valor contractual."} ·{" "}
