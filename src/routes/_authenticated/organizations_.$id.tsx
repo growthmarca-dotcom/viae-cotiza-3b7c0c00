@@ -14,6 +14,7 @@ import {
 import { useAccount } from "@/hooks/use-account";
 import { OrganizationFormDialog } from "@/components/organization-form-dialog";
 import { AgreementsPanel } from "@/components/agreements-panel";
+import { OrganizationMembersPanel } from "@/components/organization-members-panel";
 import {
   ORGANIZATION_STATUSES,
   getOrganization,
@@ -265,6 +266,8 @@ function OrganizationDetailPage() {
           </div>
         </section>
       )}
+
+      <OrganizationMembersPanel organizationId={id} canManage={isAdmin} />
 
       <AgreementsPanel organizationId={id} canManage={isAdmin} />
 

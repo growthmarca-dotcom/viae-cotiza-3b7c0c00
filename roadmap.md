@@ -12,3 +12,10 @@
 - [x] Intervención 2 — Aceptación/rechazo público por token: respuesta del cliente desde `/cotizacion/$token` (aceptar/rechazar + comentario opcional), una sola vez, respetando vencimiento y guarda de transiciones; visible en la ficha interna.
 
 - [x] Intervención 3 — Conversión Cotización → Reserva completa: idempotencia (una cotización = una reserva, índice único + reuso de la reserva existente) y alta de acompañantes según `pax_count` además del titular. El traslado `quotation_items → booking_services` y titular → `booking_passengers` ya estaba operativo.
+
+- [x] Intervención 4 — Membresías: panel "Miembros y accesos" en la ficha de organización (listado con identidad, cambio de rol interno, revocación de acceso), invitaciones por correo con enlace copiable y revocación, y ruta de aceptación `/invitacion/$token` con sesión requerida. Función segura `list_organization_members`. Sin tocar Intervenciones 1-3.
+
+## Pendiente
+- [ ] Intervención 5 — Economía / Tipo de cambio.
+- [ ] Notificación al agente cuando el cliente responde la cotización.
+- [ ] Conversión automática a reserva al aceptar.

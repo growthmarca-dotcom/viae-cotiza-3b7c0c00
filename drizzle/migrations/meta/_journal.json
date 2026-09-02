@@ -36,6 +36,13 @@
       "when": 1788392399163,
       "tag": "0004_bookings_quotation_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788392829376,
+      "tag": "0005_list_organization_members",
+      "breakpoints": true
     }
   ]
 }
