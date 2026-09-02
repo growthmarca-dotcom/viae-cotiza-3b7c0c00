@@ -51,6 +51,7 @@ export const Route = createFileRoute("/_authenticated/quotations/")({
 
 type Row = {
   id: string;
+  quotation_number: string | null;
   created_at: string;
   destination: string | null;
   accommodation_name: string | null;
@@ -85,7 +86,7 @@ function QuotationsPage() {
     await expireDueQuotations();
     const { data, error } = await supabase
       .from("quotations")
-      .select("id, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status, archived")
+      .select("id, quotation_number, created_at, destination, accommodation_name, guest_first_name, guest_last_name, total_amount, currency, status, archived")
       .eq("archived", showArchived)
       .order("created_at", { ascending: false });
     if (error) {
@@ -221,6 +222,9 @@ function QuotationsPage() {
                       >
                         {`${r.guest_first_name ?? ""} ${r.guest_last_name ?? ""}`.trim() || "—"}
                       </button>
+                      {r.quotation_number ? (
+                        <div className="text-xs text-muted-foreground">{r.quotation_number}</div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{r.destination ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.accommodation_name ?? "—"}</td>
@@ -255,6 +259,9 @@ function QuotationsPage() {
               <div key={r.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
+                    {r.quotation_number ? (
+                      <div className="text-xs text-muted-foreground">{r.quotation_number}</div>
+                    ) : null}
                     <div className="truncate font-display text-lg font-semibold">
                       {`${r.guest_first_name ?? ""} ${r.guest_last_name ?? ""}`.trim() || "—"}
                     </div>

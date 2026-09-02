@@ -26,6 +26,8 @@ export type PrintQuotationItem = {
 
 
 export type PrintQuotation = {
+  /** Número comercial legible (COT-AA-000000). Sólo referencia visual. */
+  quotation_number?: string | null;
   title: string;
   destination: string | null;
   travel_start: string | null;
@@ -132,6 +134,7 @@ export function QuotationPrintDocument({
       <section className="print-title">
         <div className="print-eyebrow" style={{ color: company.accentColor }}>
           Cotización de viaje
+          {q.quotation_number ? ` Nº ${q.quotation_number}` : ""}
         </div>
         <h1 style={{ color: company.primaryColor }}>{q.title}</h1>
         <div className="print-meta">

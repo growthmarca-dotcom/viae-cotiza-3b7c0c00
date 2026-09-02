@@ -214,6 +214,11 @@ function QuotationDetailPage() {
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
+          {q.quotation_number ? (
+            <p className="text-sm font-medium tracking-wide text-primary">
+              Cotización {q.quotation_number}
+            </p>
+          ) : null}
           <h1 className="font-display text-3xl font-semibold sm:text-4xl">{q.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {q.destination ?? "Sin destino"} · Creada {new Date(q.created_at).toLocaleDateString()}
