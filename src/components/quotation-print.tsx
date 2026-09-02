@@ -134,6 +134,7 @@ export function QuotationPrintDocument({
       <section className="print-title">
         <div className="print-eyebrow" style={{ color: company.accentColor }}>
           Cotización de viaje
+          {q.quotation_number ? ` Nº ${q.quotation_number}` : ""}
         </div>
         <h1 style={{ color: company.primaryColor }}>{q.title}</h1>
         <div className="print-meta">
