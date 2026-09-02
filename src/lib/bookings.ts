@@ -371,22 +371,38 @@ async function copyQuotationContentToBooking(
     if (error) throw error;
   }
 
-  // Titular del viaje: único pasajero con datos reales en la cotización.
+  // Titular del viaje + acompañantes según el `pax_count` cotizado.
+  // Los acompañantes nacen como marcadores nominativos para que la operación
+  // sepa cuánta gente viaja; los datos reales se completan en el expediente.
   const firstName = (quotation?.guest_first_name ?? "").trim();
   const lastName = (quotation?.guest_last_name ?? "").trim();
   if (!existingPax && (firstName || lastName)) {
-    const { error } = await supabase.from("booking_passengers").insert({
-      booking_id: bookingId,
-      user_id: uid,
-      first_name: firstName || "Titular",
-      last_name: lastName || "—",
-      email: quotation?.guest_email ?? null,
-      phone: quotation?.guest_whatsapp ?? null,
-      is_lead_passenger: true,
-    });
+    const paxTotal = Math.max(1, Number(quotation?.pax_count ?? 1) || 1);
+    const rows = [
+      {
+        booking_id: bookingId,
+        user_id: uid,
+        first_name: firstName || "Titular",
+        last_name: lastName || "—",
+        email: quotation?.guest_email ?? null,
+        phone: quotation?.guest_whatsapp ?? null,
+        is_lead_passenger: true,
+      },
+      ...Array.from({ length: paxTotal - 1 }, (_, i) => ({
+        booking_id: bookingId,
+        user_id: uid,
+        first_name: `Acompañante ${i + 2}`,
+        last_name: "—",
+        is_lead_passenger: false,
+        relationship_to_lead_passenger: "Acompañante",
+        notes: "Datos pendientes de completar (generado desde la cotización).",
+      })),
+    ];
+    const { error } = await supabase.from("booking_passengers").insert(rows as never);
     if (error) throw error;
   }
 }
+
 
 /**
  * Traduce el bloqueo de organización propietaria (trigger
