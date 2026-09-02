@@ -26,6 +26,8 @@ export type PrintQuotationItem = {
 
 
 export type PrintQuotation = {
+  /** Número comercial legible (COT-AA-000000). Sólo referencia visual. */
+  quotation_number?: string | null;
   title: string;
   destination: string | null;
   travel_start: string | null;
