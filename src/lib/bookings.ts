@@ -222,6 +222,17 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   const uid = userData.user?.id;
   if (!uid) throw new Error("Sesión no válida");
 
+  // Idempotencia de la conversión: una cotización genera una sola reserva.
+  // Si ya existe, se devuelve la existente en lugar de duplicar el contenido.
+  if (origin.quotationId) {
+    const existing = await getBookingByQuotation(origin.quotationId);
+    if (existing) {
+      await copyQuotationContentToBooking(origin.quotationId, existing.id, uid);
+      return existing.id;
+    }
+  }
+
+
   let opportunityId = origin.opportunityId ?? null;
   let organizationId = input.organization_id ?? null;
   let clientId = input.client_id;
@@ -327,10 +338,11 @@ async function copyQuotationContentToBooking(
       supabase
         .from("quotations")
         .select(
-          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id",
+          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id, pax_count",
         )
         .eq("id", quotationId)
         .maybeSingle(),
+
       supabase
         .from("booking_services")
         .select("id", { count: "exact", head: true })
@@ -359,22 +371,38 @@ async function copyQuotationContentToBooking(
     if (error) throw error;
   }
 
-  // Titular del viaje: único pasajero con datos reales en la cotización.
+  // Titular del viaje + acompañantes según el `pax_count` cotizado.
+  // Los acompañantes nacen como marcadores nominativos para que la operación
+  // sepa cuánta gente viaja; los datos reales se completan en el expediente.
   const firstName = (quotation?.guest_first_name ?? "").trim();
   const lastName = (quotation?.guest_last_name ?? "").trim();
   if (!existingPax && (firstName || lastName)) {
-    const { error } = await supabase.from("booking_passengers").insert({
-      booking_id: bookingId,
-      user_id: uid,
-      first_name: firstName || "Titular",
-      last_name: lastName || "—",
-      email: quotation?.guest_email ?? null,
-      phone: quotation?.guest_whatsapp ?? null,
-      is_lead_passenger: true,
-    });
+    const paxTotal = Math.max(1, Number(quotation?.pax_count ?? 1) || 1);
+    const rows = [
+      {
+        booking_id: bookingId,
+        user_id: uid,
+        first_name: firstName || "Titular",
+        last_name: lastName || "—",
+        email: quotation?.guest_email ?? null,
+        phone: quotation?.guest_whatsapp ?? null,
+        is_lead_passenger: true,
+      },
+      ...Array.from({ length: paxTotal - 1 }, (_, i) => ({
+        booking_id: bookingId,
+        user_id: uid,
+        first_name: `Acompañante ${i + 2}`,
+        last_name: "—",
+        is_lead_passenger: false,
+        relationship_to_lead_passenger: "Acompañante",
+        notes: "Datos pendientes de completar (generado desde la cotización).",
+      })),
+    ];
+    const { error } = await supabase.from("booking_passengers").insert(rows as never);
     if (error) throw error;
   }
 }
+
 
 /**
  * Traduce el bloqueo de organización propietaria (trigger
