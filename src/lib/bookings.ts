@@ -338,10 +338,11 @@ async function copyQuotationContentToBooking(
       supabase
         .from("quotations")
         .select(
-          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id",
+          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id, pax_count",
         )
         .eq("id", quotationId)
         .maybeSingle(),
+
       supabase
         .from("booking_services")
         .select("id", { count: "exact", head: true })
