@@ -4688,7 +4688,7 @@ export type Database = {
           other_charges?: number | null
           pax_count?: number | null
           price_per_night?: number | null
-          quotation_number: string
+          quotation_number?: string
           rejected_at?: string | null
           rejected_by?: string | null
           sent_at?: string | null

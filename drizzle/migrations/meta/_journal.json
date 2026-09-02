@@ -15,6 +15,13 @@
       "when": 1788385836193,
       "tag": "0001_quotation_number",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788385934317,
+      "tag": "0002_quotation_number_default",
+      "breakpoints": true
     }
   ]
 }
