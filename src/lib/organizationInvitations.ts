@@ -107,3 +107,32 @@ export async function listOrganizationInvitations(organizationId: string) {
   if (error) throw error;
   return (data ?? []) as unknown as OrganizationInvitation[];
 }
+
+export interface OrganizationMemberView extends OrganizationMember {
+  full_name: string | null;
+  email: string | null;
+}
+
+/** Lista los miembros de una organización con identidad legible (RPC segura). */
+export async function listOrganizationMembers(organizationId: string) {
+  const { data, error } = await supabase.rpc('list_organization_members', {
+    _org_id: organizationId,
+  });
+  if (error) throw error;
+  return (data ?? []) as unknown as OrganizationMemberView[];
+}
+
+/** Revoca una invitación pendiente (queda `inactive`, sin borrar historial). */
+export async function revokeOrganizationInvitation(invitationId: string) {
+  const { error } = await supabase
+    .from('organization_invitations')
+    .update({ status: 'inactive' })
+    .eq('id', invitationId);
+  if (error) throw error;
+}
+
+/** URL pública del enlace de invitación. */
+export function invitationLink(token: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/invitacion/${token}`;
+}
