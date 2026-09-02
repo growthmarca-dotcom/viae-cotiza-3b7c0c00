@@ -1010,6 +1010,21 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
     [sq.destination_city, sq.destination_state, sq.destination_country]
       .filter(Boolean)
       .join(", ") || null;
+  // Pasajeros y noches viajan a la cotización (los muestra el enlace público).
+  const pax = parseSmartQuotePassengers(sq.passengers_metadata as Record<string, unknown>);
+  const paxCount = pax.adults + pax.children + pax.infants;
+  const nights =
+    sq.start_date && sq.end_date
+      ? Math.max(
+          0,
+          Math.round(
+            (new Date(`${sq.end_date}T00:00:00`).getTime() -
+              new Date(`${sq.start_date}T00:00:00`).getTime()) /
+              86400000,
+          ),
+        ) || null
+      : null;
+
   const description = items
     .map((i) => {
       const detail = i.description ? ` — ${i.description}` : "";
@@ -1034,6 +1049,8 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
       guest_last_name: client?.last_name ?? null,
       accommodation_name: sq.title,
       accommodation_description: description || null,
+      pax_count: paxCount || null,
+      nights: nights,
       total_amount: total,
       currency: sq.currency,
     })
