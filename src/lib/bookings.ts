@@ -287,7 +287,93 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     .select("id")
     .single();
   if (error) throw new Error(bookingCreateErrorMessage(error));
-  return data.id as string;
+  const bookingId = data.id as string;
+
+  // La conversión traslada el contenido comercial, no sólo la cabecera:
+  // quotation_items -> booking_services y titular -> booking_passengers.
+  if (origin.quotationId) {
+    await copyQuotationContentToBooking(origin.quotationId, bookingId, uid);
+  }
+  return bookingId;
+}
+
+/** Categoría de `quotation_items` -> tipo de servicio operativo. */
+const ITEM_CATEGORY_TO_SERVICE_KIND: Record<string, string> = {
+  accommodation: "accommodation",
+  excursion: "excursion",
+  vehicle_rental: "car_rental",
+  transfer: "transfer",
+  insurance: "insurance",
+  flight: "flight",
+  other: "other",
+};
+
+/**
+ * Traslado idempotente del contenido de la cotización a la reserva. Si la
+ * reserva ya tiene servicios o pasajeros, no duplica nada.
+ */
+async function copyQuotationContentToBooking(
+  quotationId: string,
+  bookingId: string,
+  uid: string,
+): Promise<void> {
+  const [{ data: items }, { data: quotation }, { count: existingServices }, { count: existingPax }] =
+    await Promise.all([
+      supabase
+        .from("quotation_items")
+        .select("*")
+        .eq("quotation_id", quotationId)
+        .order("position", { ascending: true }),
+      supabase
+        .from("quotations")
+        .select(
+          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id",
+        )
+        .eq("id", quotationId)
+        .maybeSingle(),
+      supabase
+        .from("booking_services")
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", bookingId),
+      supabase
+        .from("booking_passengers")
+        .select("id", { count: "exact", head: true })
+        .eq("booking_id", bookingId),
+    ]);
+
+  if ((items ?? []).length > 0 && !existingServices) {
+    const rows = (items ?? []).map((i) => ({
+      booking_id: bookingId,
+      user_id: uid,
+      kind: (ITEM_CATEGORY_TO_SERVICE_KIND[i.category as string] ?? "other") as never,
+      title: (i.title as string) || "Servicio",
+      provider_name: (i.provider_name as string | null) ?? null,
+      service_date: (i.service_date as string | null) ?? null,
+      notes: (i.notes as string | null) ?? (i.description as string | null) ?? null,
+      organization_id: quotation?.organization_id ?? null,
+      sale_amount:
+        Number(i.quantity ?? 0) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0),
+      sale_currency: quotation?.currency ?? null,
+    }));
+    const { error } = await supabase.from("booking_services").insert(rows as never);
+    if (error) throw error;
+  }
+
+  // Titular del viaje: único pasajero con datos reales en la cotización.
+  const firstName = (quotation?.guest_first_name ?? "").trim();
+  const lastName = (quotation?.guest_last_name ?? "").trim();
+  if (!existingPax && (firstName || lastName)) {
+    const { error } = await supabase.from("booking_passengers").insert({
+      booking_id: bookingId,
+      user_id: uid,
+      first_name: firstName || "Titular",
+      last_name: lastName || "—",
+      email: quotation?.guest_email ?? null,
+      phone: quotation?.guest_whatsapp ?? null,
+      is_lead_passenger: true,
+    });
+    if (error) throw error;
+  }
 }
 
 /**
