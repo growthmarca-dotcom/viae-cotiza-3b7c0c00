@@ -222,6 +222,17 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   const uid = userData.user?.id;
   if (!uid) throw new Error("Sesión no válida");
 
+  // Idempotencia de la conversión: una cotización genera una sola reserva.
+  // Si ya existe, se devuelve la existente en lugar de duplicar el contenido.
+  if (origin.quotationId) {
+    const existing = await getBookingByQuotation(origin.quotationId);
+    if (existing) {
+      await copyQuotationContentToBooking(origin.quotationId, existing.id, uid);
+      return existing.id;
+    }
+  }
+
+
   let opportunityId = origin.opportunityId ?? null;
   let organizationId = input.organization_id ?? null;
   let clientId = input.client_id;
