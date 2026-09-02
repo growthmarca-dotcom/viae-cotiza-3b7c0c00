@@ -43,6 +43,13 @@
       "when": 1788392829376,
       "tag": "0005_list_organization_members",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788393438516,
+      "tag": "0006_register_currency_exchange_rate",
+      "breakpoints": true
     }
   ]
 }
