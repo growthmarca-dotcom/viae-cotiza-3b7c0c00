@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMyOrganizationId } from "@/lib/tenant";
+import { getExchangeRate } from "@/lib/money";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Booking = Tables<"bookings">;
@@ -193,6 +194,58 @@ export type BookingOrigin = {
   smartQuoteId?: string | null;
 };
 
+/**
+ * Intervención 5 — Economía / Tipo de cambio.
+ *
+ * Sello del tipo de cambio aplicado en la conversión. La tasa se resuelve una
+ * sola vez, en el momento de crear la reserva, y queda guardada en la reserva y
+ * en sus servicios (`applied_exchange_rate`, `applied_rate_date`,
+ * `applied_rate_source`). Por eso una reserva NO cambia de importe si más
+ * adelante se carga un tipo de cambio distinto.
+ *
+ * Prioridad de la tasa:
+ * 1. `manual`   — la tasa cargada por el agente en la cotización/reserva.
+ * 2. `snapshot` — la tasa vigente del Financial Core (`currency_rate_at`).
+ * 3. sin tasa   — cuando la moneda ya es ARS o no hay cotización cargada.
+ */
+export type AppliedRateStamp = {
+  applied_exchange_rate: number | null;
+  applied_rate_date: string | null;
+  applied_rate_source: "manual" | "snapshot" | "inherited" | null;
+};
+
+export async function resolveAppliedRate(
+  currency: string,
+  manualRate: number | null | undefined,
+): Promise<AppliedRateStamp> {
+  const today = new Date().toISOString().slice(0, 10);
+  const manual = manualRate != null && Number(manualRate) > 0 ? Number(manualRate) : null;
+  if (manual) {
+    return {
+      applied_exchange_rate: manual,
+      applied_rate_date: today,
+      applied_rate_source: "manual",
+    };
+  }
+  const iso = (currency || "").toUpperCase();
+  if (!iso || iso === "ARS") {
+    return { applied_exchange_rate: null, applied_rate_date: null, applied_rate_source: null };
+  }
+  try {
+    const rate = await getExchangeRate(iso, "ARS");
+    if (rate) {
+      return {
+        applied_exchange_rate: rate,
+        applied_rate_date: today,
+        applied_rate_source: "snapshot",
+      };
+    }
+  } catch {
+    // Sin cotización cargada la reserva queda sin sello: no se inventa una tasa.
+  }
+  return { applied_exchange_rate: null, applied_rate_date: null, applied_rate_source: null };
+}
+
 export type BookingInput = {
   client_id: string;
   /**
@@ -227,7 +280,11 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     const existing = await getBookingByQuotation(origin.quotationId);
     if (existing) {
-      await copyQuotationContentToBooking(origin.quotationId, existing.id, uid);
+      await copyQuotationContentToBooking(origin.quotationId, existing.id, uid, {
+        applied_exchange_rate: existing.applied_exchange_rate ?? null,
+        applied_rate_date: existing.applied_rate_date ?? null,
+        applied_rate_source: existing.applied_exchange_rate != null ? "inherited" : null,
+      });
       return existing.id;
     }
   }
@@ -283,10 +340,13 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     }
   }
 
+  const stamp = await resolveAppliedRate(input.currency, input.exchange_rate);
+
   const { data, error } = await supabase
     .from("bookings")
     .insert({
       ...input,
+      ...stamp,
       client_id: clientId,
       assigned_agent_id: agentId,
       organization_id: await resolveMyOrganizationId(organizationId),
@@ -303,7 +363,7 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   // La conversión traslada el contenido comercial, no sólo la cabecera:
   // quotation_items -> booking_services y titular -> booking_passengers.
   if (origin.quotationId) {
-    await copyQuotationContentToBooking(origin.quotationId, bookingId, uid);
+    await copyQuotationContentToBooking(origin.quotationId, bookingId, uid, stamp);
   }
   return bookingId;
 }
@@ -327,6 +387,8 @@ async function copyQuotationContentToBooking(
   quotationId: string,
   bookingId: string,
   uid: string,
+  /** Tasa sellada de la reserva: los servicios la heredan tal cual. */
+  stamp?: AppliedRateStamp,
 ): Promise<void> {
   const [{ data: items }, { data: quotation }, { count: existingServices }, { count: existingPax }] =
     await Promise.all([
@@ -366,6 +428,10 @@ async function copyQuotationContentToBooking(
       sale_amount:
         Number(i.quantity ?? 0) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0),
       sale_currency: quotation?.currency ?? null,
+      applied_exchange_rate: stamp?.applied_exchange_rate ?? null,
+      applied_rate_date: stamp?.applied_rate_date ?? null,
+      applied_rate_source:
+        stamp?.applied_exchange_rate != null ? ("inherited" as const) : null,
     }));
     const { error } = await supabase.from("booking_services").insert(rows as never);
     if (error) throw error;
