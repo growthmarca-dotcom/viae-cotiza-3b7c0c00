@@ -211,6 +211,11 @@ function PublicQuotationPage() {
           {guestName && (
             <p className="text-sm uppercase tracking-wide text-muted-foreground">Propuesta para {guestName}</p>
           )}
+          {q.quotation_number && (
+            <p className="mt-1 text-sm font-medium tracking-wide text-primary">
+              Cotización {q.quotation_number}
+            </p>
+          )}
           <h1 className="mt-2 font-display text-4xl font-semibold sm:text-5xl">{q.title}</h1>
           {q.destination && (
             <p className="mt-3 flex items-center gap-2 text-lg text-muted-foreground">
