@@ -167,36 +167,24 @@ export type SaveExchangeRateInput = {
 };
 
 /**
- * Alta de una cotización. Nunca actualiza registros previos: el histórico es
- * inmutable. Las validaciones fuertes (tasa > 0, monedas activas, períodos
- * superpuestos) se aplican también en la base de datos.
+ * Alta de una cotización. El valor de las tasas históricas nunca se modifica:
+ * la RPC `register_currency_exchange_rate` sólo cierra la vigencia del período
+ * abierto anterior del mismo par (así no se solapan) e inserta la nueva tasa.
+ * Las validaciones fuertes (tasa > 0, monedas activas, períodos superpuestos,
+ * permiso de administrador) se aplican en la base de datos.
  */
 export async function saveExchangeRate(input: SaveExchangeRateInput): Promise<void> {
   if (!Number.isFinite(input.rate) || input.rate <= 0) {
     throw new Error("El tipo de cambio debe ser mayor a 0");
   }
-  const { data: userData } = await supabase.auth.getUser();
-  const uid = userData.user?.id;
-  if (!uid) throw new Error("Sesión no válida");
-
-  const [fromCurrency, toCurrency] = await Promise.all([
-    getCurrency(input.fromIso),
-    getCurrency(input.toIso),
-  ]);
-  if (!fromCurrency?.is_active) throw new Error("La moneda de origen no está activa");
-  if (!toCurrency?.is_active) throw new Error("La moneda de destino no está activa");
-  if (fromCurrency.id === toCurrency.id) throw new Error("Las monedas deben ser distintas");
-
-  const { error } = await supabase.from("currency_exchange_rates").insert({
-    from_currency_id: fromCurrency.id,
-    to_currency_id: toCurrency.id,
-    exchange_rate: input.rate,
-    rate_type: input.rateType ?? DEFAULT_RATE_TYPE,
-    source: input.source ?? "manual",
-    valid_from: new Date(input.validFrom ?? new Date()).toISOString(),
-    valid_until: input.validUntil ? new Date(input.validUntil).toISOString() : null,
-    note: input.note?.trim() ? input.note.trim() : null,
-    created_by: uid,
+  const { error } = await supabase.rpc("register_currency_exchange_rate", {
+    _from_iso: input.fromIso.toUpperCase(),
+    _to_iso: input.toIso.toUpperCase(),
+    _rate: input.rate,
+    _valid_from: new Date(input.validFrom ?? new Date()).toISOString(),
+    _rate_type: input.rateType ?? DEFAULT_RATE_TYPE,
+    _source: input.source ?? "manual",
+    _note: input.note?.trim() ? input.note.trim() : null,
   });
   if (error) throw error;
 }
