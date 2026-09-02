@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { fetchCompany, saveCompany, uploadLogo, type CompanyRow } from "@/lib/company";
 import { ExchangeRateCard } from "@/components/exchange-rate-card";
+import { CurrencyRatesCard } from "@/components/currency-rates-card";
 import { LeadAssignmentSettings } from "@/components/lead-assignment-settings";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -294,6 +295,8 @@ function SettingsPage() {
       </section>
 
       <ExchangeRateCard />
+
+      <CurrencyRatesCard />
 
       <LeadAssignmentSettings />
 
