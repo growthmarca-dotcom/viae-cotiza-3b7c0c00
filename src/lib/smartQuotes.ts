@@ -1040,8 +1040,38 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
     .select("id")
     .single();
   if (error) throw new Error(smartQuoteCreateErrorMessage(error));
-  return data.id as string;
+  const quotationId = data.id as string;
+
+  // Las líneas de la Smart Quote se trasladan como servicios reales de la
+  // cotización (`quotation_items`), no sólo como texto descriptivo.
+  if (items.length > 0) {
+    const { error: itemsErr } = await supabase.from("quotation_items").insert(
+      items.map((i, idx) => ({
+        quotation_id: quotationId,
+        category: SMART_ITEM_TO_QUOTATION_CATEGORY[i.item_type] ?? "other",
+        title: i.title || "Servicio",
+        description: i.description ?? null,
+        quantity: Number(i.quantity ?? 1),
+        unit_amount: Number(i.unit_amount ?? 0),
+        taxes: 0,
+        position: idx,
+      })),
+    );
+    if (itemsErr) throw itemsErr;
+  }
+  return quotationId;
 }
+
+/** Mapeo de tipo de ítem de Smart Quote a categoría de `quotation_items`. */
+const SMART_ITEM_TO_QUOTATION_CATEGORY: Record<string, string> = {
+  accommodation: "accommodation",
+  activity: "excursion",
+  excursion: "excursion",
+  transfer: "transfer",
+  rental: "vehicle_rental",
+  package: "other",
+  other: "other",
+};
 
 /** Cotizaciones de presentación generadas desde una Smart Quote. */
 export async function listQuotationsBySmartQuote(smartQuoteId: string) {
