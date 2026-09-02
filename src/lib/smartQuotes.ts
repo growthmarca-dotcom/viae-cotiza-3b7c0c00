@@ -1013,7 +1013,7 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
   const { data: clientContact } = sq.client_id
     ? await supabase
         .from("clients")
-        .select("email, whatsapp")
+        .select("email, phone")
         .eq("id", sq.client_id)
         .maybeSingle()
     : { data: null };
@@ -1059,7 +1059,7 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
       guest_first_name: firstName || client?.full_name || null,
       guest_last_name: client?.last_name ?? null,
       guest_email: clientContact?.email ?? null,
-      guest_whatsapp: clientContact?.whatsapp ?? null,
+      guest_whatsapp: clientContact?.phone ?? null,
       accommodation_name: sq.title,
       accommodation_description: description || null,
       pax_count: paxCount || null,
