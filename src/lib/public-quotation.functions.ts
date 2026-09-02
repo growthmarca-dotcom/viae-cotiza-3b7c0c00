@@ -3,6 +3,8 @@ import { z } from "zod";
 
 type PublicQuotation = {
   id: string;
+  /** Número comercial legible; sólo referencia visible, nunca acceso. */
+  quotation_number: string | null;
   title: string;
   destination: string | null;
   travel_start: string | null;
