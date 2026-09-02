@@ -6858,6 +6858,21 @@ export type Database = {
         Returns: boolean
       }
       is_operations: { Args: { _user_id: string }; Returns: boolean }
+      list_organization_members: {
+        Args: { _org_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_owner: boolean
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_member_role"]
+          status: Database["public"]["Enums"]["organization_member_status"]
+          updated_at: string
+          user_id: string
+        }[]
+      }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       notify_operations_team: {
         Args: {
