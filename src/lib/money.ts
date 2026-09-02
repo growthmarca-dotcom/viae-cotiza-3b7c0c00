@@ -184,7 +184,7 @@ export async function saveExchangeRate(input: SaveExchangeRateInput): Promise<vo
     _valid_from: new Date(input.validFrom ?? new Date()).toISOString(),
     _rate_type: input.rateType ?? DEFAULT_RATE_TYPE,
     _source: input.source ?? "manual",
-    _note: input.note?.trim() ? input.note.trim() : null,
+    _note: input.note?.trim() ? input.note.trim() : undefined,
   });
   if (error) throw error;
 }
