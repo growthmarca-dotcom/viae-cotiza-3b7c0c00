@@ -27,6 +27,10 @@ type PublicQuotation = {
 
   notes: string | null;
   created_at: string;
+  /** Estado comercial: habilita o no la respuesta pública del cliente. */
+  status: string;
+  client_responded_at: string | null;
+  client_response_note: string | null;
 };
 
 /** Servicio publicado al cliente: nunca incluye proveedor ni datos internos. */
@@ -63,7 +67,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -158,3 +162,65 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
     },
   );
 
+
+/** Estados en los que el cliente puede aceptar o rechazar desde el enlace. */
+export function clientCanRespond(status: string): boolean {
+  return status === "sent" || status === "pending";
+}
+
+/**
+ * Aceptación / rechazo público de la cotización por token.
+ * No expone datos internos ni permite otras transiciones: sólo
+ * `sent`/`pending` -> `accepted`/`rejected`, y una sola vez.
+ */
+export const respondPublicQuotation = createServerFn({ method: "POST" })
+  .inputValidator((data) =>
+    z
+      .object({
+        token: z.string().regex(/^[a-f0-9]{20,64}$/i),
+        action: z.enum(["accept", "reject"]),
+        note: z.string().trim().max(1000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }): Promise<{ status: "accepted" | "rejected" }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: q, error } = await supabaseAdmin
+      .from("quotations")
+      .select("id, status, archived, expires_at, client_responded_at")
+      .eq("share_token", data.token)
+      .maybeSingle();
+
+    if (error || !q) throw new Error("Cotización no encontrada");
+    if (q.archived) throw new Error("Cotización no encontrada");
+    if (q.expires_at && new Date(q.expires_at as string) < new Date()) {
+      throw new Error("Esta cotización ya venció. Contactá a tu agente.");
+    }
+    if (q.client_responded_at) {
+      throw new Error("Esta cotización ya fue respondida.");
+    }
+    if (!clientCanRespond(q.status as string)) {
+      throw new Error("Esta cotización no admite respuesta en su estado actual.");
+    }
+
+    const next = data.action === "accept" ? "accepted" : "rejected";
+    const { error: updErr } = await supabaseAdmin
+      .from("quotations")
+      .update({
+        status: next,
+        client_responded_at: new Date().toISOString(),
+        client_response_note: data.note?.length ? data.note : null,
+        client_response_channel: "public_link",
+      } as never)
+      .eq("id", q.id);
+
+    if (updErr) {
+      if (updErr.hint === "invalid_status_transition") {
+        throw new Error("Esta cotización no admite respuesta en su estado actual.");
+      }
+      console.error("public quotation response failed", updErr);
+      throw new Error("No se pudo registrar la respuesta. Intentá de nuevo.");
+    }
+    return { status: next };
+  });

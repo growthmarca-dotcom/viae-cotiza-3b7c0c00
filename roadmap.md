@@ -9,5 +9,4 @@
   - [x] Botón "Contactar agente" con ícono de WhatsApp y mensaje inicial de la cotización.
   - [x] Enlace inferior a la web oficial de VIAE, clickeable y en pestaña nueva (mismo estilo/ubicación).
 
-## Próximo (no iniciar aún)
-- [ ] Intervención 2 — Aceptación/rechazo público por token.
+- [x] Intervención 2 — Aceptación/rechazo público por token: respuesta del cliente desde `/cotizacion/$token` (aceptar/rechazar + comentario opcional), una sola vez, respetando vencimiento y guarda de transiciones; visible en la ficha interna.

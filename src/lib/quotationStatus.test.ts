@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { clientCanRespond } from "./public-quotation.functions";
 import {
   ALLOWED_TRANSITIONS,
   canTransition,
@@ -64,5 +65,18 @@ describe("expiración por expires_at", () => {
 
   it("no vence si la validez es futura", () => {
     expect(isQuotationExpired({ status: "draft", expires_at: "2026-07-01" }, now)).toBe(false);
+  });
+});
+
+describe("respuesta pública del cliente", () => {
+  it("permite responder sólo cuando la cotización fue enviada o está pendiente", () => {
+    expect(clientCanRespond("sent")).toBe(true);
+    expect(clientCanRespond("pending")).toBe(true);
+  });
+
+  it("no permite responder en borrador ni en estados terminales", () => {
+    for (const s of ["draft", "accepted", "rejected", "expired"]) {
+      expect(clientCanRespond(s)).toBe(false);
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -12,10 +13,17 @@ import {
   Users,
   Moon,
   MessageCircle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getPublicQuotation } from "@/lib/public-quotation.functions";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  clientCanRespond,
+  getPublicQuotation,
+  respondPublicQuotation,
+} from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import {
@@ -58,6 +66,10 @@ function websiteHref(raw: string | null): string | null {
 function PublicQuotationPage() {
   const { token } = Route.useParams();
   const fetchFn = useServerFn(getPublicQuotation);
+  const respondFn = useServerFn(respondPublicQuotation);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<"accept" | "reject" | null>(null);
+  const [answer, setAnswer] = useState<"accepted" | "rejected" | null>(null);
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-quotation", token],
     queryFn: () => fetchFn({ data: { token } }),
@@ -127,6 +139,35 @@ function PublicQuotationPage() {
     ? `https://wa.me/${agentPhone}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
   const siteHref = websiteHref(company.website);
+
+  // Respuesta del cliente desde el enlace público (una sola vez).
+  const respondedStatus =
+    answer ??
+    (q.client_responded_at || q.status === "accepted" || q.status === "rejected"
+      ? q.status === "accepted"
+        ? "accepted"
+        : q.status === "rejected"
+          ? "rejected"
+          : null
+      : null);
+  const canRespond = respondedStatus === null && clientCanRespond(q.status);
+
+  async function respond(action: "accept" | "reject") {
+    setBusy(action);
+    try {
+      const res = await respondFn({
+        data: { token, action, note: note.trim() ? note.trim() : undefined },
+      });
+      setAnswer(res.status);
+      toast.success(
+        res.status === "accepted" ? "¡Gracias! Confirmamos tu propuesta." : "Registramos tu respuesta.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo registrar la respuesta");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function copyQuotationUrl() {
     try {
@@ -368,6 +409,81 @@ function PublicQuotationPage() {
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="font-display text-xl font-semibold">Observaciones</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{q.notes}</p>
+          </section>
+        )}
+
+        {(canRespond || respondedStatus) && (
+          <section
+            data-print-hide
+            className="rounded-2xl border bg-card p-6 shadow-sm"
+            style={{ borderColor: `${company.accentColor}66` }}
+          >
+            {respondedStatus ? (
+              <div className="flex items-start gap-3">
+                {respondedStatus === "accepted" ? (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5" style={{ color: company.primaryColor }} />
+                ) : (
+                  <XCircle className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                )}
+                <div>
+                  <h2 className="font-display text-xl font-semibold">
+                    {respondedStatus === "accepted"
+                      ? "Propuesta aceptada"
+                      : "Propuesta rechazada"}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {respondedStatus === "accepted"
+                      ? "Tu agente ya recibió la confirmación y se pondrá en contacto para los próximos pasos."
+                      : "Registramos tu respuesta. Si querés otra alternativa, escribile a tu agente."}
+                  </p>
+                  {q.client_response_note && (
+                    <p className="mt-2 whitespace-pre-wrap text-sm">“{q.client_response_note}”</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-display text-2xl font-semibold">¿Confirmás esta propuesta?</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Podés aceptarla o rechazarla desde acá. Tu agente recibirá la respuesta al instante.
+                </p>
+                <Textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Comentario para tu agente (opcional)"
+                  rows={3}
+                  maxLength={1000}
+                  className="mt-4"
+                />
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    disabled={busy !== null}
+                    onClick={() => respond("accept")}
+                    style={{ background: company.primaryColor }}
+                  >
+                    {busy === "accept" ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                    )}
+                    Aceptar propuesta
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={busy !== null}
+                    onClick={() => respond("reject")}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    {busy === "reject" ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <XCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Rechazar
+                  </Button>
+                </div>
+              </>
+            )}
           </section>
         )}
 

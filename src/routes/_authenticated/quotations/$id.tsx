@@ -282,7 +282,18 @@ function QuotationDetailPage() {
               {q.accepted_at && <span>Aceptada {new Date(q.accepted_at).toLocaleString()}</span>}
               {q.rejected_at && <span>Rechazada {new Date(q.rejected_at).toLocaleString()}</span>}
               {q.expires_at && <span>Válida hasta {new Date(q.expires_at).toLocaleDateString()}</span>}
+              {q.client_responded_at && (
+                <span className="font-medium text-foreground">
+                  Respondida por el cliente desde el enlace público{" "}
+                  {new Date(q.client_responded_at).toLocaleString()}
+                </span>
+              )}
             </div>
+            {q.client_response_note && (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                Comentario del cliente: “{q.client_response_note}”
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {(["sent", "accepted", "rejected"] as QuotationStatus[]).map((to) => (
