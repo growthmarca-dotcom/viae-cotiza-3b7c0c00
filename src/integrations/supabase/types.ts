@@ -4622,6 +4622,9 @@ export type Database = {
           archived: boolean
           cancellation_policy: string | null
           client_id: string | null
+          client_responded_at: string | null
+          client_response_channel: string | null
+          client_response_note: string | null
           created_at: string
           currency: string
           destination: string | null
@@ -4668,6 +4671,9 @@ export type Database = {
           archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
+          client_responded_at?: string | null
+          client_response_channel?: string | null
+          client_response_note?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
@@ -4714,6 +4720,9 @@ export type Database = {
           archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
+          client_responded_at?: string | null
+          client_response_channel?: string | null
+          client_response_note?: string | null
           created_at?: string
           currency?: string
           destination?: string | null
