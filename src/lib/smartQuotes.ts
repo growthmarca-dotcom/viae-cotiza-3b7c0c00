@@ -1005,11 +1005,37 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
     items.reduce((acc, i) => acc + Number(i.total_amount ?? 0), 0);
 
   const client = sq.clients;
-  const firstName = (client?.full_name ?? "").replace(client?.last_name ?? "", "").trim();
+  const firstName = (client?.full_name ?? "")
+    .replace(client?.last_name ?? "", "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Contacto del titular: la cotización y su enlace público lo muestran.
+  const { data: clientContact } = sq.client_id
+    ? await supabase
+        .from("clients")
+        .select("email, phone")
+        .eq("id", sq.client_id)
+        .maybeSingle()
+    : { data: null };
   const destination =
     [sq.destination_city, sq.destination_state, sq.destination_country]
       .filter(Boolean)
       .join(", ") || null;
+  // Pasajeros y noches viajan a la cotización (los muestra el enlace público).
+  const pax = parseSmartQuotePassengers(sq.passengers_metadata as Record<string, unknown>);
+  const paxCount = pax.adults + pax.children + pax.infants;
+  const nights =
+    sq.start_date && sq.end_date
+      ? Math.max(
+          0,
+          Math.round(
+            (new Date(`${sq.end_date}T00:00:00`).getTime() -
+              new Date(`${sq.start_date}T00:00:00`).getTime()) /
+              86400000,
+          ),
+        ) || null
+      : null;
+
   const description = items
     .map((i) => {
       const detail = i.description ? ` — ${i.description}` : "";
@@ -1032,8 +1058,12 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
       travel_end: sq.end_date,
       guest_first_name: firstName || client?.full_name || null,
       guest_last_name: client?.last_name ?? null,
+      guest_email: clientContact?.email ?? null,
+      guest_whatsapp: clientContact?.phone ?? null,
       accommodation_name: sq.title,
       accommodation_description: description || null,
+      pax_count: paxCount || null,
+      nights: nights,
       total_amount: total,
       currency: sq.currency,
     })
