@@ -1005,7 +1005,18 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
     items.reduce((acc, i) => acc + Number(i.total_amount ?? 0), 0);
 
   const client = sq.clients;
-  const firstName = (client?.full_name ?? "").replace(client?.last_name ?? "", "").trim();
+  const firstName = (client?.full_name ?? "")
+    .replace(client?.last_name ?? "", "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Contacto del titular: la cotización y su enlace público lo muestran.
+  const { data: clientContact } = sq.client_id
+    ? await supabase
+        .from("clients")
+        .select("email, whatsapp")
+        .eq("id", sq.client_id)
+        .maybeSingle()
+    : { data: null };
   const destination =
     [sq.destination_city, sq.destination_state, sq.destination_country]
       .filter(Boolean)
@@ -1047,6 +1058,8 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
       travel_end: sq.end_date,
       guest_first_name: firstName || client?.full_name || null,
       guest_last_name: client?.last_name ?? null,
+      guest_email: clientContact?.email ?? null,
+      guest_whatsapp: clientContact?.whatsapp ?? null,
       accommodation_name: sq.title,
       accommodation_description: description || null,
       pax_count: paxCount || null,
