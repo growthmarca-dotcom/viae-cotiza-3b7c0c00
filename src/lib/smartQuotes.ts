@@ -1062,8 +1062,17 @@ export async function createQuotationFromSmartQuote(smartQuoteId: string): Promi
   return quotationId;
 }
 
+type QuotationItemCategoryValue =
+  | "accommodation"
+  | "excursion"
+  | "vehicle_rental"
+  | "transfer"
+  | "insurance"
+  | "flight"
+  | "other";
+
 /** Mapeo de tipo de ítem de Smart Quote a categoría de `quotation_items`. */
-const SMART_ITEM_TO_QUOTATION_CATEGORY: Record<string, string> = {
+const SMART_ITEM_TO_QUOTATION_CATEGORY: Record<string, QuotationItemCategoryValue> = {
   accommodation: "accommodation",
   activity: "excursion",
   excursion: "excursion",
