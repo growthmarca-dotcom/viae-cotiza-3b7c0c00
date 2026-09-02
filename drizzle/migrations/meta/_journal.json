@@ -50,6 +50,13 @@
       "when": 1788393438516,
       "tag": "0006_register_currency_exchange_rate",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788393540879,
+      "tag": "0007_register_currency_rate_same_day",
+      "breakpoints": true
     }
   ]
 }
