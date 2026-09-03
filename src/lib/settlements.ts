@@ -425,3 +425,307 @@ export async function listMySettlements(): Promise<Settlement[]> {
   if (error) throw error;
   return data ?? [];
 }
+
+// =====================================================================
+// Fase C1.3 — Conciliación interna, ajustes, saldos y notas de crédito/débito.
+//
+// Nada de esto edita la historia: la comisión, la liquidación, el ítem, la
+// factura aprobada y el pago siguen siendo inmutables. Una diferencia se
+// corrige SIEMPRE con un movimiento nuevo y trazable.
+// =====================================================================
+
+export type Adjustment = Tables<"commission_adjustments">;
+export type AdjustmentApplication = Tables<"commission_adjustment_applications">;
+export type AdjustmentHistoryRow = Tables<"commission_adjustment_history">;
+
+export type ReconciliationStatus = "pending" | "reconciled" | "discrepancy";
+export type AdjustmentType = "credit" | "debit";
+export type AdjustmentStatus = "pending_approval" | "approved" | "rejected";
+export type NoteDocumentType = "credit_note" | "debit_note";
+
+export const RECONCILIATION_LABELS: Record<ReconciliationStatus, string> = {
+  pending: "Pendiente de conciliación",
+  reconciled: "Conciliada",
+  discrepancy: "Discrepancia",
+};
+
+export const RECONCILIATION_CLASSES: Record<ReconciliationStatus, string> = {
+  pending: "bg-muted text-muted-foreground",
+  reconciled: "bg-gold/15 text-gold-foreground",
+  discrepancy: "bg-destructive/10 text-destructive",
+};
+
+export const ADJUSTMENT_TYPE_LABELS: Record<AdjustmentType, string> = {
+  credit: "Crédito (reduce lo que ViaE debe)",
+  debit: "Débito (aumenta lo que ViaE debe)",
+};
+
+export const ADJUSTMENT_STATUS_LABELS: Record<AdjustmentStatus, string> = {
+  pending_approval: "Pendiente de aprobación",
+  approved: "Aprobado",
+  rejected: "Rechazado",
+};
+
+export const ADJUSTMENT_STATUS_CLASSES: Record<AdjustmentStatus, string> = {
+  pending_approval: "bg-primary/10 text-primary",
+  approved: "bg-gold/15 text-gold-foreground",
+  rejected: "bg-destructive/10 text-destructive",
+};
+
+export const ADJUSTMENT_REASONS = [
+  { value: "commission_calculation_error", label: "Error de cálculo de comisión" },
+  { value: "cancellation", label: "Cancelación" },
+  { value: "refund", label: "Reintegro" },
+  { value: "duplicate_commission", label: "Comisión duplicada" },
+  { value: "rounding_difference", label: "Diferencia de redondeo" },
+  { value: "administrative_correction", label: "Corrección administrativa" },
+  { value: "other", label: "Otro (requiere descripción)" },
+] as const;
+
+export type AdjustmentReason = (typeof ADJUSTMENT_REASONS)[number]["value"];
+
+export function adjustmentReasonLabel(v: string | null | undefined) {
+  return ADJUSTMENT_REASONS.find((r) => r.value === v)?.label ?? "—";
+}
+
+export function reconciliationLabel(v: string | null | undefined) {
+  return RECONCILIATION_LABELS[(v ?? "pending") as ReconciliationStatus] ?? "—";
+}
+
+export const NOTE_TYPE_LABELS: Record<string, string> = {
+  invoice: "Factura",
+  credit_note: "Nota de crédito",
+  debit_note: "Nota de débito",
+  other: "Documento",
+};
+
+export function documentTypeLabel(v: string | null | undefined) {
+  return NOTE_TYPE_LABELS[v ?? "other"] ?? "Documento";
+}
+
+/** Importe final a pagar: total original + débitos - créditos ± saldos aplicados. */
+export async function getPayableAmount(settlementId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("settlement_payable_amount", {
+    _settlement_id: settlementId,
+  });
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+/** Conciliación interna: no toca el pago, sólo registra su verificación. */
+export async function reconcileSettlementPayment(
+  settlementId: string,
+  status: ReconciliationStatus,
+  notes?: string,
+) {
+  const { data, error } = await supabase.rpc("reconcile_settlement_payment", {
+    _settlement_id: settlementId,
+    _status: status,
+    _notes: notes?.trim() ? notes.trim() : undefined,
+  });
+  if (error) throw error;
+  return data as unknown as {
+    ok: boolean;
+    reason?: string;
+    changed?: boolean;
+    reconciliation_status?: string;
+    issues?: string[];
+  };
+}
+
+export type CreateAdjustmentInput = {
+  settlementId?: string;
+  commissionId?: string;
+  adjustmentType: AdjustmentType;
+  amount: number;
+  reason: AdjustmentReason;
+  notes?: string;
+  currency?: string;
+  idempotencyKey?: string;
+};
+
+export async function createAdjustment(input: CreateAdjustmentInput) {
+  const { data, error } = await supabase.rpc("create_commission_adjustment", {
+    _adjustment_type: input.adjustmentType,
+    _amount: input.amount,
+    _reason: input.reason,
+    _settlement_id: input.settlementId ?? undefined,
+    _commission_id: input.commissionId ?? undefined,
+    _currency: input.currency ?? undefined,
+    _notes: input.notes?.trim() ? input.notes.trim() : undefined,
+    _idempotency_key: input.idempotencyKey ?? undefined,
+  });
+  if (error) throw error;
+  return data as unknown as {
+    ok: boolean;
+    reason?: string;
+    created?: boolean;
+    adjustment_id?: string;
+    status?: string;
+    affects_payment?: boolean;
+    payable?: number;
+  };
+}
+
+export async function reviewAdjustment(id: string, approve: boolean, reason?: string) {
+  const { data, error } = await supabase.rpc("review_commission_adjustment", {
+    _adjustment_id: id,
+    _approve: approve,
+    _reason: reason?.trim() ? reason.trim() : undefined,
+  });
+  if (error) throw error;
+  return data as unknown as {
+    ok: boolean;
+    reason?: string;
+    changed?: boolean;
+    status?: string;
+    creates_balance?: boolean;
+    payable?: number;
+  };
+}
+
+/** Aplicación manual y trazable de un saldo a una liquidación futura. */
+export async function applyAdjustmentBalance(
+  adjustmentId: string,
+  settlementId: string,
+  amount: number,
+) {
+  const { data, error } = await supabase.rpc("apply_commission_adjustment_balance", {
+    _adjustment_id: adjustmentId,
+    _settlement_id: settlementId,
+    _amount: amount,
+  });
+  if (error) throw error;
+  return data as unknown as {
+    ok: boolean;
+    reason?: string;
+    changed?: boolean;
+    application_id?: string;
+    remaining?: number;
+    payable?: number;
+  };
+}
+
+export async function listSettlementAdjustments(settlementId: string): Promise<Adjustment[]> {
+  const { data, error } = await supabase
+    .from("commission_adjustments")
+    .select("*")
+    .eq("settlement_id", settlementId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listSettlementApplications(
+  settlementId: string,
+): Promise<AdjustmentApplication[]> {
+  const { data, error } = await supabase
+    .from("commission_adjustment_applications")
+    .select("*")
+    .eq("settlement_id", settlementId)
+    .order("applied_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export type AdjustmentBalance = {
+  adjustment_id: string;
+  organization_id: string | null;
+  beneficiary_type: string;
+  beneficiary_id: string;
+  currency: string;
+  adjustment_type: string;
+  amount: number;
+  origin_settlement_id: string | null;
+  origin_commission_id: string | null;
+  reason: string;
+  created_at: string;
+  amount_applied: number;
+  remaining_amount: number;
+};
+
+/**
+ * Saldos disponibles del mismo beneficiario y moneda. Nunca se compensan
+ * monedas distintas: un saldo USD sólo aplica a liquidaciones USD.
+ */
+export async function listAvailableBalances(filters: {
+  beneficiaryType: string;
+  beneficiaryId: string;
+  currency: string;
+}): Promise<AdjustmentBalance[]> {
+  const { data, error } = await supabase
+    .from("commission_adjustment_balances")
+    .select("*")
+    .eq("beneficiary_type", filters.beneficiaryType)
+    .eq("beneficiary_id", filters.beneficiaryId)
+    .eq("currency", filters.currency)
+    .gt("remaining_amount", 0)
+    .order("created_at");
+  if (error) throw error;
+  return (data ?? []) as unknown as AdjustmentBalance[];
+}
+
+export async function listAdjustmentHistory(
+  settlementId: string,
+): Promise<AdjustmentHistoryRow[]> {
+  const { data, error } = await supabase
+    .from("commission_adjustment_history")
+    .select("*")
+    .eq("settlement_id", settlementId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export const ADJUSTMENT_HISTORY_LABELS: Record<string, string> = {
+  adjustment_created: "Ajuste creado",
+  adjustment_approved: "Ajuste aprobado",
+  adjustment_rejected: "Ajuste rechazado",
+  balance_created: "Saldo generado",
+  balance_applied: "Saldo aplicado",
+  reconciliation_updated: "Conciliación actualizada",
+  discrepancy_detected: "Discrepancia detectada",
+  note_submitted: "Nota presentada",
+  note_approved: "Nota aprobada",
+  note_rejected: "Nota rechazada",
+};
+
+export const RECONCILIATION_ISSUE_LABELS: Record<string, string> = {
+  currency_mismatch: "La moneda del pago no coincide con la de la liquidación.",
+  amount_mismatch: "El importe pagado no coincide con el importe final.",
+  approved_invoice_missing: "No hay una factura aprobada.",
+  settlement_not_settled: "La liquidación no está marcada como pagada.",
+};
+
+Object.assign(SETTLEMENT_REASONS, {
+  invalid_reconciliation_status: "Estado de conciliación no válido.",
+  payment_not_found: "Esta liquidación no tiene un pago registrado.",
+  coherence_failed: "El pago no coincide con la liquidación: revisá las diferencias.",
+  invalid_adjustment_type: "Tipo de ajuste no válido.",
+  invalid_reason: "Motivo de ajuste no válido.",
+  notes_required: "Si el motivo es «Otro», la descripción es obligatoria.",
+  link_required: "El ajuste tiene que referenciar una liquidación o una comisión.",
+  commission_not_found: "La comisión no existe.",
+  beneficiary_required: "El ajuste necesita un beneficiario.",
+  credit_exceeds_payable: "El crédito no puede superar el importe a pagar.",
+  adjustment_not_applicable: "Ese ajuste no genera saldo aplicable.",
+  settlement_not_found: "La liquidación no existe.",
+  beneficiary_mismatch: "El saldo pertenece a otro beneficiario.",
+  settlement_already_paid: "Esa liquidación ya fue pagada.",
+  same_settlement: "El saldo no se aplica a la liquidación que lo originó.",
+  exceeds_balance: "No podés aplicar más saldo del disponible.",
+  exceeds_settlement: "No podés aplicar más que el importe de la liquidación.",
+  adjustment_pending_approval: "Hay un ajuste pendiente de aprobación: definí el importe final.",
+  nothing_to_pay: "Con los ajustes aplicados no queda importe a pagar.",
+  adjustment_required: "La nota tiene que estar vinculada a un ajuste.",
+  adjustment_not_found: "El ajuste no existe.",
+  adjustment_settlement_mismatch: "El ajuste pertenece a otra liquidación.",
+  note_type_mismatch: "El tipo de nota no coincide con el tipo de ajuste.",
+  note_already_present: "Ya hay una nota presentada o aprobada para ese ajuste.",
+});
+
+/** Signo económico determinado por el tipo: nunca se guardan importes negativos. */
+export function adjustmentSignedAmount(a: { adjustment_type: string; amount: number | string }) {
+  const value = Number(a.amount ?? 0);
+  return a.adjustment_type === "debit" ? value : -value;
+}
