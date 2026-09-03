@@ -323,21 +323,30 @@ function QuotationDetailPage() {
         )}
       </div>
 
-      {q.client_id && (
-        <BookingCreateDialog
+      {q.client_id && q.status === "accepted" && !booking && (
+        <QuotationConvertDialog
           open={bookingOpen}
           onOpenChange={setBookingOpen}
-          origin={{ quotationId: q.id }}
-          defaults={{
+          summary={{
+            quotationId: q.id,
+            quotationNumber: q.quotation_number ?? null,
             clientId: q.client_id,
+            clientName: guestName,
             destination: q.destination,
             travelStart: q.travel_start,
             travelEnd: q.travel_end,
+            paxCount: q.pax_count ?? null,
+            servicesCount: items.length,
             amount: Number(q.total_amount ?? 0),
             currency: q.currency,
             exchangeRate: q.exchange_rate,
           }}
-          onCreated={(bookingId) => navigate({ to: "/bookings/$id", params: { id: bookingId } })}
+          onConverted={async (bookingId) => {
+            await loadBooking();
+            loadHistory();
+            toast.success("Reserva creada correctamente.");
+            navigate({ to: "/bookings/$id", params: { id: bookingId } });
+          }}
         />
       )}
 
