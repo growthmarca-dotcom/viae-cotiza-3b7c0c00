@@ -660,7 +660,7 @@ export async function listAvailableBalances(filters: {
   const { data, error } = await supabase
     .from("commission_adjustment_balances")
     .select("*")
-    .eq("beneficiary_type", filters.beneficiaryType)
+    .eq("beneficiary_type", filters.beneficiaryType as "agent" | "organization" | "viae")
     .eq("beneficiary_id", filters.beneficiaryId)
     .eq("currency", filters.currency)
     .gt("remaining_amount", 0)
