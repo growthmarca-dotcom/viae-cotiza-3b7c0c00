@@ -16,6 +16,6 @@
 - [x] Intervención 4 — Membresías: panel "Miembros y accesos" en la ficha de organización (listado con identidad, cambio de rol interno, revocación de acceso), invitaciones por correo con enlace copiable y revocación, y ruta de aceptación `/invitacion/$token` con sesión requerida. Función segura `list_organization_members`. Sin tocar Intervenciones 1-3.
 
 ## Pendiente
-- [ ] Intervención 5 — Economía / Tipo de cambio.
+- [x] Intervención 5 — Economía / Tipo de cambio: carga de tipos de cambio del Financial Core en Ajustes (`CurrencyRatesCard` + RPC `register_currency_exchange_rate`, histórico inmutable) y sello de la tasa aplicada en la conversión a reserva (`applied_exchange_rate` / `applied_rate_date` / `applied_rate_source` en `bookings` y `booking_services`; prioridad manual → snapshot → sin tasa). Las reservas no cambian de importe si luego se carga otra tasa.
 - [ ] Notificación al agente cuando el cliente responde la cotización.
 - [ ] Conversión automática a reserva al aceptar.
