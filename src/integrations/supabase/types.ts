@@ -6905,6 +6905,18 @@ export type Database = {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
       }
+      register_currency_exchange_rate: {
+        Args: {
+          _from_iso: string
+          _note?: string
+          _rate: number
+          _rate_type?: string
+          _source?: string
+          _to_iso: string
+          _valid_from?: string
+        }
+        Returns: string
+      }
       remove_organization_member: {
         Args: { _member_id: string }
         Returns: {

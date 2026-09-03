@@ -332,6 +332,14 @@ function BookingDetailPage() {
                 {formatMoney(booking.currency, Number(booking.amount ?? 0))}
                 {booking.exchange_rate != null ? ` · TC ${booking.exchange_rate}` : ""}
               </Info>
+              {/* Intervención 5: tasa sellada en la conversión (no cambia retroactivamente). */}
+              <Info label="Tipo de cambio aplicado">
+                {booking.applied_exchange_rate != null
+                  ? `1 ${booking.currency} = ${Number(booking.applied_exchange_rate).toLocaleString("es-AR", { maximumFractionDigits: 4 })} ARS${
+                      booking.applied_rate_date ? ` · ${booking.applied_rate_date}` : ""
+                    }${booking.applied_rate_source ? ` · ${booking.applied_rate_source}` : ""}`
+                  : "Sin tasa sellada"}
+              </Info>
               <Info label="Agente responsable">{agentName ?? "Sin asignar"}</Info>
               <Info label="Organización">{organizationName ?? "—"}</Info>
               <Info label="Registro">
