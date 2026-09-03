@@ -30,6 +30,14 @@ import {
 } from "@/lib/quotationItems";
 import { QuotationConvertDialog } from "@/components/quotation-convert-dialog";
 import { getBookingByQuotation, type Booking } from "@/lib/bookings";
+import { OpportunityLostDialog } from "@/components/opportunity-lost-dialog";
+import {
+  closeOpportunityAsWon,
+  logPipelineCloseIssue,
+  stageGroup,
+  stageLabel,
+  type Opportunity,
+} from "@/lib/opportunities";
 import {
   canTransition,
   setQuotationStatus,
@@ -88,6 +96,48 @@ function QuotationDetailPage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [items, setItems] = useState<QuotationItemRow[]>([]);
   const [statusBusy, setStatusBusy] = useState<QuotationStatus | null>(null);
+  const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
+  const [lostOpen, setLostOpen] = useState(false);
+  const [closingWon, setClosingWon] = useState(false);
+
+  async function loadOpportunity(opportunityId: string | null) {
+    if (!opportunityId) {
+      setOpportunity(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("opportunities")
+      .select("*")
+      .eq("id", opportunityId)
+      .maybeSingle();
+    setOpportunity((data as Opportunity) ?? null);
+  }
+
+  /** Reintento del cierre del ciclo comercial sin volver a crear la reserva. */
+  async function closeWon() {
+    if (!opportunity) return;
+    setClosingWon(true);
+    try {
+      const result = await closeOpportunityAsWon(opportunity.id);
+      toast.success(
+        result.status === "closed"
+          ? "Oportunidad cerrada como ganada."
+          : "La oportunidad ya estaba cerrada como ganada.",
+      );
+      await loadOpportunity(opportunity.id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "No se pudo cerrar la oportunidad";
+      await logPipelineCloseIssue(opportunity.id, {
+        booking_id: booking?.id ?? null,
+        quotation_id: id,
+        error: message,
+        retry: true,
+      }).catch(() => undefined);
+      toast.error(message);
+    } finally {
+      setClosingWon(false);
+    }
+  }
 
   async function loadBooking() {
     try {
@@ -128,6 +178,7 @@ function QuotationDetailPage() {
       setCompany(info);
       await loadHistory();
       await loadBooking();
+      await loadOpportunity((data as Q).opportunity_id);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -330,6 +381,59 @@ function QuotationDetailPage() {
         )}
       </div>
 
+      {/* Cierre del ciclo comercial en el Pipeline (Intervención 8) */}
+      {opportunity && (
+        <div data-print-hide className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-semibold">Oportunidad asociada</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                <Link
+                  to="/opportunities/$id"
+                  params={{ id: opportunity.id }}
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                  {opportunity.title}
+                </Link>{" "}
+                · Etapa: {stageLabel(opportunity.stage)}
+                {opportunity.lost_reason ? ` · Motivo: ${opportunity.lost_reason}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {booking && stageGroup(opportunity.stage) !== "won" && (
+                <Button size="sm" onClick={closeWon} disabled={closingWon}>
+                  {closingWon && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Cerrar oportunidad como ganada
+                </Button>
+              )}
+              {stageGroup(opportunity.stage) === "open" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => setLostOpen(true)}
+                >
+                  Marcar oportunidad como perdida
+                </Button>
+              )}
+            </div>
+          </div>
+          {q.status === "rejected" && stageGroup(opportunity.stage) === "open" && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              El cliente rechazó la cotización. La oportunidad sigue abierta: el cierre sin venta es
+              una decisión del agente y requiere un motivo.
+            </p>
+          )}
+          <OpportunityLostDialog
+            open={lostOpen}
+            onOpenChange={setLostOpen}
+            opportunityId={opportunity.id}
+            opportunityTitle={opportunity.title}
+            onClosed={() => loadOpportunity(opportunity.id)}
+          />
+        </div>
+      )}
+
       {q.client_id && q.status === "accepted" && !booking && (
         <QuotationConvertDialog
           open={bookingOpen}
@@ -347,9 +451,11 @@ function QuotationDetailPage() {
             amount: Number(q.total_amount ?? 0),
             currency: q.currency,
             exchangeRate: q.exchange_rate,
+            opportunityId: q.opportunity_id,
           }}
           onConverted={async (bookingId) => {
             await loadBooking();
+            await loadOpportunity(q.opportunity_id);
             loadHistory();
             toast.success("Reserva creada correctamente.");
             navigate({ to: "/bookings/$id", params: { id: bookingId } });
