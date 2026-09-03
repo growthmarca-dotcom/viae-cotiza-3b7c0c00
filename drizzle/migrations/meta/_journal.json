@@ -120,6 +120,13 @@
       "when": 1788401412055,
       "tag": "0016_commission_settlement_c12_rpcs",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788402787126,
+      "tag": "0017_commission_adjustments_c13_core",
+      "breakpoints": true
     }
   ]
 }
