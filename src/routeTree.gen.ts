@@ -24,6 +24,7 @@ import { Route as AuthenticatedProvidersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedOpportunitiesRouteImport } from './routes/_authenticated/opportunities'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
+import { Route as AuthenticatedMySettlementsRouteImport } from './routes/_authenticated/my-settlements'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -127,6 +128,12 @@ const AuthenticatedOperationsRoute = AuthenticatedOperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMySettlementsRoute =
+  AuthenticatedMySettlementsRouteImport.update({
+    id: '/my-settlements',
+    path: '/my-settlements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -278,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/my-settlements': typeof AuthenticatedMySettlementsRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
@@ -319,6 +327,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/my-settlements': typeof AuthenticatedMySettlementsRoute
   '/operations': typeof AuthenticatedOperationsRoute
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/my-settlements': typeof AuthenticatedMySettlementsRoute
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
   '/_authenticated/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/driver'
     | '/leads'
+    | '/my-settlements'
     | '/operations'
     | '/opportunities'
     | '/organizations'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/driver'
     | '/leads'
+    | '/my-settlements'
     | '/operations'
     | '/opportunities'
     | '/organizations'
@@ -488,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/driver'
     | '/_authenticated/leads'
+    | '/_authenticated/my-settlements'
     | '/_authenticated/operations'
     | '/_authenticated/opportunities'
     | '/_authenticated/organizations'
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthenticatedOperationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-settlements': {
+      id: '/_authenticated/my-settlements'
+      path: '/my-settlements'
+      fullPath: '/my-settlements'
+      preLoaderRoute: typeof AuthenticatedMySettlementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/leads': {
@@ -823,6 +843,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedMySettlementsRoute: typeof AuthenticatedMySettlementsRoute
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
   AuthenticatedOpportunitiesRoute: typeof AuthenticatedOpportunitiesRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
@@ -859,6 +880,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedMySettlementsRoute: AuthenticatedMySettlementsRoute,
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
   AuthenticatedOpportunitiesRoute: AuthenticatedOpportunitiesRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
