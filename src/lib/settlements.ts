@@ -307,7 +307,9 @@ export type SubmitInvoiceInput = {
   currency?: string;
   invoiceKind?: string;
   notes?: string;
-  documentType?: "invoice" | "other";
+  documentType?: "invoice" | "other" | "credit_note" | "debit_note";
+  adjustmentId?: string;
+  commissionId?: string;
 };
 
 /** Carga de factura/documento. La valida la RPC, no el frontend. */
