@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatMoney } from "@/lib/currency";
 import { useAccount } from "@/hooks/use-account";
 import { baseLabel } from "@/lib/commissions";
+import { SettlementInvoicePanel } from "@/components/settlement-invoice-panel";
+import { SettlementPaymentPanel } from "@/components/settlement-payment-panel";
 import {
   SETTLEMENT_STATUS_CLASSES,
   SETTLEMENT_STATUS_HELP,
@@ -88,7 +90,8 @@ function SettlementDetailPage() {
   };
 
   const transition = useMutation({
-    mutationFn: (to: Exclude<SettlementStatus, "settled">) => setSettlementStatus(id, to, comment),
+    mutationFn: (to: Exclude<SettlementStatus, "settled" | "invoice_review" | "ready_for_payment">) =>
+      setSettlementStatus(id, to, comment),
     onSuccess: (res) => {
       if (!res.ok) {
         toast.error(REASONS[res.reason ?? ""] ?? "No se pudo cambiar el estado.");
@@ -134,7 +137,7 @@ function SettlementDetailPage() {
   }
 
   const st = settlement.status as SettlementStatus;
-  const locked = st === "approved" || st === "settled";
+  const locked = st !== "draft" && st !== "pending_review";
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -207,18 +210,35 @@ function SettlementDetailPage() {
                 </>
               )}
               {st === "approved" && (
+                <>
+                  <Button
+                    onClick={() => transition.mutate("invoice_pending")}
+                    disabled={transition.isPending}
+                  >
+                    Solicitar factura
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => transition.mutate("pending_review")}
+                    disabled={transition.isPending}
+                  >
+                    Reabrir revisión
+                  </Button>
+                </>
+              )}
+              {st === "invoice_pending" && (
                 <Button
                   variant="outline"
-                  onClick={() => transition.mutate("pending_review")}
+                  onClick={() => transition.mutate("approved")}
                   disabled={transition.isPending}
                 >
-                  Reabrir revisión
+                  Volver a aprobada
                 </Button>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              El pago y sus comprobantes se registran en la próxima fase; por eso todavía no se puede
-              marcar como liquidada.
+              La liquidación pasa a lista para pago sólo cuando se aprueba la factura, y a pagada
+              sólo al registrar el pago completo.
             </p>
           </div>
         )}
@@ -264,6 +284,10 @@ function SettlementDetailPage() {
         )}
       </section>
 
+      <SettlementInvoicePanel settlement={settlement} isAdmin={isAdmin} canUpload={isAdmin} />
+
+      <SettlementPaymentPanel settlement={settlement} isAdmin={isAdmin} />
+
       {isAdmin && (
         <section className="space-y-3">
           <h2 className="font-display text-lg font-semibold">Notas administrativas</h2>
@@ -302,7 +326,15 @@ function SettlementDetailPage() {
                     ? "Liquidación generada"
                     : h.action === "notes_updated"
                       ? "Notas actualizadas"
-                      : `${settlementStatusLabel(h.from_status)} → ${settlementStatusLabel(h.to_status)}`}
+                      : h.action === "invoice_submitted"
+                        ? "Factura presentada"
+                        : h.action === "invoice_approved"
+                          ? "Factura aprobada"
+                          : h.action === "invoice_rejected"
+                            ? "Factura rechazada"
+                            : h.action === "payment_recorded"
+                              ? "Pago registrado"
+                              : `${settlementStatusLabel(h.from_status)} → ${settlementStatusLabel(h.to_status)}`}
                 </p>
                 {h.comment && <p className="text-muted-foreground">{h.comment}</p>}
                 <p className="mt-1 text-xs text-muted-foreground">
