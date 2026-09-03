@@ -316,6 +316,21 @@ function ClientDetailPage() {
         </div>
       </header>
 
+      <PersonLinkCard
+        personId={client.person_id}
+        suggestion={{
+          first_name: firstName,
+          last_name: lastName,
+          email: client.email ?? "",
+          phone: client.phone ?? "",
+        }}
+        description="Vincula al cliente con su identidad maestra en Personas. El funcionamiento comercial del cliente no cambia."
+        onLink={async (personId) => {
+          await linkClientToPerson(client.id, personId);
+          await load();
+        }}
+      />
+
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
