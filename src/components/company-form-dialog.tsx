@@ -1,3 +1,9 @@
+/**
+ * @deprecated LEGACY: formulario de alta/edición de `companies` (modelo
+ * histórico deprecado). La entidad maestra es organizations. No usar en
+ * código nuevo; se conserva solo por compatibilidad mientras existan
+ * selectores que referencian companies.
+ */
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
