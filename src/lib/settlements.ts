@@ -327,6 +327,8 @@ export async function submitSettlementInvoice(input: SubmitInvoiceInput) {
     _invoice_kind: input.invoiceKind?.trim() ? input.invoiceKind.trim() : undefined,
     _notes: input.notes?.trim() ? input.notes.trim() : undefined,
     _document_type: input.documentType ?? "invoice",
+    _adjustment_id: input.adjustmentId ?? undefined,
+    _commission_id: input.commissionId ?? undefined,
   });
   if (error) throw error;
   return data as unknown as { ok: boolean; reason?: string; document_id?: string; status?: string };
