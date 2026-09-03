@@ -10,6 +10,8 @@ import { useAccount } from "@/hooks/use-account";
 import { baseLabel } from "@/lib/commissions";
 import { SettlementInvoicePanel } from "@/components/settlement-invoice-panel";
 import { SettlementPaymentPanel } from "@/components/settlement-payment-panel";
+import { SettlementReconciliationPanel } from "@/components/settlement-reconciliation-panel";
+import { SettlementAdjustmentsPanel } from "@/components/settlement-adjustments-panel";
 import {
   SETTLEMENT_STATUS_CLASSES,
   SETTLEMENT_STATUS_HELP,
@@ -287,6 +289,10 @@ function SettlementDetailPage() {
       <SettlementInvoicePanel settlement={settlement} isAdmin={isAdmin} canUpload={isAdmin} />
 
       <SettlementPaymentPanel settlement={settlement} isAdmin={isAdmin} />
+
+      <SettlementAdjustmentsPanel settlement={settlement} isAdmin={isAdmin} />
+
+      <SettlementReconciliationPanel settlement={settlement} isAdmin={isAdmin} />
 
       {isAdmin && (
         <section className="space-y-3">
