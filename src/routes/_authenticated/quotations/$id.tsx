@@ -70,6 +70,7 @@ function describeHistory(action: string) {
   if (action === "archived") return "Cotización archivada";
   if (action === "unarchived") return "Cotización desarchivada";
   if (action === "duplicated") return "Cotización duplicada";
+  if (action === "converted_to_booking") return "Convertida en reserva";
   return action;
 }
 
