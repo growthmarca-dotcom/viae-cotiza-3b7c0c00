@@ -28,7 +28,7 @@ import {
   rowsTotal,
   type QuotationItemRow,
 } from "@/lib/quotationItems";
-import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { QuotationConvertDialog } from "@/components/quotation-convert-dialog";
 import { getBookingByQuotation, type Booking } from "@/lib/bookings";
 import {
   canTransition,
@@ -70,6 +70,7 @@ function describeHistory(action: string) {
   if (action === "archived") return "Cotización archivada";
   if (action === "unarchived") return "Cotización desarchivada";
   if (action === "duplicated") return "Cotización duplicada";
+  if (action === "converted_to_booking") return "Convertida en reserva";
   return action;
 }
 
@@ -248,9 +249,9 @@ function QuotationDetailPage() {
           </Button>
           {booking ? (
             <Button variant="outline" onClick={() => navigate({ to: "/bookings/$id", params: { id: booking.id } })}>
-              <TicketCheck className="mr-2 h-4 w-4" /> Ver reserva {booking.booking_number}
+              <TicketCheck className="mr-2 h-4 w-4" /> Reserva creada · Abrir {booking.booking_number}
             </Button>
-          ) : (
+          ) : q.status === "accepted" ? (
             <Button
               onClick={() => {
                 if (!q.client_id) {
@@ -260,9 +261,9 @@ function QuotationDetailPage() {
                 setBookingOpen(true);
               }}
             >
-              <TicketCheck className="mr-2 h-4 w-4" /> Generar reserva
+              <TicketCheck className="mr-2 h-4 w-4" /> Convertir a reserva
             </Button>
-          )}
+          ) : null}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
@@ -315,28 +316,44 @@ function QuotationDetailPage() {
             ))}
           </div>
         </div>
-        {q.status === "accepted" && (
+        {q.status === "accepted" ? (
           <p className="mt-3 text-xs text-muted-foreground">
             Una cotización aceptada es definitiva: no puede volver a borrador ni cambiar de estado.
+            {booking
+              ? ` Reserva ${booking.booking_number} generada a partir de esta cotización.`
+              : " Ya podés convertirla en reserva."}
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            La conversión a reserva se habilita únicamente cuando la cotización está aceptada.
           </p>
         )}
       </div>
 
-      {q.client_id && (
-        <BookingCreateDialog
+      {q.client_id && q.status === "accepted" && !booking && (
+        <QuotationConvertDialog
           open={bookingOpen}
           onOpenChange={setBookingOpen}
-          origin={{ quotationId: q.id }}
-          defaults={{
+          summary={{
+            quotationId: q.id,
+            quotationNumber: q.quotation_number ?? null,
             clientId: q.client_id,
+            clientName: guestName,
             destination: q.destination,
             travelStart: q.travel_start,
             travelEnd: q.travel_end,
+            paxCount: q.pax_count ?? null,
+            servicesCount: items.length,
             amount: Number(q.total_amount ?? 0),
             currency: q.currency,
             exchangeRate: q.exchange_rate,
           }}
-          onCreated={(bookingId) => navigate({ to: "/bookings/$id", params: { id: bookingId } })}
+          onConverted={async (bookingId) => {
+            await loadBooking();
+            loadHistory();
+            toast.success("Reserva creada correctamente.");
+            navigate({ to: "/bookings/$id", params: { id: bookingId } });
+          }}
         />
       )}
 

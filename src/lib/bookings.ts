@@ -301,9 +301,16 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     const { data: q } = await supabase
       .from("quotations")
-      .select("opportunity_id, organization_id, client_id, smart_quote_id")
+      .select("opportunity_id, organization_id, client_id, smart_quote_id, status")
       .eq("id", origin.quotationId)
       .maybeSingle();
+    // Intervención 7: sólo una cotización aceptada puede convertirse en reserva.
+    if (q && q.status !== "accepted") {
+      throw new Error(
+        "Sólo una cotización aceptada puede convertirse en reserva. Estado actual: " +
+          String(q.status),
+      );
+    }
     if (q) {
       opportunityId = opportunityId ?? q.opportunity_id ?? null;
       organizationId = organizationId ?? q.organization_id ?? null;
