@@ -22,6 +22,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ClientFormDialog } from "@/components/client-form-dialog";
+import { PersonLinkCard } from "@/components/person-link-card";
+import { linkClientToPerson } from "@/lib/persons";
 import {
   CLIENT_STATUSES,
   RECORD_STATUSES,
