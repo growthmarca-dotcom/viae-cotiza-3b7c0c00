@@ -1586,6 +1586,219 @@ export type Database = {
           },
         ]
       }
+      commission_adjustment_applications: {
+        Row: {
+          adjustment_id: string
+          amount_applied: number
+          applied_at: string
+          applied_by: string | null
+          currency: string
+          id: string
+          settlement_id: string
+        }
+        Insert: {
+          adjustment_id: string
+          amount_applied: number
+          applied_at?: string
+          applied_by?: string | null
+          currency: string
+          id?: string
+          settlement_id: string
+        }
+        Update: {
+          adjustment_id?: string
+          amount_applied?: number
+          applied_at?: string
+          applied_by?: string | null
+          currency?: string
+          id?: string
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_adjustment_applications_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustment_balances"
+            referencedColumns: ["adjustment_id"]
+          },
+          {
+            foreignKeyName: "commission_adjustment_applications_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustment_applications_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_adjustment_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          adjustment_id: string | null
+          amount: number | null
+          comment: string | null
+          created_at: string
+          currency: string | null
+          from_status: string | null
+          id: string
+          settlement_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          adjustment_id?: string | null
+          amount?: number | null
+          comment?: string | null
+          created_at?: string
+          currency?: string | null
+          from_status?: string | null
+          id?: string
+          settlement_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          adjustment_id?: string | null
+          amount?: number | null
+          comment?: string | null
+          created_at?: string
+          currency?: string | null
+          from_status?: string | null
+          id?: string
+          settlement_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_adjustment_history_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustment_balances"
+            referencedColumns: ["adjustment_id"]
+          },
+          {
+            foreignKeyName: "commission_adjustment_history_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustment_history_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_adjustments: {
+        Row: {
+          adjustment_type: string
+          affects_payment: boolean
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          commission_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          idempotency_key: string | null
+          notes: string | null
+          organization_id: string | null
+          reason: string
+          rejection_reason: string | null
+          settlement_id: string | null
+          source_id: string | null
+          source_type: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          adjustment_type: string
+          affects_payment?: boolean
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          commission_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          reason: string
+          rejection_reason?: string | null
+          settlement_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          adjustment_type?: string
+          affects_payment?: boolean
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          beneficiary_id?: string
+          beneficiary_type?: Database["public"]["Enums"]["agreement_party"]
+          commission_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          reason?: string
+          rejection_reason?: string | null
+          settlement_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_adjustments_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_history: {
         Row: {
           action: string
@@ -1635,7 +1848,9 @@ export type Database = {
       }
       commission_settlement_documents: {
         Row: {
+          adjustment_id: string | null
           amount: number | null
+          commission_id: string | null
           created_at: string
           currency: string | null
           document_type: string
@@ -1658,7 +1873,9 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          adjustment_id?: string | null
           amount?: number | null
+          commission_id?: string | null
           created_at?: string
           currency?: string | null
           document_type?: string
@@ -1681,7 +1898,9 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          adjustment_id?: string | null
           amount?: number | null
+          commission_id?: string | null
           created_at?: string
           currency?: string | null
           document_type?: string
@@ -1704,6 +1923,27 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commission_settlement_documents_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustment_balances"
+            referencedColumns: ["adjustment_id"]
+          },
+          {
+            foreignKeyName: "commission_settlement_documents_adjustment_id_fkey"
+            columns: ["adjustment_id"]
+            isOneToOne: false
+            referencedRelation: "commission_adjustments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_settlement_documents_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commission_settlement_documents_settlement_id_fkey"
             columns: ["settlement_id"]
@@ -1812,6 +2052,10 @@ export type Database = {
           payment_method: string
           payment_proof_path: string | null
           payment_reference: string | null
+          reconciled_at: string | null
+          reconciled_by: string | null
+          reconciliation_notes: string | null
+          reconciliation_status: string
           recorded_at: string
           recorded_by: string | null
           settlement_id: string
@@ -1825,6 +2069,10 @@ export type Database = {
           payment_method?: string
           payment_proof_path?: string | null
           payment_reference?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reconciliation_notes?: string | null
+          reconciliation_status?: string
           recorded_at?: string
           recorded_by?: string | null
           settlement_id: string
@@ -1838,6 +2086,10 @@ export type Database = {
           payment_method?: string
           payment_proof_path?: string | null
           payment_reference?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reconciliation_notes?: string | null
+          reconciliation_status?: string
           recorded_at?: string
           recorded_by?: string | null
           settlement_id?: string
@@ -6924,7 +7176,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      commission_adjustment_balances: {
+        Row: {
+          adjustment_id: string | null
+          adjustment_type: string | null
+          amount: number | null
+          amount_applied: number | null
+          beneficiary_id: string | null
+          beneficiary_type:
+            | Database["public"]["Enums"]["agreement_party"]
+            | null
+          created_at: string | null
+          currency: string | null
+          organization_id: string | null
+          origin_commission_id: string | null
+          origin_settlement_id: string | null
+          reason: string | null
+          remaining_amount: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_adjustments_commission_id_fkey"
+            columns: ["origin_commission_id"]
+            isOneToOne: false
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_adjustments_settlement_id_fkey"
+            columns: ["origin_settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_organization_invitation: {
@@ -6956,6 +7249,14 @@ export type Database = {
         Returns: Json
       }
       admins_exist: { Args: never; Returns: boolean }
+      apply_commission_adjustment_balance: {
+        Args: {
+          _adjustment_id: string
+          _amount: number
+          _settlement_id: string
+        }
+        Returns: Json
+      }
       booking_public_tracking: {
         Args: { _token: string }
         Returns: {
@@ -7079,6 +7380,21 @@ export type Database = {
           _visibility?: Database["public"]["Enums"]["timeline_visibility"]
         }
         Returns: string
+      }
+      create_commission_adjustment: {
+        Args: {
+          _adjustment_type: string
+          _amount: number
+          _commission_id?: string
+          _currency?: string
+          _idempotency_key?: string
+          _notes?: string
+          _reason: string
+          _settlement_id?: string
+          _source_id?: string
+          _source_type?: string
+        }
+        Returns: Json
       }
       currency_rate_at: {
         Args: {
@@ -7218,6 +7534,10 @@ export type Database = {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
       }
+      reconcile_settlement_payment: {
+        Args: { _notes?: string; _settlement_id: string; _status: string }
+        Returns: Json
+      }
       record_commission_settlement_payment: {
         Args: {
           _amount: number
@@ -7330,6 +7650,10 @@ export type Database = {
         }
         Returns: Json
       }
+      review_commission_adjustment: {
+        Args: { _adjustment_id: string; _approve: boolean; _reason?: string }
+        Returns: Json
+      }
       review_settlement_document: {
         Args: { _approve: boolean; _document_id: string; _reason?: string }
         Returns: Json
@@ -7354,6 +7678,10 @@ export type Database = {
         }
         Returns: Json
       }
+      settlement_payable_amount: {
+        Args: { _settlement_id: string }
+        Returns: number
+      }
       simulate_commission: {
         Args: { _booking_service_id: string }
         Returns: Json
@@ -7372,7 +7700,9 @@ export type Database = {
       }
       submit_settlement_invoice: {
         Args: {
+          _adjustment_id?: string
           _amount?: number
+          _commission_id?: string
           _currency?: string
           _document_type?: string
           _file_name?: string

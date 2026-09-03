@@ -19,6 +19,7 @@ import {
   ALLOWED_DOC_TYPES,
   MAX_DOC_BYTES,
   PAYMENT_METHODS,
+  getPayableAmount,
   getSettlementPayment,
   paymentMethodLabel,
   recordSettlementPayment,
@@ -47,10 +48,10 @@ export function SettlementPaymentPanel({
   const upload = useServerFn(uploadSettlementFile);
   const fileUrl = useServerFn(getSettlementFileUrl);
 
-  const total = Number(settlement.total_commission_amount ?? 0);
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [amount, setAmount] = useState(String(total));
+  // null = todavía sin editar: se usa el importe final calculado por la base.
+  const [amount, setAmount] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
@@ -61,9 +62,16 @@ export function SettlementPaymentPanel({
     queryFn: () => getSettlementPayment(settlement.id),
   });
 
+  // El importe a pagar lo define la base: total original ± ajustes y saldos aplicados.
+  const { data: payable = 0 } = useQuery({
+    queryKey: ["settlement-payable", settlement.id],
+    queryFn: () => getPayableAmount(settlement.id),
+  });
+  const total = payable;
+
   const record = useMutation({
     mutationFn: async () => {
-      const value = Number(amount);
+      const value = Number(amount ?? String(total));
       if (!Number.isFinite(value)) throw new Error("Importe inválido.");
       if (Math.round(value * 100) !== Math.round(total * 100))
         throw new Error("El importe debe ser exactamente igual al total de la liquidación.");
@@ -109,6 +117,7 @@ export function SettlementPaymentPanel({
       setOpen(false);
       setProof(null);
       void qc.invalidateQueries({ queryKey: ["settlement-payment", settlement.id] });
+      void qc.invalidateQueries({ queryKey: ["settlement-payable", settlement.id] });
       void qc.invalidateQueries({ queryKey: ["settlement", settlement.id] });
       void qc.invalidateQueries({ queryKey: ["settlement-history", settlement.id] });
       void qc.invalidateQueries({ queryKey: ["settlements"] });
@@ -186,12 +195,12 @@ export function SettlementPaymentPanel({
               <Input
                 id="pay-amount"
                 inputMode="decimal"
-                value={amount}
+                value={amount ?? String(total)}
                 onChange={(e) => setAmount(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Debe ser exactamente {formatMoney(settlement.currency, total)}: no hay pagos
-                parciales.
+                Debe ser exactamente {formatMoney(settlement.currency, total)} — importe final con
+                ajustes y saldos aplicados. No hay pagos parciales.
               </p>
             </div>
             <div className="space-y-1.5">

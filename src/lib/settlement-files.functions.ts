@@ -21,7 +21,7 @@ const ALLOWED: Record<string, string[]> = {
 
 type UploadInput = {
   settlementId: string;
-  kind: "invoice" | "payment_proof";
+  kind: "invoice" | "payment_proof" | "note";
   fileName: string;
   mimeType: string;
   /** Contenido del archivo en base64 (sin prefijo data:). */
