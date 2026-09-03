@@ -249,9 +249,9 @@ function QuotationDetailPage() {
           </Button>
           {booking ? (
             <Button variant="outline" onClick={() => navigate({ to: "/bookings/$id", params: { id: booking.id } })}>
-              <TicketCheck className="mr-2 h-4 w-4" /> Ver reserva {booking.booking_number}
+              <TicketCheck className="mr-2 h-4 w-4" /> Reserva creada · Abrir {booking.booking_number}
             </Button>
-          ) : (
+          ) : q.status === "accepted" ? (
             <Button
               onClick={() => {
                 if (!q.client_id) {
@@ -261,7 +261,7 @@ function QuotationDetailPage() {
                 setBookingOpen(true);
               }}
             >
-              <TicketCheck className="mr-2 h-4 w-4" /> Generar reserva
+              <TicketCheck className="mr-2 h-4 w-4" /> Convertir a reserva
             </Button>
           )}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
