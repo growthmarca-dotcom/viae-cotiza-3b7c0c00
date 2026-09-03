@@ -1799,6 +1799,106 @@ export type Database = {
           },
         ]
       }
+      commission_beneficiary_authorization_history: {
+        Row: {
+          action: Database["public"]["Enums"]["beneficiary_authorization_action"]
+          actor_id: string | null
+          authorization_id: string
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          created_at: string
+          id: string
+          notes: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["beneficiary_authorization_action"]
+          actor_id?: string | null
+          authorization_id: string
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["beneficiary_authorization_action"]
+          actor_id?: string | null
+          authorization_id?: string
+          beneficiary_id?: string
+          beneficiary_type?: Database["public"]["Enums"]["agreement_party"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_beneficiary_authorization_hist_authorization_id_fkey"
+            columns: ["authorization_id"]
+            isOneToOne: false
+            referencedRelation: "commission_beneficiary_authorizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_beneficiary_authorizations: {
+        Row: {
+          authorized_at: string
+          authorized_by: string
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string | null
+          reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          status: Database["public"]["Enums"]["beneficiary_authorization_status"]
+          updated_at: string
+        }
+        Insert: {
+          authorized_at?: string
+          authorized_by: string
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: Database["public"]["Enums"]["beneficiary_authorization_status"]
+          updated_at?: string
+        }
+        Update: {
+          authorized_at?: string
+          authorized_by?: string
+          beneficiary_id?: string
+          beneficiary_type?: Database["public"]["Enums"]["agreement_party"]
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          status?: Database["public"]["Enums"]["beneficiary_authorization_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_beneficiary_authorizations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_history: {
         Row: {
           action: string
@@ -7257,6 +7357,15 @@ export type Database = {
         }
         Returns: Json
       }
+      authorize_commission_beneficiary: {
+        Args: {
+          _beneficiary_id: string
+          _beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          _notes?: string
+          _reason?: string
+        }
+        Returns: Json
+      }
       booking_public_tracking: {
         Args: { _token: string }
         Returns: {
@@ -7473,6 +7582,13 @@ export type Database = {
         }
       }
       is_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_authorized_beneficiary: {
+        Args: {
+          _beneficiary_id: string
+          _beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+        }
+        Returns: boolean
+      }
       is_driver: { Args: { _user_id: string }; Returns: boolean }
       is_member_of: {
         Args: { _org_id: string; _user_id: string }
@@ -7658,6 +7774,14 @@ export type Database = {
         Args: { _approve: boolean; _document_id: string; _reason?: string }
         Returns: Json
       }
+      revoke_commission_beneficiary: {
+        Args: {
+          _beneficiary_id: string
+          _beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          _reason: string
+        }
+        Returns: Json
+      }
       set_commission_status: {
         Args: {
           _comment?: string
@@ -7783,6 +7907,8 @@ export type Database = {
         | "full"
         | "closed"
         | "blocked"
+      beneficiary_authorization_action: "authorized" | "revoked"
+      beneficiary_authorization_status: "authorized" | "revoked"
       booking_document_kind: "voucher" | "receipt" | "invoice" | "other"
       booking_operation_status:
         | "pending_operation"
@@ -8430,6 +8556,8 @@ export const Constants = {
         "closed",
         "blocked",
       ],
+      beneficiary_authorization_action: ["authorized", "revoked"],
+      beneficiary_authorization_status: ["authorized", "revoked"],
       booking_document_kind: ["voucher", "receipt", "invoice", "other"],
       booking_operation_status: [
         "pending_operation",

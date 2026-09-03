@@ -14,6 +14,7 @@ import {
 import { useAccount } from "@/hooks/use-account";
 import { OrganizationFormDialog } from "@/components/organization-form-dialog";
 import { AgreementsPanel } from "@/components/agreements-panel";
+import { BeneficiaryAuthorizationPanel } from "@/components/beneficiary-authorization-panel";
 import { OrganizationMembersPanel } from "@/components/organization-members-panel";
 import {
   ORGANIZATION_STATUSES,
@@ -270,6 +271,8 @@ function OrganizationDetailPage() {
       <OrganizationMembersPanel organizationId={id} canManage={isAdmin} />
 
       <AgreementsPanel organizationId={id} canManage={isAdmin} />
+
+      <BeneficiaryAuthorizationPanel beneficiaryType="organization" beneficiaryId={id} />
 
       {org.notes && isOperations && (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">

@@ -141,6 +141,20 @@
       "when": 1788402965137,
       "tag": "0019_commission_c13_function_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788404344008,
+      "tag": "0020_commission_beneficiary_authorizations",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788404828381,
+      "tag": "0021_beneficiary_authorization_history_trigger",
+      "breakpoints": true
     }
   ]
 }

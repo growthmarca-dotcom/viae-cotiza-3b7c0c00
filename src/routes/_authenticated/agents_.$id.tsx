@@ -22,6 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AgentFormDialog } from "@/components/agent-form-dialog";
+import { BeneficiaryAuthorizationPanel } from "@/components/beneficiary-authorization-panel";
+import { PersonLinkCard } from "@/components/person-link-card";
+import { linkAgentToPerson } from "@/lib/persons";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
@@ -325,13 +328,13 @@ function AgentDetailPage() {
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Perfil comercial
+              Configuración de comisión
             </p>
             <p className="text-sm">
-              {agent.commission_type
-                ? `${agent.commission_type === "percentage" ? "Porcentaje" : "Monto fijo"}: ${agent.commission_value ?? 0}${agent.commission_type === "percentage" ? "%" : ` ${agent.commission_currency}`}`
-                : "Sin definir"}{" "}
-              <span className="text-xs text-muted-foreground">(sin cálculo automático)</span>
+              Definida por acuerdos comerciales
+              <span className="block text-xs text-muted-foreground">
+                Fuente única: Acuerdos comerciales → Reglas
+              </span>
             </p>
           </div>
           <div>
@@ -374,6 +377,24 @@ function AgentDetailPage() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-6 space-y-6">
+        <PersonLinkCard
+          personId={agent.person_id}
+          suggestion={{
+            first_name: agent.first_name ?? "",
+            last_name: agent.last_name ?? "",
+            email: agent.email ?? "",
+            phone: agent.whatsapp ?? "",
+          }}
+          description="Vincula al agente con su identidad maestra en Personas. Los datos históricos del agente no se modifican."
+          onLink={async (personId) => {
+            await linkAgentToPerson(agent.id, personId);
+            await load();
+          }}
+        />
+        <BeneficiaryAuthorizationPanel beneficiaryType="agent" beneficiaryId={agent.id} />
       </div>
 
       {isAdmin && <AccessSection agent={agent} onChanged={load} />}
