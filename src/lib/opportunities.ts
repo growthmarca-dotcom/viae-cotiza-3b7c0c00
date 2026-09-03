@@ -253,6 +253,98 @@ export async function moveOpportunityStage(args: {
   await updateOpportunity(args.id, patch);
 }
 
+// ============================================================
+// Cierre del ciclo comercial (Intervención 8)
+// Reutiliza `moveOpportunityStage()` y `opportunity_stage_config`.
+// No introduce un segundo motor de estados ni otro historial.
+// ============================================================
+
+/** Primera etapa activa de un grupo del pipeline, según la configuración de la base. */
+export async function resolveStageForGroup(group: PipelineGroup): Promise<OpportunityStage> {
+  const config = await listStageConfig();
+  const match = config.find((c) => c.pipeline_group === group);
+  if (match) return match.stage as OpportunityStage;
+  const fallback = OPPORTUNITY_STAGES.find((s) => stageGroup(s.value) === group);
+  if (!fallback) throw new Error(`No hay una etapa configurada para el grupo "${group}".`);
+  return fallback.value;
+}
+
+export type PipelineCloseResult =
+  | { status: "closed"; stage: OpportunityStage }
+  | { status: "already"; stage: OpportunityStage };
+
+/**
+ * Cierra la oportunidad como ganada tras crear/obtener la reserva.
+ * Idempotente: si ya está en un grupo ganado no vuelve a mover la etapa,
+ * por lo que no duplica `opportunity_history` ni resella `stage_changed_at`.
+ */
+export async function closeOpportunityAsWon(opportunityId: string): Promise<PipelineCloseResult> {
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("id, stage")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("La oportunidad no existe o no tenés acceso.");
+  const current = data.stage as OpportunityStage;
+  if (stageGroup(current) === "won") return { status: "already", stage: current };
+  const target = await resolveStageForGroup("won");
+  await moveOpportunityStage({ id: opportunityId, stage: target });
+  return { status: "closed", stage: target };
+}
+
+/**
+ * Cierre asistido como perdida: decisión del agente, nunca automática.
+ * El motivo se guarda en `opportunities.lost_reason` (estructura existente)
+ * y el cambio de etapa queda registrado por los triggers en
+ * `opportunity_history` con etapa anterior, nueva, fecha y usuario.
+ */
+export async function closeOpportunityAsLost(
+  opportunityId: string,
+  reason: string,
+): Promise<PipelineCloseResult> {
+  const motivo = reason.trim();
+  if (!motivo) throw new Error("Indicá el motivo de pérdida.");
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("id, stage")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("La oportunidad no existe o no tenés acceso.");
+  const current = data.stage as OpportunityStage;
+  const target = await resolveStageForGroup("lost");
+  if (stageGroup(current) === "lost") {
+    await updateOpportunity(opportunityId, { lost_reason: motivo });
+    return { status: "already", stage: current };
+  }
+  await moveOpportunityStage({ id: opportunityId, stage: target, lostReason: motivo });
+  return { status: "closed", stage: target };
+}
+
+/** Motivos frecuentes de pérdida (texto libre permitido). */
+export const LOST_REASONS = [
+  "Precio fuera de presupuesto",
+  "Eligió otra agencia",
+  "Postergó el viaje",
+  "Sin respuesta del cliente",
+  "Cambió el destino",
+  "Otro",
+] as const;
+
+/** Registra en auditoría un cierre de oportunidad fallido tras crear la reserva. */
+export async function logPipelineCloseIssue(
+  opportunityId: string,
+  details: Record<string, unknown>,
+): Promise<void> {
+  await supabase.rpc("log_pipeline_close_issue", {
+    _opportunity_id: opportunityId,
+    _details: details as never,
+  });
+}
+
+
+
 
 /**
  * Traduce el bloqueo del trigger `opportunities_require_organization`
