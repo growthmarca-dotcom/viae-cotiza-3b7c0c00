@@ -85,6 +85,13 @@
       "when": 1788397787964,
       "tag": "0011_commissions_accrual_phase_b1",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788398317373,
+      "tag": "0012_commissions_hardening_phase_b2",
+      "breakpoints": true
     }
   ]
 }
