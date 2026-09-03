@@ -17,5 +17,5 @@
 
 ## Pendiente
 - [x] Intervención 5 — Economía / Tipo de cambio: carga de tipos de cambio del Financial Core en Ajustes (`CurrencyRatesCard` + RPC `register_currency_exchange_rate`, histórico inmutable) y sello de la tasa aplicada en la conversión a reserva (`applied_exchange_rate` / `applied_rate_date` / `applied_rate_source` en `bookings` y `booking_services`; prioridad manual → snapshot → sin tasa). Las reservas no cambian de importe si luego se carga otra tasa.
-- [ ] Notificación al agente cuando el cliente responde la cotización.
+- [x] Notificación al agente cuando el cliente responde la cotización: trigger `tg_quotation_client_response_notify` en `quotations` (transición sin responder → respondida) que crea avisos en el centro de notificaciones existente para el agente asignado a la oportunidad y/o el dueño de la cotización, con número, cliente, fecha/hora, comentario y enlace directo; índice único por (usuario, cotización, tipo) para idempotencia; si no hay agente responsable queda registrado en `audit_log` sin afectar la respuesta del cliente. La campana distingue "Cliente aceptó" / "Cliente rechazó" y ofrece "Abrir cotización". No crea reservas.
 - [ ] Conversión automática a reserva al aceptar.
