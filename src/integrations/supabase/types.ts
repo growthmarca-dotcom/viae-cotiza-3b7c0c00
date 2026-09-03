@@ -1633,6 +1633,86 @@ export type Database = {
           },
         ]
       }
+      commission_settlement_documents: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          document_type: string
+          file_name: string | null
+          file_path: string
+          file_size: number | null
+          id: string
+          invoice_date: string | null
+          invoice_kind: string | null
+          invoice_number: string | null
+          mime_type: string | null
+          notes: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          settlement_id: string
+          status: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          document_type?: string
+          file_name?: string | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_kind?: string | null
+          invoice_number?: string | null
+          mime_type?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          settlement_id: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          document_type?: string
+          file_name?: string | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          invoice_date?: string | null
+          invoice_kind?: string | null
+          invoice_number?: string | null
+          mime_type?: string | null
+          notes?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          settlement_id?: string
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlement_documents_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_settlement_history: {
         Row: {
           action: string
@@ -1717,6 +1797,56 @@ export type Database = {
             foreignKeyName: "commission_settlement_items_settlement_id_fkey"
             columns: ["settlement_id"]
             isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_settlement_payments: {
+        Row: {
+          amount: number
+          currency: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_proof_path: string | null
+          payment_reference: string | null
+          recorded_at: string
+          recorded_by: string | null
+          settlement_id: string
+        }
+        Insert: {
+          amount: number
+          currency: string
+          id?: string
+          notes?: string | null
+          payment_date: string
+          payment_method?: string
+          payment_proof_path?: string | null
+          payment_reference?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          settlement_id: string
+        }
+        Update: {
+          amount?: number
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_proof_path?: string | null
+          payment_reference?: string | null
+          recorded_at?: string
+          recorded_by?: string | null
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlement_payments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: true
             referencedRelation: "commission_settlements"
             referencedColumns: ["id"]
           },
@@ -7033,6 +7163,10 @@ export type Database = {
         Returns: boolean
       }
       is_operations: { Args: { _user_id: string }; Returns: boolean }
+      is_settlement_beneficiary: {
+        Args: { _settlement_id: string; _user_id: string }
+        Returns: boolean
+      }
       list_organization_members: {
         Args: { _org_id: string }
         Returns: {
@@ -7083,6 +7217,19 @@ export type Database = {
       rate_at: {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
+      }
+      record_commission_settlement_payment: {
+        Args: {
+          _amount: number
+          _currency: string
+          _notes?: string
+          _payment_date: string
+          _payment_method?: string
+          _payment_proof_path?: string
+          _payment_reference?: string
+          _settlement_id: string
+        }
+        Returns: Json
       }
       register_currency_exchange_rate: {
         Args: {
@@ -7183,6 +7330,10 @@ export type Database = {
         }
         Returns: Json
       }
+      review_settlement_document: {
+        Args: { _approve: boolean; _document_id: string; _reason?: string }
+        Returns: Json
+      }
       set_commission_status: {
         Args: {
           _comment?: string
@@ -7218,6 +7369,23 @@ export type Database = {
       smart_quote_share_token: {
         Args: { _days?: number; _smart_quote_id: string }
         Returns: string
+      }
+      submit_settlement_invoice: {
+        Args: {
+          _amount?: number
+          _currency?: string
+          _document_type?: string
+          _file_name?: string
+          _file_path: string
+          _file_size?: number
+          _invoice_date?: string
+          _invoice_kind?: string
+          _invoice_number?: string
+          _mime_type?: string
+          _notes?: string
+          _settlement_id: string
+        }
+        Returns: Json
       }
       sync_booking_client_status: {
         Args: { _booking_id: string }
@@ -7664,7 +7832,14 @@ export type Database = {
         | "package"
       search_source_type: "internal" | "api" | "manual"
       settlement_frequency: "monthly" | "biweekly"
-      settlement_status: "draft" | "pending_review" | "approved" | "settled"
+      settlement_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "invoice_pending"
+        | "invoice_review"
+        | "ready_for_payment"
+        | "settled"
       smart_quote_item_type:
         | "accommodation"
         | "activity"
@@ -8352,7 +8527,15 @@ export const Constants = {
       ],
       search_source_type: ["internal", "api", "manual"],
       settlement_frequency: ["monthly", "biweekly"],
-      settlement_status: ["draft", "pending_review", "approved", "settled"],
+      settlement_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "invoice_pending",
+        "invoice_review",
+        "ready_for_payment",
+        "settled",
+      ],
       smart_quote_item_type: [
         "accommodation",
         "activity",

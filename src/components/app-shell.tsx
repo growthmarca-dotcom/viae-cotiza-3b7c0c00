@@ -46,6 +46,7 @@ const baseNav = [
 
   { to: "/agents", label: "Agentes", icon: UserRound },
   { to: "/commissions", label: "Mis comisiones", icon: Wallet },
+  { to: "/my-settlements", label: "Mis liquidaciones", icon: Wallet },
   { to: "/resources", label: "Recursos", icon: Boxes },
   { to: "/transport", label: "Transporte", icon: RouteIcon },
   { to: "/agenda", label: "Agenda", icon: CalendarDays },

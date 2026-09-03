@@ -99,6 +99,27 @@
       "when": 1788400387367,
       "tag": "0013_commission_settlements_phase_c11",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788401298776,
+      "tag": "0014_commission_settlement_invoices_payments_c12",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788401343914,
+      "tag": "0015_commission_settlement_c12_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788401412055,
+      "tag": "0016_commission_settlement_c12_rpcs",
+      "breakpoints": true
     }
   ]
 }
