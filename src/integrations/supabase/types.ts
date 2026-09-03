@@ -7218,6 +7218,19 @@ export type Database = {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
       }
+      record_commission_settlement_payment: {
+        Args: {
+          _amount: number
+          _currency: string
+          _notes?: string
+          _payment_date: string
+          _payment_method?: string
+          _payment_proof_path?: string
+          _payment_reference?: string
+          _settlement_id: string
+        }
+        Returns: Json
+      }
       register_currency_exchange_rate: {
         Args: {
           _from_iso: string
@@ -7317,6 +7330,10 @@ export type Database = {
         }
         Returns: Json
       }
+      review_settlement_document: {
+        Args: { _approve: boolean; _document_id: string; _reason?: string }
+        Returns: Json
+      }
       set_commission_status: {
         Args: {
           _comment?: string
@@ -7352,6 +7369,23 @@ export type Database = {
       smart_quote_share_token: {
         Args: { _days?: number; _smart_quote_id: string }
         Returns: string
+      }
+      submit_settlement_invoice: {
+        Args: {
+          _amount?: number
+          _currency?: string
+          _document_type?: string
+          _file_name?: string
+          _file_path: string
+          _file_size?: number
+          _invoice_date?: string
+          _invoice_kind?: string
+          _invoice_number?: string
+          _mime_type?: string
+          _notes?: string
+          _settlement_id: string
+        }
+        Returns: Json
       }
       sync_booking_client_status: {
         Args: { _booking_id: string }
