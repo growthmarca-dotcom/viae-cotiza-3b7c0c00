@@ -26,10 +26,12 @@ import {
   AGREEMENT_STATUSES,
   AGREEMENT_TYPES,
   EMPTY_AGREEMENT,
+  SETTLEMENT_FREQUENCIES,
   type AgreementInput,
   type AgreementStatus,
   type AgreementType,
   type CommissionType,
+  type SettlementFrequency,
 } from "@/lib/agreements";
 
 type Props = {
@@ -263,6 +265,41 @@ export function AgreementFormDialog({
                 {AGREEMENT_STATUSES.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
                     {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="agreement-delay">Plazo de liquidación (días)</Label>
+            <Input
+              id="agreement-delay"
+              type="number"
+              min="0"
+              max="365"
+              step="1"
+              value={form.settlement_delay_days}
+              onChange={(e) => set("settlement_delay_days", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Días a esperar desde la finalización del servicio para que la comisión sea liquidable.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Frecuencia de liquidación</Label>
+            <Select
+              value={form.settlement_frequency}
+              onValueChange={(v) => set("settlement_frequency", v as SettlementFrequency)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SETTLEMENT_FREQUENCIES.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
                   </SelectItem>
                 ))}
               </SelectContent>

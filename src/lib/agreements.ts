@@ -76,7 +76,26 @@ export type AgreementInput = {
   valid_until: string;
   status: AgreementStatus;
   notes: string;
+  /** Días a esperar desde el check-out para considerar liquidable la comisión. */
+  settlement_delay_days: string;
+  settlement_frequency: SettlementFrequency;
 };
+
+export type SettlementFrequency = "monthly" | "biweekly";
+
+export const SETTLEMENT_FREQUENCIES: { value: SettlementFrequency; label: string; help: string }[] =
+  [
+    { value: "monthly", label: "Mensual", help: "Un período por mes calendario." },
+    {
+      value: "biweekly",
+      label: "Quincenal",
+      help: "Dos períodos fijos: del 1 al 15 y del 16 al fin de mes.",
+    },
+  ];
+
+export function settlementFrequencyLabel(v: string | null | undefined) {
+  return SETTLEMENT_FREQUENCIES.find((f) => f.value === v)?.label ?? "—";
+}
 
 export const EMPTY_AGREEMENT: AgreementInput = {
   title: "",
@@ -90,6 +109,8 @@ export const EMPTY_AGREEMENT: AgreementInput = {
   valid_until: "",
   status: "draft",
   notes: "",
+  settlement_delay_days: "0",
+  settlement_frequency: "monthly",
 };
 
 const text = (v: string) => (v.trim() ? v.trim() : null);
@@ -107,6 +128,8 @@ export function agreementToInput(a: CommercialAgreement): AgreementInput {
     valid_until: a.valid_until ?? "",
     status: (a.status ?? "draft") as AgreementStatus,
     notes: a.notes ?? "",
+    settlement_delay_days: String(a.settlement_delay_days ?? 0),
+    settlement_frequency: (a.settlement_frequency ?? "monthly") as SettlementFrequency,
   };
 }
 
@@ -121,6 +144,9 @@ export function validateAgreement(input: AgreementInput): string | null {
   }
   if (input.valid_from && input.valid_until && input.valid_until < input.valid_from)
     return "La fecha de fin no puede ser anterior a la de inicio.";
+  const delay = Number(input.settlement_delay_days || "0");
+  if (!Number.isInteger(delay) || delay < 0 || delay > 365)
+    return "El plazo de liquidación debe ser un número entero de 0 a 365 días.";
   return null;
 }
 
@@ -137,6 +163,8 @@ function payload(input: AgreementInput) {
     valid_until: text(input.valid_until),
     status: input.status,
     notes: text(input.notes),
+    settlement_delay_days: Number(input.settlement_delay_days || "0"),
+    settlement_frequency: input.settlement_frequency,
   };
 }
 
