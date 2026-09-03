@@ -60,6 +60,28 @@ export type QuotationItemDraft = {
   requirement: boolean;
 };
 
+/* ------------------------------------------------------------------ */
+/* Legacy vs modelo estructural (P0.1)                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Frontera entre las cotizaciones históricas (modelo plano: `accommodation_*`,
+ * `price_per_night`, etc.) y el modelo estructural vigente basado en
+ * `quotation_items`. No requiere migración ni marcas nuevas: se apoya en
+ * `quotations.created_at`, que ya existe en el modelo.
+ *
+ * Toda cotización creada a partir de esta fecha debe tener al menos un ítem.
+ */
+export const STRUCTURED_ITEMS_SINCE = "2026-09-03T00:00:00Z";
+
+/** true cuando la cotización pertenece al flujo histórico (sin ítems). */
+export function isLegacyQuotation(createdAt: string | null | undefined): boolean {
+  if (!createdAt) return false;
+  const t = new Date(createdAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return t < new Date(STRUCTURED_ITEMS_SINCE).getTime();
+}
+
 let seq = 0;
 function localKey() {
   seq += 1;
