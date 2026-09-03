@@ -21,14 +21,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CURRENCIES } from "@/lib/currency";
 import {
   AGENT_ACCESS_STATUSES,
   AGENT_LANGUAGES,
   AGENT_SPECIALTIES,
   AGENT_STATUSES,
   AGENT_WA_STATUSES,
-  COMMISSION_TYPES,
   EMPTY_AGENT,
   type AgentAccessStatus,
   type AgentInput,
