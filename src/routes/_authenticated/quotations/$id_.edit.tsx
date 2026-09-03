@@ -34,6 +34,8 @@ function EditQuotationPage() {
   const [previousPaths, setPreviousPaths] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState<QuotationItemDraft[]>([]);
+  /** P0.1: las cotizaciones históricas (modelo plano) no exigen `quotation_items`. */
+  const [legacy, setLegacy] = useState(false);
 
   useEffect(() => {
     (async () => {
