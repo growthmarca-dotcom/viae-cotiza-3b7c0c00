@@ -71,6 +71,13 @@
       "when": 1788394990260,
       "tag": "0009_quotation_conversion_trace",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788397020072,
+      "tag": "0010_log_pipeline_close_issue",
+      "breakpoints": true
     }
   ]
 }
