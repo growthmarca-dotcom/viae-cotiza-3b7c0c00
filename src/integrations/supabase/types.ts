@@ -6654,6 +6654,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      accrue_booking_commissions: {
+        Args: { _booking_id: string }
+        Returns: Json
+      }
+      accrue_commission: {
+        Args: { _booking_service_id: string }
+        Returns: Json
+      }
       admins_exist: { Args: never; Returns: boolean }
       booking_public_tracking: {
         Args: { _token: string }
@@ -7005,6 +7013,14 @@ export type Database = {
           _creator_user_id: string
           _explicit_org_id?: string
           _opportunity_id?: string
+        }
+        Returns: Json
+      }
+      set_commission_status: {
+        Args: {
+          _comment?: string
+          _commission_id: string
+          _to: Database["public"]["Enums"]["commission_status"]
         }
         Returns: Json
       }
