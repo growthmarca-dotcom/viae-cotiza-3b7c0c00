@@ -18,27 +18,43 @@ export type Settlement = Tables<"commission_settlements">;
 export type SettlementItem = Tables<"commission_settlement_items">;
 export type SettlementHistoryRow = Tables<"commission_settlement_history">;
 
-export type SettlementStatus = "draft" | "pending_review" | "approved" | "settled";
+export type SettlementStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "invoice_pending"
+  | "invoice_review"
+  | "ready_for_payment"
+  | "settled";
 export type BeneficiaryType = "organization" | "agent";
 
 export const SETTLEMENT_STATUS_LABELS: Record<SettlementStatus, string> = {
   draft: "Borrador",
   pending_review: "En revisión",
   approved: "Aprobada",
-  settled: "Liquidada",
+  invoice_pending: "Factura pendiente",
+  invoice_review: "Factura en revisión",
+  ready_for_payment: "Lista para pago",
+  settled: "Pagada",
 };
 
 export const SETTLEMENT_STATUS_HELP: Record<SettlementStatus, string> = {
   draft: "Generada automáticamente. Todavía no fue revisada.",
   pending_review: "Enviada a revisión administrativa.",
   approved: "Aprobada para liquidar. Su detalle ya no se modifica.",
-  settled: "Pagada. El registro del pago se habilita en la próxima fase.",
+  invoice_pending: "Falta la factura del beneficiario para poder pagar.",
+  invoice_review: "Factura presentada, pendiente de revisión administrativa.",
+  ready_for_payment: "Factura aprobada. Se puede registrar el pago.",
+  settled: "Pago registrado. La liquidación es histórica.",
 };
 
 export const SETTLEMENT_STATUS_CLASSES: Record<SettlementStatus, string> = {
   draft: "bg-muted text-muted-foreground",
   pending_review: "bg-primary/10 text-primary",
   approved: "bg-gold/15 text-gold-foreground",
+  invoice_pending: "bg-destructive/10 text-destructive",
+  invoice_review: "bg-primary/10 text-primary",
+  ready_for_payment: "bg-gold/15 text-gold-foreground",
   settled: "bg-secondary text-muted-foreground",
 };
 
@@ -79,7 +95,7 @@ export async function generateSettlements(asOf?: string): Promise<GenerateResult
 /** Única vía de cambio de estado: nunca UPDATE directo desde el frontend. */
 export async function setSettlementStatus(
   id: string,
-  to: Exclude<SettlementStatus, "settled">,
+  to: Exclude<SettlementStatus, "settled" | "invoice_review" | "ready_for_payment">,
   comment?: string,
 ) {
   const { data, error } = await supabase.rpc("set_settlement_status", {
