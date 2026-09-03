@@ -35,6 +35,7 @@ import {
 import { BookingTransportTab } from "@/components/booking-transport-panel";
 import { BookingServicesPanel } from "@/components/booking-services-panel";
 import { CommissionSimulationPanel } from "@/components/commission-simulation-panel";
+import { CommissionAccrualPanel } from "@/components/commission-accrual-panel";
 import { BookingTrackingCard } from "@/components/booking-tracking-card";
 import { BookingChecklistPanel } from "@/components/booking-checklist-panel";
 import { BookingIncidentsPanel } from "@/components/booking-incidents-panel";
@@ -539,11 +540,13 @@ function BookingDetailPage() {
 
         {/* --------------------------------------------------------- Comisiones */}
         <TabsContent value="commissions" className="space-y-3">
+          <CommissionAccrualPanel bookingId={booking.id} bookingStatus={booking.status} />
           <p className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-sm">
-            Simulación — no genera movimiento contable
+            Simulación — es una estimación y no está registrada como comisión
           </p>
           <CommissionSimulationPanel bookingId={booking.id} />
         </TabsContent>
+
 
         {/* ----------------------------------------------------------- Timeline */}
         <TabsContent value="timeline">

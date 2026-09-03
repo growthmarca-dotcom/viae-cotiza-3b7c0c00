@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Handshake, Pencil, PlusCircle } from "lucide-react";
+import { Handshake, Pencil, PlusCircle, ScrollText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AgreementFormDialog } from "@/components/agreement-form-dialog";
+import { AgreementRulesDialog } from "@/components/agreement-rules-dialog";
 import {
   AGREEMENT_STATUS_CLASSES,
   agreementStatusLabel,
@@ -12,8 +13,10 @@ import {
   agreementValueLabel,
   createAgreement,
   listAgreements,
+  setAgreementStatus,
   updateAgreement,
   type AgreementInput,
+  type AgreementStatus,
   type AgreementWithRelations,
 } from "@/lib/agreements";
 
@@ -31,6 +34,7 @@ export function AgreementsPanel({
   const qc = useQueryClient();
   const [openNew, setOpenNew] = useState(false);
   const [editing, setEditing] = useState<AgreementWithRelations | null>(null);
+  const [rulesFor, setRulesFor] = useState<AgreementWithRelations | null>(null);
 
   const key = ["agreements", { organizationId: organizationId ?? null }];
   const { data: agreements = [] } = useQuery({
@@ -56,6 +60,17 @@ export function AgreementsPanel({
     onSuccess: () => {
       toast.success("Acuerdo actualizado");
       setEditing(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  /** Activar / desactivar: los acuerdos no se eliminan, cambian de estado. */
+  const status = useMutation({
+    mutationFn: ({ id, status: next }: { id: string; status: AgreementStatus }) =>
+      setAgreementStatus(id, next),
+    onSuccess: () => {
+      toast.success("Estado del acuerdo actualizado");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -110,7 +125,7 @@ export function AgreementsPanel({
                     .join(" · ")}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     AGREEMENT_STATUS_CLASSES[a.status ?? "draft"]
@@ -118,12 +133,32 @@ export function AgreementsPanel({
                 >
                   {agreementStatusLabel(a.status)}
                 </span>
+                <Button variant="ghost" size="sm" onClick={() => setRulesFor(a)}>
+                  <ScrollText className="mr-2 h-4 w-4" />
+                  Reglas
+                </Button>
                 {canManage && (
-                  <Button variant="ghost" size="icon" onClick={() => setEditing(a)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={status.isPending}
+                      onClick={() =>
+                        status.mutate({
+                          id: a.id,
+                          status: a.status === "active" ? "suspended" : "active",
+                        })
+                      }
+                    >
+                      {a.status === "active" ? "Desactivar" : "Activar"}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setEditing(a)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
               </div>
+
             </div>
           ))}
         </div>
@@ -148,6 +183,14 @@ export function AgreementsPanel({
         submitLabel="Guardar cambios"
         submitting={update.isPending}
         onSubmit={(input) => editing && update.mutate({ id: editing.id, input })}
+      />
+
+      <AgreementRulesDialog
+        open={Boolean(rulesFor)}
+        onOpenChange={(v) => !v && setRulesFor(null)}
+        agreementId={rulesFor?.id ?? null}
+        agreementTitle={rulesFor?.title || "Acuerdo comercial"}
+        canManage={canManage}
       />
     </section>
   );

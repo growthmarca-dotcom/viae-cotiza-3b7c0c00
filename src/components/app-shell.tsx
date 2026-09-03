@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { AppFooter } from "@/components/app-footer";
-import { Building2, Handshake } from "lucide-react";
+import { Building2, Handshake, Wallet } from "lucide-react";
 import { useDeveloperBranding } from "@/hooks/use-developer-branding";
 
 import { cn } from "@/lib/utils";
@@ -45,6 +45,7 @@ const baseNav = [
   { to: "/clients", label: "Clientes", icon: Users },
 
   { to: "/agents", label: "Agentes", icon: UserRound },
+  { to: "/commissions", label: "Mis comisiones", icon: Wallet },
   { to: "/resources", label: "Recursos", icon: Boxes },
   { to: "/transport", label: "Transporte", icon: RouteIcon },
   { to: "/agenda", label: "Agenda", icon: CalendarDays },

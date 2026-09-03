@@ -26,6 +26,7 @@ import { Route as AuthenticatedOperationsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated/driver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCommissionsRouteImport } from './routes/_authenticated/commissions'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAgreementsRouteImport } from './routes/_authenticated/agreements'
@@ -133,6 +134,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCommissionsRoute =
+  AuthenticatedCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -253,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/agreements': typeof AuthenticatedAgreementsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/clients': typeof AuthenticatedClientsRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -291,6 +299,7 @@ export interface FileRoutesByTo {
   '/agreements': typeof AuthenticatedAgreementsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/clients': typeof AuthenticatedClientsRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/driver': typeof AuthenticatedDriverRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -331,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated/agreements': typeof AuthenticatedAgreementsRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
+  '/_authenticated/commissions': typeof AuthenticatedCommissionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/driver': typeof AuthenticatedDriverRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/agreements'
     | '/bookings'
     | '/clients'
+    | '/commissions'
     | '/dashboard'
     | '/driver'
     | '/leads'
@@ -409,6 +420,7 @@ export interface FileRouteTypes {
     | '/agreements'
     | '/bookings'
     | '/clients'
+    | '/commissions'
     | '/dashboard'
     | '/driver'
     | '/leads'
@@ -448,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agreements'
     | '/_authenticated/bookings'
     | '/_authenticated/clients'
+    | '/_authenticated/commissions'
     | '/_authenticated/dashboard'
     | '/_authenticated/driver'
     | '/_authenticated/leads'
@@ -609,6 +622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/commissions': {
+      id: '/_authenticated/commissions'
+      path: '/commissions'
+      fullPath: '/commissions'
+      preLoaderRoute: typeof AuthenticatedCommissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/clients': {
       id: '/_authenticated/clients'
       path: '/clients'
@@ -759,6 +779,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgreementsRoute: typeof AuthenticatedAgreementsRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
+  AuthenticatedCommissionsRoute: typeof AuthenticatedCommissionsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDriverRoute: typeof AuthenticatedDriverRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
@@ -792,6 +813,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgreementsRoute: AuthenticatedAgreementsRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
+  AuthenticatedCommissionsRoute: AuthenticatedCommissionsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDriverRoute: AuthenticatedDriverRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
