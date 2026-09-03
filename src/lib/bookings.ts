@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMyOrganizationId } from "@/lib/tenant";
 import { getExchangeRate } from "@/lib/money";
+import { isLegacyQuotation } from "@/lib/quotationItems";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Booking = Tables<"bookings">;
