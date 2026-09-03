@@ -7249,6 +7249,14 @@ export type Database = {
         Returns: Json
       }
       admins_exist: { Args: never; Returns: boolean }
+      apply_commission_adjustment_balance: {
+        Args: {
+          _adjustment_id: string
+          _amount: number
+          _settlement_id: string
+        }
+        Returns: Json
+      }
       booking_public_tracking: {
         Args: { _token: string }
         Returns: {
@@ -7372,6 +7380,21 @@ export type Database = {
           _visibility?: Database["public"]["Enums"]["timeline_visibility"]
         }
         Returns: string
+      }
+      create_commission_adjustment: {
+        Args: {
+          _adjustment_type: string
+          _amount: number
+          _commission_id?: string
+          _currency?: string
+          _idempotency_key?: string
+          _notes?: string
+          _reason: string
+          _settlement_id?: string
+          _source_id?: string
+          _source_type?: string
+        }
+        Returns: Json
       }
       currency_rate_at: {
         Args: {
@@ -7511,6 +7534,10 @@ export type Database = {
         Args: { _base: string; _date?: string; _owner: string; _quote: string }
         Returns: number
       }
+      reconcile_settlement_payment: {
+        Args: { _notes?: string; _settlement_id: string; _status: string }
+        Returns: Json
+      }
       record_commission_settlement_payment: {
         Args: {
           _amount: number
@@ -7623,6 +7650,10 @@ export type Database = {
         }
         Returns: Json
       }
+      review_commission_adjustment: {
+        Args: { _adjustment_id: string; _approve: boolean; _reason?: string }
+        Returns: Json
+      }
       review_settlement_document: {
         Args: { _approve: boolean; _document_id: string; _reason?: string }
         Returns: Json
@@ -7647,6 +7678,10 @@ export type Database = {
         }
         Returns: Json
       }
+      settlement_payable_amount: {
+        Args: { _settlement_id: string }
+        Returns: number
+      }
       simulate_commission: {
         Args: { _booking_service_id: string }
         Returns: Json
@@ -7665,7 +7700,9 @@ export type Database = {
       }
       submit_settlement_invoice: {
         Args: {
+          _adjustment_id?: string
           _amount?: number
+          _commission_id?: string
           _currency?: string
           _document_type?: string
           _file_name?: string

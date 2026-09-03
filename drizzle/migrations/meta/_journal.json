@@ -127,6 +127,13 @@
       "when": 1788402787126,
       "tag": "0017_commission_adjustments_c13_core",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788402933494,
+      "tag": "0018_commission_adjustments_c13_rpcs",
+      "breakpoints": true
     }
   ]
 }
