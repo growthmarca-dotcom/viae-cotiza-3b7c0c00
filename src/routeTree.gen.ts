@@ -17,6 +17,7 @@ import { Route as PropuestaTokenRouteImport } from './routes/propuesta.$token'
 import { Route as InvitacionTokenRouteImport } from './routes/invitacion.$token'
 import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedTransportRouteImport } from './routes/_authenticated/transport'
+import { Route as AuthenticatedSettlementsRouteImport } from './routes/_authenticated/settlements'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
@@ -87,6 +88,12 @@ const AuthenticatedTransportRoute = AuthenticatedTransportRouteImport.update({
   path: '/transport',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettlementsRoute =
+  AuthenticatedSettlementsRouteImport.update({
+    id: '/settlements',
+    path: '/settlements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -270,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/settlements': typeof AuthenticatedSettlementsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -309,6 +317,7 @@ export interface FileRoutesByTo {
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/settlements': typeof AuthenticatedSettlementsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/settlements': typeof AuthenticatedSettlementsRoute
   '/_authenticated/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/providers'
     | '/resources'
     | '/settings'
+    | '/settlements'
     | '/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/providers'
     | '/resources'
     | '/settings'
+    | '/settlements'
     | '/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/_authenticated/providers'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
+    | '/_authenticated/settlements'
     | '/_authenticated/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -557,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/transport'
       fullPath: '/transport'
       preLoaderRoute: typeof AuthenticatedTransportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settlements': {
+      id: '/_authenticated/settlements'
+      path: '/settlements'
+      fullPath: '/settlements'
+      preLoaderRoute: typeof AuthenticatedSettlementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -789,6 +809,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSettlementsRoute: typeof AuthenticatedSettlementsRoute
   AuthenticatedTransportRoute: typeof AuthenticatedTransportRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
@@ -823,6 +844,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSettlementsRoute: AuthenticatedSettlementsRoute,
   AuthenticatedTransportRoute: AuthenticatedTransportRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
