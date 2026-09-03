@@ -44,7 +44,20 @@ const KIND_LABEL: Record<string, string> = {
   operation_status: "Cambio operativo",
   operation_service: "Servicio de la reserva",
   operation_incident: "Incidencia operativa",
+  quotation_client_response: "Respuesta del cliente",
 };
+
+/** Enlace interno del aviso, cuando la notificación lo trae en `data.link`. */
+export function notificationLink(n: Notification): string | null {
+  const link = (n.data as { link?: unknown } | null)?.link;
+  return typeof link === "string" && link.startsWith("/") ? link : null;
+}
+
+/** Respuesta pública del cliente: distingue aceptación de rechazo. */
+export function notificationResponseStatus(n: Notification): "accepted" | "rejected" | null {
+  const status = (n.data as { status?: unknown } | null)?.status;
+  return status === "accepted" || status === "rejected" ? status : null;
+}
 
 
 export function notificationKindLabel(kind: string) {

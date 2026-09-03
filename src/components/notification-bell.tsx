@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Loader2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,8 @@ import {
   subscribeToMyNotifications,
   notificationKindClasses,
   notificationKindLabel,
+  notificationLink,
+  notificationResponseStatus,
   unreadCount,
   type Notification,
 } from "@/lib/notifications";
@@ -121,9 +124,19 @@ export function NotificationBell() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
-                      className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${notificationKindClasses(n.kind)}`}
+                      className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
+                        notificationResponseStatus(n) === "accepted"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : notificationResponseStatus(n) === "rejected"
+                            ? "border-destructive/30 bg-destructive/10 text-destructive"
+                            : notificationKindClasses(n.kind)
+                      }`}
                     >
-                      {notificationKindLabel(n.kind)}
+                      {notificationResponseStatus(n) === "accepted"
+                        ? "Cliente aceptó"
+                        : notificationResponseStatus(n) === "rejected"
+                          ? "Cliente rechazó"
+                          : notificationKindLabel(n.kind)}
                     </span>
                     <span className="shrink-0 text-[11px] text-muted-foreground">
                       {formatNotificationDate(n.created_at)}
@@ -131,6 +144,15 @@ export function NotificationBell() {
                   </div>
                   <p className="mt-1.5 font-medium">{n.title}</p>
                   {n.body && <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>}
+                  {notificationLink(n) && (
+                    <Link
+                      to={notificationLink(n)!}
+                      onClick={() => setOpen(false)}
+                      className="mt-1 inline-block text-xs font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Abrir cotización
+                    </Link>
+                  )}
                   {n.read_at == null && (
                     <Button
                       variant="link"
