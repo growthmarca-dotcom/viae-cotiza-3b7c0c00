@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CompanyFormDialog } from "@/components/company-form-dialog";
 import { ResourceFormDialog } from "@/components/resource-form-dialog";
 import { ExtrasManager } from "@/components/extras-manager";
 import { listAssignableAgents } from "@/lib/agents";
@@ -24,7 +23,6 @@ import {
   categoryLabel,
   companyKindLabel,
   computeResourceStats,
-  createCompany,
   createResource,
   listCompanies,
   listResources,
@@ -32,7 +30,6 @@ import {
   RESOURCE_AVAILABILITIES,
   RESOURCE_CATEGORIES,
   RESOURCE_ZONES,
-  type CompanyInput,
   type CompanyKind,
   type ResourceAvailability,
   type ResourceCategory,
@@ -79,7 +76,6 @@ function ResourcesPage() {
   const [coverageScope, setCoverageScope] = useState<CoverageScope | "all">("all");
 
   const [resourceOpen, setResourceOpen] = useState(false);
-  const [companyOpen, setCompanyOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const resourcesQuery = useQuery({
@@ -182,20 +178,6 @@ function ResourcesPage() {
     }
   }
 
-  async function submitCompany(input: CompanyInput) {
-    setSaving(true);
-    try {
-      await createCompany(input);
-      toast.success("Empresa creada");
-      setCompanyOpen(false);
-      companiesQuery.refetch();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo crear la empresa");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
     <div className="space-y-8 pb-16">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -212,9 +194,9 @@ function ResourcesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setCompanyOpen(true)}>
-            <Building2 className="mr-2 h-4 w-4" /> Nueva empresa
-          </Button>
+          {/* companies es un modelo legacy: no se crean nuevas empresas desde aquí.
+              La entidad maestra es /organizations. El listado se mantiene solo lectura
+              porque los selectores de recursos/transporte aún referencian companies. */}
           <Button onClick={() => setResourceOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nuevo recurso
           </Button>
@@ -234,7 +216,7 @@ function ResourcesPage() {
             <Boxes className="mr-2 h-4 w-4" /> Recursos
           </TabsTrigger>
           <TabsTrigger value="companies">
-            <Building2 className="mr-2 h-4 w-4" /> Empresas
+            <Building2 className="mr-2 h-4 w-4" /> Empresas (legacy)
           </TabsTrigger>
           <TabsTrigger value="extras">
             <Package className="mr-2 h-4 w-4" /> Extras
@@ -533,14 +515,6 @@ function ResourcesPage() {
         submitLabel="Crear recurso"
         submitting={saving}
         onSubmit={submitResource}
-      />
-      <CompanyFormDialog
-        open={companyOpen}
-        onOpenChange={setCompanyOpen}
-        title="Nueva empresa"
-        submitLabel="Crear empresa"
-        submitting={saving}
-        onSubmit={submitCompany}
       />
     </div>
   );

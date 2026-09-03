@@ -277,6 +277,15 @@ function companyPayload(input: CompanyInput) {
   };
 }
 
+/**
+ * LEGACY / DEPRECADO: `companies` es un modelo histórico subordinado a
+ * `organizations` (companies.organization_id). La entidad maestra fiscal y
+ * comercial es organizations. No crear nuevas empresas desde la UI; estas
+ * funciones se conservan solo porque recursos/transporte aún referencian
+ * companies (resources.company_id, resources.owner_company_id,
+ * booking_services.company_id, transport_services.company_id).
+ * No borrar la tabla ni migrar datos sin un plan de migración explícito.
+ */
 export async function listCompanies(includeArchived = false): Promise<Company[]> {
   let q = supabase.from("companies").select("*").order("name", { ascending: true });
   if (!includeArchived) q = q.eq("record_status", "active");
@@ -291,6 +300,7 @@ export async function getCompany(id: string): Promise<Company | null> {
   return (data as Company) ?? null;
 }
 
+/** @deprecated LEGACY: no usar en código nuevo. Las altas de entidades van a organizations. */
 export async function createCompany(input: CompanyInput): Promise<string> {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
@@ -304,6 +314,7 @@ export async function createCompany(input: CompanyInput): Promise<string> {
   return data.id as string;
 }
 
+/** @deprecated LEGACY: no usar en código nuevo. La edición de entidades va a organizations. */
 export async function updateCompany(id: string, input: CompanyInput) {
   const { error } = await supabase.from("companies").update(companyPayload(input)).eq("id", id);
   if (error) throw error;
