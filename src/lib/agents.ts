@@ -8,6 +8,13 @@ export type { AgentAvailability };
 export type Agent = Tables<"agents">;
 
 export type AgentStatus = "pending" | "training" | "active" | "suspended" | "inactive" | "archived";
+/**
+ * OBSOLETO en el modelo de agentes: `agents.commission_type/value/currency` ya
+ * no son fuente de verdad ni se editan desde la UI. El cálculo de comisiones
+ * proviene exclusivamente de `commercial_agreements` → `agreement_rules`.
+ * Lo mismo aplica a `agents.settlement_authorized`, reemplazado por la
+ * autorización unificada de beneficiarios (`src/lib/beneficiaryAuthorizations`).
+ */
 export type CommissionType = "percentage" | "fixed";
 export type AgentAccessStatus = "none" | "invited" | "linked";
 export type AgentWaStatus = "available" | "busy" | "offline";
@@ -99,9 +106,6 @@ export type AgentInput = {
   specialties: string[];
   notes: string;
   status: AgentStatus;
-  commission_type: CommissionType | "";
-  commission_value: string;
-  commission_currency: string;
   access_status: AgentAccessStatus;
   invited_email: string;
   wa_number: string;
@@ -114,11 +118,6 @@ export type AgentInput = {
   auto_receive_leads: boolean;
   available_for_assignment: boolean;
   availability: AgentAvailability;
-  /**
-   * Autoriza al agente a recibir comisiones liquidadas a título propio.
-   * NO participa del cálculo: los importes siempre vienen del motor de acuerdos.
-   */
-  settlement_authorized: boolean;
 };
 
 export const EMPTY_AGENT: AgentInput = {
@@ -134,10 +133,6 @@ export const EMPTY_AGENT: AgentInput = {
   specialties: [],
   notes: "",
   status: "pending",
-  commission_type: "",
-  commission_value: "",
-  commission_currency: "USD",
-  settlement_authorized: false,
   access_status: "none",
   invited_email: "",
   wa_number: "",
@@ -166,10 +161,6 @@ export function agentToInput(a: Agent): AgentInput {
     specialties: a.specialties ?? [],
     notes: a.notes ?? "",
     status: a.status as AgentStatus,
-    commission_type: (a.commission_type as CommissionType | null) ?? "",
-    commission_value: a.commission_value != null ? String(a.commission_value) : "",
-    commission_currency: a.commission_currency ?? "USD",
-    settlement_authorized: a.settlement_authorized ?? false,
     access_status: a.access_status as AgentAccessStatus,
     invited_email: a.invited_email ?? "",
     wa_number: a.wa_number ?? "",
@@ -202,10 +193,6 @@ function toPayload(input: AgentInput) {
     specialties: input.specialties,
     notes: text(input.notes),
     status: input.status,
-    commission_type: input.commission_type === "" ? null : input.commission_type,
-    commission_value: num(input.commission_value),
-    commission_currency: input.commission_currency || "USD",
-    settlement_authorized: input.settlement_authorized,
     access_status: input.access_status,
     invited_email: text(input.invited_email),
     invited_at: input.access_status === "invited" ? new Date().toISOString() : null,
