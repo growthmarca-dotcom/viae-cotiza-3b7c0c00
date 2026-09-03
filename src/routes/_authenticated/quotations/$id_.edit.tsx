@@ -8,6 +8,7 @@ import { formToRow, rowToForm, saveQuotationImages, signImageUrls } from "@/lib/
 import { QuotationItemsTabs } from "@/components/quotation-items-tabs";
 import { QuotationItemsSummary } from "@/components/quotation-items-summary";
 import {
+  isLegacyQuotation,
   itemsTotal as sumItems,
   listQuotationItems,
   rowToDraft,
@@ -34,6 +35,8 @@ function EditQuotationPage() {
   const [previousPaths, setPreviousPaths] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [items, setItems] = useState<QuotationItemDraft[]>([]);
+  /** P0.1: las cotizaciones históricas (modelo plano) no exigen `quotation_items`. */
+  const [legacy, setLegacy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,6 +47,7 @@ function EditQuotationPage() {
         return;
       }
       setInitial(rowToForm(data));
+      setLegacy(isLegacyQuotation(data.created_at));
       const paths = (data.images ?? []) as string[];
       setPreviousPaths(paths);
       const urls = await signImageUrls(paths);
@@ -92,8 +96,13 @@ function EditQuotationPage() {
 
         onCancel={() => navigate({ to: "/quotations/$id", params: { id } })}
         onSubmit={async ({ form, newFiles, keptPaths }) => {
-          if (!form.firstName.trim() || (!form.accommodationName.trim() && items.length === 0)) {
-            toast.error("Nombre del cliente y al menos un servicio son obligatorios.");
+          if (!form.firstName.trim()) {
+            toast.error("El nombre del cliente es obligatorio.");
+            return;
+          }
+          // P0.1: sólo las cotizaciones del modelo vigente exigen ítems.
+          if (!legacy && items.length === 0) {
+            toast.error("Cargá al menos un servicio de la cotización.");
             return;
           }
           setSubmitting(true);

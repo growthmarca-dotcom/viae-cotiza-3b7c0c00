@@ -208,8 +208,9 @@ function NewQuotationPage() {
             toast.error("El nombre del cliente es obligatorio.");
             return;
           }
-          if (!form.accommodationName.trim() && items.length === 0) {
-            toast.error("Cargá al menos un servicio o el alojamiento principal.");
+          // P0.1: el modelo vigente exige servicios estructurados en `quotation_items`.
+          if (items.length === 0) {
+            toast.error("Cargá al menos un servicio de la cotización antes de generarla.");
             return;
           }
           if (needsOrgChoice && !organizationId) {
