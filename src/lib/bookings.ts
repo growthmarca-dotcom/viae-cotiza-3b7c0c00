@@ -301,7 +301,7 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     const { data: q } = await supabase
       .from("quotations")
-      .select("opportunity_id, organization_id, client_id, smart_quote_id, status")
+      .select("opportunity_id, organization_id, client_id, smart_quote_id, status, created_at")
       .eq("id", origin.quotationId)
       .maybeSingle();
     // Intervención 7: sólo una cotización aceptada puede convertirse en reserva.
@@ -310,6 +310,19 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
         "Sólo una cotización aceptada puede convertirse en reserva. Estado actual: " +
           String(q.status),
       );
+    }
+    // P0.1: las cotizaciones del modelo vigente deben tener servicios en
+    // `quotation_items`. Las históricas (modelo plano) quedan exceptuadas.
+    if (q && !isLegacyQuotation(q.created_at)) {
+      const { count } = await supabase
+        .from("quotation_items")
+        .select("id", { count: "exact", head: true })
+        .eq("quotation_id", origin.quotationId);
+      if (!count) {
+        throw new Error(
+          "La cotización no tiene servicios cargados: agregá al menos un servicio antes de convertirla en reserva.",
+        );
+      }
     }
     if (q) {
       opportunityId = opportunityId ?? q.opportunity_id ?? null;
