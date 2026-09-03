@@ -44,6 +44,8 @@ import {
   moveOpportunityStage,
   sourceLabel,
   stageClasses,
+  stageGroup,
+
   type Opportunity,
   type OpportunityHistoryRow,
   type OpportunityStage,
