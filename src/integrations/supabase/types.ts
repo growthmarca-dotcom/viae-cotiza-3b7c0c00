@@ -6873,6 +6873,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      log_pipeline_close_issue: {
+        Args: { _details?: Json; _opportunity_id: string }
+        Returns: undefined
+      }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       notify_operations_team: {
         Args: {

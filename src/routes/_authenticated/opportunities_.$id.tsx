@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { BookingCreateDialog } from "@/components/booking-create-dialog";
 import { OpportunityTrackingDialog } from "@/components/opportunity-tracking-dialog";
+import { OpportunityLostDialog } from "@/components/opportunity-lost-dialog";
 import { SmartQuoteCreateDialog } from "@/components/smart-quote-create-dialog";
 import { useAccount } from "@/hooks/use-account";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,8 @@ import {
   moveOpportunityStage,
   sourceLabel,
   stageClasses,
+  stageGroup,
+
   type Opportunity,
   type OpportunityHistoryRow,
   type OpportunityStage,
@@ -98,6 +101,7 @@ function OpportunityDetailPage() {
   const [stageConfig, setStageConfig] = useState<StageConfig[]>([]);
   const [myAgentId, setMyAgentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lostOpen, setLostOpen] = useState(false);
   const [moving, setMoving] = useState(false);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -297,7 +301,7 @@ function OpportunityDetailPage() {
             )}
           </dl>
 
-          <div className="max-w-sm">
+          <div className="max-w-sm space-y-3">
             <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
               Cambiar etapa
             </p>
@@ -313,7 +317,26 @@ function OpportunityDetailPage() {
                 ))}
               </SelectContent>
             </Select>
+            {stageGroup(opportunity.stage) === "open" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                disabled={!editable || moving}
+                onClick={() => setLostOpen(true)}
+              >
+                Marcar oportunidad como perdida
+              </Button>
+            )}
+            <OpportunityLostDialog
+              open={lostOpen}
+              onOpenChange={setLostOpen}
+              opportunityId={opportunity.id}
+              opportunityTitle={opportunity.title}
+              onClosed={load}
+            />
           </div>
+
         </section>
 
         <section className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">

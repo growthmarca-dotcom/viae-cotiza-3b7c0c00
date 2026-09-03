@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/currency";
 import { createBooking } from "@/lib/bookings";
+import { closeOpportunityAsWon, logPipelineCloseIssue } from "@/lib/opportunities";
 
 export type QuotationConvertSummary = {
   quotationId: string;
@@ -27,6 +28,8 @@ export type QuotationConvertSummary = {
   amount: number;
   currency: string;
   exchangeRate: number | null;
+  /** Oportunidad asociada: se cierra como ganada al confirmar (Intervención 8). */
+  opportunityId?: string | null;
 };
 
 type Props = {
@@ -40,6 +43,7 @@ type Props = {
  * Intervención 7 — Conversión asistida de cotización aceptada -> reserva.
  * Solo confirma: la creación reutiliza `createBooking()` (idempotente por
  * `bookings.quotation_id`) y su traslado de servicios y pasajeros.
+ * Intervención 8 — tras la reserva cierra la oportunidad como ganada.
  */
 export function QuotationConvertDialog({ open, onOpenChange, summary, onConverted }: Props) {
   const [saving, setSaving] = useState(false);
@@ -64,6 +68,26 @@ export function QuotationConvertDialog({ open, onOpenChange, summary, onConverte
             : "Reserva generada por conversión de una cotización aceptada.",
         },
       );
+
+      // El cierre de la oportunidad no puede invalidar la reserva ya creada,
+      // pero tampoco se oculta: se audita y se avisa para poder reintentar.
+      if (summary.opportunityId) {
+        try {
+          await closeOpportunityAsWon(summary.opportunityId);
+        } catch (closeErr) {
+          const message =
+            closeErr instanceof Error ? closeErr.message : "Error desconocido al cerrar la etapa";
+          await logPipelineCloseIssue(summary.opportunityId, {
+            booking_id: bookingId,
+            quotation_id: summary.quotationId,
+            error: message,
+          }).catch(() => undefined);
+          toast.error(
+            `La reserva se creó, pero no se pudo cerrar la oportunidad como ganada: ${message}. Podés reintentar el cierre desde la cotización.`,
+          );
+        }
+      }
+
       onOpenChange(false);
       onConverted(bookingId);
     } catch (err) {
@@ -72,6 +96,7 @@ export function QuotationConvertDialog({ open, onOpenChange, summary, onConverte
       setSaving(false);
     }
   }
+
 
   const dates =
     summary.travelStart || summary.travelEnd
