@@ -162,7 +162,10 @@ function SettlementsPage() {
             <SelectItem value="draft">Borrador</SelectItem>
             <SelectItem value="pending_review">En revisión</SelectItem>
             <SelectItem value="approved">Aprobada</SelectItem>
-            <SelectItem value="settled">Liquidada</SelectItem>
+            <SelectItem value="invoice_pending">Factura pendiente</SelectItem>
+            <SelectItem value="invoice_review">Factura en revisión</SelectItem>
+            <SelectItem value="ready_for_payment">Lista para pago</SelectItem>
+            <SelectItem value="settled">Pagada</SelectItem>
           </SelectContent>
         </Select>
 
