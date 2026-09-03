@@ -315,7 +315,26 @@ function OpportunityDetailPage() {
                 ))}
               </SelectContent>
             </Select>
+            {stageGroup(opportunity.stage) === "open" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                disabled={!editable || moving}
+                onClick={() => setLostOpen(true)}
+              >
+                Marcar oportunidad como perdida
+              </Button>
+            )}
+            <OpportunityLostDialog
+              open={lostOpen}
+              onOpenChange={setLostOpen}
+              opportunityId={opportunity.id}
+              opportunityTitle={opportunity.title}
+              onClosed={load}
+            />
           </div>
+
         </section>
 
         <section className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
