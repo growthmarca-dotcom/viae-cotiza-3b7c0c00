@@ -316,9 +316,16 @@ function QuotationDetailPage() {
             ))}
           </div>
         </div>
-        {q.status === "accepted" && (
+        {q.status === "accepted" ? (
           <p className="mt-3 text-xs text-muted-foreground">
             Una cotización aceptada es definitiva: no puede volver a borrador ni cambiar de estado.
+            {booking
+              ? ` Reserva ${booking.booking_number} generada a partir de esta cotización.`
+              : " Ya podés convertirla en reserva."}
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            La conversión a reserva se habilita únicamente cuando la cotización está aceptada.
           </p>
         )}
       </div>
