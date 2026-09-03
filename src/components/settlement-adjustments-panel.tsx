@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { formatMoney } from "@/lib/currency";
 import {
+  ADJUSTMENT_HISTORY_LABELS,
   ADJUSTMENT_REASONS,
   ADJUSTMENT_STATUS_CLASSES,
   ADJUSTMENT_STATUS_LABELS,
@@ -28,6 +29,7 @@ import {
   createAdjustment,
   documentTypeLabel,
   getPayableAmount,
+  listAdjustmentHistory,
   listAvailableBalances,
   listSettlementAdjustments,
   listSettlementApplications,
@@ -92,6 +94,10 @@ export function SettlementAdjustmentsPanel({
   const { data: payable = 0 } = useQuery({
     queryKey: ["settlement-payable", settlement.id],
     queryFn: () => getPayableAmount(settlement.id),
+  });
+  const { data: adjHistory = [] } = useQuery({
+    queryKey: ["settlement-adjustment-history", settlement.id],
+    queryFn: () => listAdjustmentHistory(settlement.id),
   });
   const { data: balances = [] } = useQuery({
     queryKey: [
@@ -635,6 +641,26 @@ export function SettlementAdjustmentsPanel({
                   </div>
                 </li>
               ))}
+          </ul>
+        </div>
+      )}
+
+      {adjHistory.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Historial de ajustes y conciliación</h3>
+          <ul className="space-y-2">
+            {adjHistory.map((h) => (
+              <li key={h.id} className="rounded-xl border border-border bg-card p-3 text-sm">
+                <p className="font-medium">{ADJUSTMENT_HISTORY_LABELS[h.action] ?? h.action}</p>
+                {h.comment && <p className="text-muted-foreground">{h.comment}</p>}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {new Date(h.created_at).toLocaleString("es-AR", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+              </li>
+            ))}
           </ul>
         </div>
       )}
