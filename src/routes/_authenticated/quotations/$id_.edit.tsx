@@ -46,6 +46,7 @@ function EditQuotationPage() {
         return;
       }
       setInitial(rowToForm(data));
+      setLegacy(isLegacyQuotation(data.created_at));
       const paths = (data.images ?? []) as string[];
       setPreviousPaths(paths);
       const urls = await signImageUrls(paths);
