@@ -32,7 +32,6 @@ import {
   type AgentInput,
   type AgentStatus,
   type AgentWaStatus,
-  type CommissionType,
 } from "@/lib/agents";
 import { AGENT_AVAILABILITIES, type AgentAvailability } from "@/lib/resources";
 
