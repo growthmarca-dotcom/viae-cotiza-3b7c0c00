@@ -263,7 +263,7 @@ function QuotationDetailPage() {
             >
               <TicketCheck className="mr-2 h-4 w-4" /> Convertir a reserva
             </Button>
-          )}
+          ) : null}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
