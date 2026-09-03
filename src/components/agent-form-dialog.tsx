@@ -232,58 +232,10 @@ export function AgentFormDialog({
             />
           </div>
 
-          <SectionTitle>Perfil comercial (sólo registro, sin cálculo)</SectionTitle>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div>
-              <Label>Tipo de comisión</Label>
-              <Select
-                value={form.commission_type === "" ? "none" : form.commission_type}
-                onValueChange={(v) =>
-                  set("commission_type", v === "none" ? "" : (v as CommissionType))
-                }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin definir</SelectItem>
-                  {COMMISSION_TYPES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Valor</Label>
-              <Input
-                className="mt-1"
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.commission_value}
-                onChange={(e) => set("commission_value", e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Moneda</Label>
-              <Select
-                value={form.commission_currency}
-                onValueChange={(v) => set("commission_currency", v)}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            La configuración de comisiones no se define en el agente: proviene exclusivamente de
+            los acuerdos comerciales y sus reglas (Acuerdos comerciales → Reglas). La autorización
+            para cobrar comisiones se gestiona en la ficha del agente.
           </div>
 
           <SectionTitle>Acceso al sistema</SectionTitle>
@@ -418,18 +370,6 @@ export function AgentFormDialog({
               <Switch
                 checked={form.auto_receive_leads}
                 onCheckedChange={(v) => set("auto_receive_leads", v)}
-              />
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <div>
-                <Label className="font-normal">Autorizado a recibir liquidaciones</Label>
-                <p className="text-xs text-muted-foreground">
-                  Habilita liquidar comisiones a nombre del agente.
-                </p>
-              </div>
-              <Switch
-                checked={form.settlement_authorized}
-                onCheckedChange={(v) => set("settlement_authorized", v)}
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
