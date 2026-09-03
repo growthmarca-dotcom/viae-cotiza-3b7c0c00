@@ -76,8 +76,6 @@ export function notificationKindClasses(kind: string) {
     case "operation_service":
       return "bg-primary/10 text-primary border-primary/30";
 
-    case "quotation_client_response":
-      return notificationResponseStatusClasses(kind);
     case "transport_schedule":
     case "operation_incident":
       return "bg-destructive/10 text-destructive border-destructive/30";
