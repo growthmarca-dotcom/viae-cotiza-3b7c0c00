@@ -28,7 +28,7 @@ import {
   rowsTotal,
   type QuotationItemRow,
 } from "@/lib/quotationItems";
-import { BookingCreateDialog } from "@/components/booking-create-dialog";
+import { QuotationConvertDialog } from "@/components/quotation-convert-dialog";
 import { getBookingByQuotation, type Booking } from "@/lib/bookings";
 import {
   canTransition,
