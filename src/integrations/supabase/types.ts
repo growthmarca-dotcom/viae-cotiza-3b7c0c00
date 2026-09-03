@@ -48,6 +48,7 @@ export type Database = {
           notes: string | null
           person_id: string | null
           priority: number
+          settlement_authorized: boolean
           specialties: string[]
           state: string | null
           status: Database["public"]["Enums"]["agent_status"]
@@ -93,6 +94,7 @@ export type Database = {
           notes?: string | null
           person_id?: string | null
           priority?: number
+          settlement_authorized?: boolean
           specialties?: string[]
           state?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
@@ -138,6 +140,7 @@ export type Database = {
           notes?: string | null
           person_id?: string | null
           priority?: number
+          settlement_authorized?: boolean
           specialties?: string[]
           state?: string | null
           status?: Database["public"]["Enums"]["agent_status"]
@@ -1498,6 +1501,8 @@ export type Database = {
           organization_id: string | null
           party_type: Database["public"]["Enums"]["agreement_party"] | null
           priority: number
+          settlement_delay_days: number
+          settlement_frequency: Database["public"]["Enums"]["settlement_frequency"]
           status: Database["public"]["Enums"]["agreement_status"]
           title: string | null
           updated_at: string
@@ -1525,6 +1530,8 @@ export type Database = {
           organization_id?: string | null
           party_type?: Database["public"]["Enums"]["agreement_party"] | null
           priority?: number
+          settlement_delay_days?: number
+          settlement_frequency?: Database["public"]["Enums"]["settlement_frequency"]
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
@@ -1552,6 +1559,8 @@ export type Database = {
           organization_id?: string | null
           party_type?: Database["public"]["Enums"]["agreement_party"] | null
           priority?: number
+          settlement_delay_days?: number
+          settlement_frequency?: Database["public"]["Enums"]["settlement_frequency"]
           status?: Database["public"]["Enums"]["agreement_status"]
           title?: string | null
           updated_at?: string
@@ -1620,6 +1629,160 @@ export type Database = {
             columns: ["commission_id"]
             isOneToOne: false
             referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_settlement_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          comment: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["settlement_status"] | null
+          id: string
+          settlement_id: string
+          to_status: Database["public"]["Enums"]["settlement_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["settlement_status"] | null
+          id?: string
+          settlement_id: string
+          to_status?: Database["public"]["Enums"]["settlement_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["settlement_status"] | null
+          id?: string
+          settlement_id?: string
+          to_status?: Database["public"]["Enums"]["settlement_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlement_history_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_settlement_items: {
+        Row: {
+          checkout_date: string | null
+          commission_amount: number
+          commission_id: string
+          created_at: string
+          currency: string
+          eligible_on: string | null
+          id: string
+          settlement_id: string
+        }
+        Insert: {
+          checkout_date?: string | null
+          commission_amount: number
+          commission_id: string
+          created_at?: string
+          currency: string
+          eligible_on?: string | null
+          id?: string
+          settlement_id: string
+        }
+        Update: {
+          checkout_date?: string | null
+          commission_amount?: number
+          commission_id?: string
+          created_at?: string
+          currency?: string
+          eligible_on?: string | null
+          id?: string
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlement_items_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_settlement_items_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_settlements: {
+        Row: {
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          commission_count: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          notes: string | null
+          organization_id: string | null
+          period_end: string
+          period_start: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["settlement_status"]
+          total_commission_amount: number
+          updated_at: string
+        }
+        Insert: {
+          beneficiary_id: string
+          beneficiary_type: Database["public"]["Enums"]["agreement_party"]
+          commission_count?: number
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          period_end: string
+          period_start: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["settlement_status"]
+          total_commission_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          beneficiary_id?: string
+          beneficiary_type?: Database["public"]["Enums"]["agreement_party"]
+          commission_count?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          period_end?: string
+          period_start?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["settlement_status"]
+          total_commission_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_settlements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -6821,6 +6984,10 @@ export type Database = {
       }
       expire_due_quotations: { Args: never; Returns: number }
       expire_stale_invitations: { Args: never; Returns: number }
+      generate_commission_settlements: {
+        Args: { _as_of?: string }
+        Returns: Json
+      }
       has_org_role: {
         Args: { _org_id: string; _role: string; _user_id: string }
         Returns: boolean
@@ -7021,6 +7188,18 @@ export type Database = {
           _comment?: string
           _commission_id: string
           _to: Database["public"]["Enums"]["commission_status"]
+        }
+        Returns: Json
+      }
+      set_settlement_notes: {
+        Args: { _notes: string; _settlement_id: string }
+        Returns: Json
+      }
+      set_settlement_status: {
+        Args: {
+          _comment?: string
+          _settlement_id: string
+          _to: Database["public"]["Enums"]["settlement_status"]
         }
         Returns: Json
       }
@@ -7484,6 +7663,8 @@ export type Database = {
         | "rental"
         | "package"
       search_source_type: "internal" | "api" | "manual"
+      settlement_frequency: "monthly" | "biweekly"
+      settlement_status: "draft" | "pending_review" | "approved" | "settled"
       smart_quote_item_type:
         | "accommodation"
         | "activity"
@@ -8170,6 +8351,8 @@ export const Constants = {
         "package",
       ],
       search_source_type: ["internal", "api", "manual"],
+      settlement_frequency: ["monthly", "biweekly"],
+      settlement_status: ["draft", "pending_review", "approved", "settled"],
       smart_quote_item_type: [
         "accommodation",
         "activity",

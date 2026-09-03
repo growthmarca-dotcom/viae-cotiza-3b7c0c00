@@ -92,6 +92,13 @@
       "when": 1788398317373,
       "tag": "0012_commissions_hardening_phase_b2",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788400387367,
+      "tag": "0013_commission_settlements_phase_c11",
+      "breakpoints": true
     }
   ]
 }

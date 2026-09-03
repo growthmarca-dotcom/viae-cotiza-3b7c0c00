@@ -421,6 +421,18 @@ export function AgentFormDialog({
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+              <div>
+                <Label className="font-normal">Autorizado a recibir liquidaciones</Label>
+                <p className="text-xs text-muted-foreground">
+                  Habilita liquidar comisiones a nombre del agente.
+                </p>
+              </div>
+              <Switch
+                checked={form.settlement_authorized}
+                onCheckedChange={(v) => set("settlement_authorized", v)}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
               <Label className="font-normal">Disponible para asignación</Label>
               <Switch
                 checked={form.available_for_assignment}

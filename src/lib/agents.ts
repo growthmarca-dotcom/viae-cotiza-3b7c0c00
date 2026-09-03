@@ -114,6 +114,11 @@ export type AgentInput = {
   auto_receive_leads: boolean;
   available_for_assignment: boolean;
   availability: AgentAvailability;
+  /**
+   * Autoriza al agente a recibir comisiones liquidadas a título propio.
+   * NO participa del cálculo: los importes siempre vienen del motor de acuerdos.
+   */
+  settlement_authorized: boolean;
 };
 
 export const EMPTY_AGENT: AgentInput = {
@@ -132,6 +137,7 @@ export const EMPTY_AGENT: AgentInput = {
   commission_type: "",
   commission_value: "",
   commission_currency: "USD",
+  settlement_authorized: false,
   access_status: "none",
   invited_email: "",
   wa_number: "",
@@ -163,6 +169,7 @@ export function agentToInput(a: Agent): AgentInput {
     commission_type: (a.commission_type as CommissionType | null) ?? "",
     commission_value: a.commission_value != null ? String(a.commission_value) : "",
     commission_currency: a.commission_currency ?? "USD",
+    settlement_authorized: a.settlement_authorized ?? false,
     access_status: a.access_status as AgentAccessStatus,
     invited_email: a.invited_email ?? "",
     wa_number: a.wa_number ?? "",
@@ -198,6 +205,7 @@ function toPayload(input: AgentInput) {
     commission_type: input.commission_type === "" ? null : input.commission_type,
     commission_value: num(input.commission_value),
     commission_currency: input.commission_currency || "USD",
+    settlement_authorized: input.settlement_authorized,
     access_status: input.access_status,
     invited_email: text(input.invited_email),
     invited_at: input.access_status === "invited" ? new Date().toISOString() : null,

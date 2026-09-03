@@ -17,6 +17,7 @@ import { Route as PropuestaTokenRouteImport } from './routes/propuesta.$token'
 import { Route as InvitacionTokenRouteImport } from './routes/invitacion.$token'
 import { Route as CotizacionTokenRouteImport } from './routes/cotizacion.$token'
 import { Route as AuthenticatedTransportRouteImport } from './routes/_authenticated/transport'
+import { Route as AuthenticatedSettlementsRouteImport } from './routes/_authenticated/settlements'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
@@ -36,6 +37,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSmartQuotesIndexRouteImport } from './routes/_authenticated/smart-quotes/index'
 import { Route as AuthenticatedQuotationsIndexRouteImport } from './routes/_authenticated/quotations/index'
 import { Route as AuthenticatedSmartQuotesIdRouteImport } from './routes/_authenticated/smart-quotes/$id'
+import { Route as AuthenticatedSettlementsIdRouteImport } from './routes/_authenticated/settlements_.$id'
 import { Route as AuthenticatedResourcesIdRouteImport } from './routes/_authenticated/resources_.$id'
 import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authenticated/quotations/new'
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
@@ -87,6 +89,12 @@ const AuthenticatedTransportRoute = AuthenticatedTransportRouteImport.update({
   path: '/transport',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettlementsRoute =
+  AuthenticatedSettlementsRouteImport.update({
+    id: '/settlements',
+    path: '/settlements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -188,6 +196,12 @@ const AuthenticatedSmartQuotesIdRoute =
     path: '/smart-quotes/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettlementsIdRoute =
+  AuthenticatedSettlementsIdRouteImport.update({
+    id: '/settlements_/$id',
+    path: '/settlements/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedResourcesIdRoute =
   AuthenticatedResourcesIdRouteImport.update({
     id: '/resources_/$id',
@@ -270,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/settlements': typeof AuthenticatedSettlementsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -285,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
+  '/settlements/$id': typeof AuthenticatedSettlementsIdRoute
   '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
@@ -309,6 +325,7 @@ export interface FileRoutesByTo {
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/settlements': typeof AuthenticatedSettlementsRoute
   '/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -324,6 +341,7 @@ export interface FileRoutesByTo {
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
+  '/settlements/$id': typeof AuthenticatedSettlementsIdRoute
   '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes': typeof AuthenticatedSmartQuotesIndexRoute
@@ -350,6 +368,7 @@ export interface FileRoutesById {
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/settlements': typeof AuthenticatedSettlementsRoute
   '/_authenticated/transport': typeof AuthenticatedTransportRoute
   '/cotizacion/$token': typeof CotizacionTokenRoute
   '/invitacion/$token': typeof InvitacionTokenRoute
@@ -365,6 +384,7 @@ export interface FileRoutesById {
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
   '/_authenticated/quotations/new': typeof AuthenticatedQuotationsNewRoute
   '/_authenticated/resources_/$id': typeof AuthenticatedResourcesIdRoute
+  '/_authenticated/settlements_/$id': typeof AuthenticatedSettlementsIdRoute
   '/_authenticated/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
@@ -391,6 +411,7 @@ export interface FileRouteTypes {
     | '/providers'
     | '/resources'
     | '/settings'
+    | '/settlements'
     | '/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -406,6 +427,7 @@ export interface FileRouteTypes {
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
+    | '/settlements/$id'
     | '/smart-quotes/$id'
     | '/quotations/'
     | '/smart-quotes/'
@@ -430,6 +452,7 @@ export interface FileRouteTypes {
     | '/providers'
     | '/resources'
     | '/settings'
+    | '/settlements'
     | '/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -445,6 +468,7 @@ export interface FileRouteTypes {
     | '/quotations/$id'
     | '/quotations/new'
     | '/resources/$id'
+    | '/settlements/$id'
     | '/smart-quotes/$id'
     | '/quotations'
     | '/smart-quotes'
@@ -470,6 +494,7 @@ export interface FileRouteTypes {
     | '/_authenticated/providers'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
+    | '/_authenticated/settlements'
     | '/_authenticated/transport'
     | '/cotizacion/$token'
     | '/invitacion/$token'
@@ -485,6 +510,7 @@ export interface FileRouteTypes {
     | '/_authenticated/quotations/$id'
     | '/_authenticated/quotations/new'
     | '/_authenticated/resources_/$id'
+    | '/_authenticated/settlements_/$id'
     | '/_authenticated/smart-quotes/$id'
     | '/_authenticated/quotations/'
     | '/_authenticated/smart-quotes/'
@@ -557,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/transport'
       fullPath: '/transport'
       preLoaderRoute: typeof AuthenticatedTransportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settlements': {
+      id: '/_authenticated/settlements'
+      path: '/settlements'
+      fullPath: '/settlements'
+      preLoaderRoute: typeof AuthenticatedSettlementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -692,6 +725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSmartQuotesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settlements_/$id': {
+      id: '/_authenticated/settlements_/$id'
+      path: '/settlements/$id'
+      fullPath: '/settlements/$id'
+      preLoaderRoute: typeof AuthenticatedSettlementsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/resources_/$id': {
       id: '/_authenticated/resources_/$id'
       path: '/resources/$id'
@@ -789,6 +829,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSettlementsRoute: typeof AuthenticatedSettlementsRoute
   AuthenticatedTransportRoute: typeof AuthenticatedTransportRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
@@ -800,6 +841,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
   AuthenticatedQuotationsNewRoute: typeof AuthenticatedQuotationsNewRoute
   AuthenticatedResourcesIdRoute: typeof AuthenticatedResourcesIdRoute
+  AuthenticatedSettlementsIdRoute: typeof AuthenticatedSettlementsIdRoute
   AuthenticatedSmartQuotesIdRoute: typeof AuthenticatedSmartQuotesIdRoute
   AuthenticatedQuotationsIndexRoute: typeof AuthenticatedQuotationsIndexRoute
   AuthenticatedSmartQuotesIndexRoute: typeof AuthenticatedSmartQuotesIndexRoute
@@ -823,6 +865,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSettlementsRoute: AuthenticatedSettlementsRoute,
   AuthenticatedTransportRoute: AuthenticatedTransportRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
@@ -834,6 +877,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,
   AuthenticatedQuotationsNewRoute: AuthenticatedQuotationsNewRoute,
   AuthenticatedResourcesIdRoute: AuthenticatedResourcesIdRoute,
+  AuthenticatedSettlementsIdRoute: AuthenticatedSettlementsIdRoute,
   AuthenticatedSmartQuotesIdRoute: AuthenticatedSmartQuotesIdRoute,
   AuthenticatedQuotationsIndexRoute: AuthenticatedQuotationsIndexRoute,
   AuthenticatedSmartQuotesIndexRoute: AuthenticatedSmartQuotesIndexRoute,

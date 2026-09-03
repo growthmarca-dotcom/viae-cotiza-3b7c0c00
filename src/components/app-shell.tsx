@@ -55,7 +55,10 @@ const baseNav = [
 
 ] as const;
 
-const adminNav = [{ to: "/admin", label: "Administración", icon: ShieldCheck }] as const;
+const adminNav = [
+  { to: "/settlements", label: "Liquidaciones", icon: Wallet },
+  { to: "/admin", label: "Administración", icon: ShieldCheck },
+] as const;
 
 /** Central operativa: sólo administración y usuarios con rol Operaciones. */
 const operationsNav = [
