@@ -42,9 +42,16 @@ export function PersonLinkCard({
   onLink,
   suggestion,
   description,
+  organizationId,
 }: {
   personId: string | null;
   onLink: (personId: string | null) => Promise<void>;
+  /**
+   * Organización de contexto del registro. Se usa como organización de la
+   * persona cuando se crea una nueva identidad; si no se conoce, el usuario
+   * debe elegirla explícitamente (nunca se asume la primera de la lista).
+   */
+  organizationId?: string | null;
   suggestion?: Partial<Pick<PersonInput, "first_name" | "last_name" | "email" | "phone">>;
   description?: string;
 }) {
@@ -86,7 +93,7 @@ export function PersonLinkCard({
       setOrgs(o);
       setForm({
         ...EMPTY_PERSON,
-        organization_id: o[0]?.id ?? "",
+        organization_id: organizationId ?? (o.length === 1 ? o[0]!.id : ""),
         first_name: suggestion?.first_name ?? "",
         last_name: suggestion?.last_name ?? "",
         email: suggestion?.email ?? "",
