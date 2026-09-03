@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 /**
@@ -75,7 +76,6 @@ export const PERSON_LINKED_TABLES: {
 /* Persons como fuente maestra de identidad (activación de la capa)    */
 /* ------------------------------------------------------------------ */
 
-import { supabase } from "@/integrations/supabase/client";
 
 export const PERSON_DOCUMENT_TYPES = ["DNI", "Pasaporte", "CUIT", "CUIL", "CI", "Otro"] as const;
 
