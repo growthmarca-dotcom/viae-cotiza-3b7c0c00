@@ -19,6 +19,7 @@ import {
   findOpenOpportunityForClient,
   formToRow,
   listMyQuotationOrganizations,
+  organizationIdForOpportunity,
   quotationCreateErrorMessage,
   saveQuotationImages,
 } from "@/lib/quotations";
@@ -265,7 +266,8 @@ function NewQuotationPage() {
               amount: Number(row.total_amount) || 0,
               currency: row.currency,
               opportunityId: existingOpportunityId,
-              organizationId: organizationId || (orgs.length === 1 ? orgs[0].id : null),
+              organizationId:
+                inheritedOrgId ?? (organizationId || (orgs.length === 1 ? orgs[0].id : null)),
             });
             if (opportunityId && opportunityId !== existingOpportunityId) {
               await supabase
