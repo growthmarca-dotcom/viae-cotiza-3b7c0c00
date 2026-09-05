@@ -19,6 +19,7 @@ import {
   findOpenOpportunityForClient,
   formToRow,
   listMyQuotationOrganizations,
+  organizationIdForOpportunity,
   quotationCreateErrorMessage,
   saveQuotationImages,
 } from "@/lib/quotations";
@@ -232,6 +233,11 @@ function NewQuotationPage() {
               leadOpportunityId ??
               (clientId ? await findOpenOpportunityForClient(clientId) : null);
 
+            // v1.10.8.1: si la cotización nace de una oportunidad, hereda su
+            // organización propietaria; solo si no hay oportunidad se resuelve
+            // por membresía del usuario.
+            const inheritedOrgId = await organizationIdForOpportunity(existingOpportunityId);
+
             const row = formToRow(form);
             const { data: inserted, error: insertErr } = await supabase
               .from("quotations")
@@ -240,7 +246,8 @@ function NewQuotationPage() {
                 user_id: userId,
                 client_id: clientId,
                 lead_id: lead?.id ?? null,
-                organization_id: await resolveMyOrganizationId(organizationId || null),
+                organization_id:
+                  inheritedOrgId ?? (await resolveMyOrganizationId(organizationId || null)),
                 opportunity_id: existingOpportunityId,
                 status: "draft",
               })
@@ -259,7 +266,8 @@ function NewQuotationPage() {
               amount: Number(row.total_amount) || 0,
               currency: row.currency,
               opportunityId: existingOpportunityId,
-              organizationId: organizationId || (orgs.length === 1 ? orgs[0].id : null),
+              organizationId:
+                inheritedOrgId ?? (organizationId || (orgs.length === 1 ? orgs[0].id : null)),
             });
             if (opportunityId && opportunityId !== existingOpportunityId) {
               await supabase

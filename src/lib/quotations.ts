@@ -204,6 +204,24 @@ export async function listMyQuotationOrganizations(): Promise<OrganizationOption
 }
 
 /**
+ * Organización propietaria de una oportunidad (v1.10.8.1 — consolidación
+ * Opportunity ↔ Quotation). La cotización que nace de una oportunidad hereda
+ * SIEMPRE esta organización: no se toma un valor arbitrario del frontend.
+ */
+export async function organizationIdForOpportunity(
+  opportunityId: string | null | undefined,
+): Promise<string | null> {
+  if (!opportunityId) return null;
+  const { data, error } = await supabase
+    .from("opportunities")
+    .select("organization_id")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (error) return null;
+  return data?.organization_id ?? null;
+}
+
+/**
  * Oportunidad abierta del cliente reutilizable para una nueva cotización.
  * Evita duplicar oportunidades por cada propuesta enviada.
  */
