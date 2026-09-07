@@ -394,11 +394,13 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   }
 
   // P0.2 — Cierre del ciclo comercial: al crear una reserva con oportunidad
-  // asociada, la oportunidad se cierra como ganada (`booked`, grupo won).
-  // La conversión cotización -> reserva ya cierra la oportunidad desde
-  // `quotation-convert-dialog`; aquí sólo se cubren las creaciones directas
-  // (ficha de oportunidad, panel del cliente) para no duplicar el cierre.
-  if (opportunityId && !origin.quotationId) {
+  // asociada, la oportunidad se cierra como ganada (`booked`, grupo won),
+  // cualquiera sea la pantalla de origen (ficha de oportunidad, panel del
+  // cliente o conversión de cotización). El cierre es idempotente
+  // (`closeOpportunityAsWon` devuelve "already" si ya está ganada), por lo que
+  // la conversión cotización -> reserva no duplica historial aunque
+  // `quotation-convert-dialog` también invoque el cierre.
+  if (opportunityId) {
     await tryCloseOpportunityAsWon(opportunityId, bookingId);
   }
   return bookingId;
