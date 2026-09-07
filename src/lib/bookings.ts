@@ -2,6 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolveMyOrganizationId } from "@/lib/tenant";
 import { getExchangeRate } from "@/lib/money";
 import { isLegacyQuotation } from "@/lib/quotationItems";
+import {
+  closeOpportunityAsWon,
+  logPipelineCloseIssue,
+  stageGroup,
+  type OpportunityStage,
+} from "@/lib/opportunities";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Booking = Tables<"bookings">;
@@ -386,7 +392,59 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     await copyQuotationContentToBooking(origin.quotationId, bookingId, uid, stamp);
   }
+
+  // P0.2 — Cierre del ciclo comercial: al crear una reserva con oportunidad
+  // asociada, la oportunidad se cierra como ganada (`booked`, grupo won),
+  // cualquiera sea la pantalla de origen (ficha de oportunidad, panel del
+  // cliente o conversión de cotización). El cierre es idempotente
+  // (`closeOpportunityAsWon` devuelve "already" si ya está ganada), por lo que
+  // la conversión cotización -> reserva no duplica historial aunque
+  // `quotation-convert-dialog` también invoque el cierre.
+  if (opportunityId) {
+    await tryCloseOpportunityAsWon(opportunityId, bookingId);
+  }
   return bookingId;
+}
+
+/**
+ * P0.2 — Cierre tolerante a fallos de la oportunidad tras crear la reserva.
+ * Reutiliza `closeOpportunityAsWon()` / `logPipelineCloseIssue()`; no es una
+ * segunda implementación del cierre ni una política nueva:
+ * - La reserva es la operación principal: si el cierre falla, la reserva se
+ *   mantiene, el problema se audita con `logPipelineCloseIssue()` y la
+ *   aplicación informa el aviso sin revertir nada.
+ * - Una oportunidad `lost`/`cancelled` NO se mueve silenciosamente a ganada
+ *   (no hay reapertura automática sin decisión de producto): se audita el
+ *   caso y se conserva su etapa.
+ */
+async function tryCloseOpportunityAsWon(opportunityId: string, bookingId: string): Promise<void> {
+  try {
+    const { data: opp, error } = await supabase
+      .from("opportunities")
+      .select("stage")
+      .eq("id", opportunityId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!opp) throw new Error("La oportunidad no existe o no tenés acceso.");
+    if (stageGroup(opp.stage as OpportunityStage) === "lost") {
+      await logPipelineCloseIssue(opportunityId, {
+        booking_id: bookingId,
+        reason: "opportunity_lost_or_cancelled",
+        stage: opp.stage,
+      }).catch(() => undefined);
+      return;
+    }
+    await closeOpportunityAsWon(opportunityId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await logPipelineCloseIssue(opportunityId, {
+      booking_id: bookingId,
+      error: message,
+    }).catch(() => undefined);
+    console.warn(
+      `La reserva ${bookingId} se creó, pero no se pudo cerrar la oportunidad como ganada: ${message}`,
+    );
+  }
 }
 
 /** Categoría de `quotation_items` -> tipo de servicio operativo. */
