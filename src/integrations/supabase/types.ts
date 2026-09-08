@@ -6469,6 +6469,9 @@ export type Database = {
         Row: {
           agent_id: string | null
           client_id: string | null
+          client_responded_at: string | null
+          client_response_channel: string | null
+          client_response_note: string | null
           created_at: string
           currency: string
           destination_city: string | null
@@ -6495,6 +6498,9 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           client_id?: string | null
+          client_responded_at?: string | null
+          client_response_channel?: string | null
+          client_response_note?: string | null
           created_at?: string
           currency?: string
           destination_city?: string | null
@@ -6521,6 +6527,9 @@ export type Database = {
         Update: {
           agent_id?: string | null
           client_id?: string | null
+          client_responded_at?: string | null
+          client_response_channel?: string | null
+          client_response_note?: string | null
           created_at?: string
           currency?: string
           destination_city?: string | null
