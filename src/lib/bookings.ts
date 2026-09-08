@@ -3,6 +3,13 @@ import { resolveMyOrganizationId } from "@/lib/tenant";
 import { getExchangeRate } from "@/lib/money";
 import { isLegacyQuotation } from "@/lib/quotationItems";
 import {
+  buildPassengerRows,
+  buildServiceRows,
+  mergeQuotationHeader,
+  type QuotationHeader,
+  type QuotationItemLike,
+} from "@/lib/bookingConversion";
+import {
   closeOpportunityAsWon,
   logPipelineCloseIssue,
   stageGroup,
