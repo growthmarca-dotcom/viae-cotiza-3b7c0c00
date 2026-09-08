@@ -303,7 +303,15 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     }
   }
 
+  // Idempotencia por oportunidad: la creación directa desde la ficha de la
+  // oportunidad o el panel del cliente no debe generar una segunda reserva
+  // para la misma oportunidad.
+  if (!origin.quotationId && origin.opportunityId) {
+    const existing = await getBookingByOpportunity(origin.opportunityId);
+    if (existing) return existing.id;
+  }
 
+  let header: BookingInput = { ...input };
   let opportunityId = origin.opportunityId ?? null;
   let organizationId = input.organization_id ?? null;
   let clientId = input.client_id;
@@ -315,7 +323,9 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     const { data: q } = await supabase
       .from("quotations")
-      .select("opportunity_id, organization_id, client_id, smart_quote_id, status, created_at")
+      .select(
+        "opportunity_id, organization_id, client_id, smart_quote_id, status, created_at, destination, travel_start, travel_end, total_amount, currency, exchange_rate",
+      )
       .eq("id", origin.quotationId)
       .maybeSingle();
     // Intervención 7: sólo una cotización aceptada puede convertirse en reserva.
@@ -343,8 +353,12 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
       organizationId = organizationId ?? q.organization_id ?? null;
       clientId = clientId || (q.client_id ?? clientId);
       smartQuoteId = smartQuoteId ?? q.smart_quote_id ?? null;
+      // Fechas, importe y moneda de la cotización cuando el formulario no los
+      // envió: la reserva no queda con datos comerciales vacíos.
+      header = mergeQuotationHeader(header, q as QuotationHeader);
     }
   }
+
 
   // Origen Smart Quote (v1.10.9.1): completa contexto comercial faltante.
   if (smartQuoteId) {
