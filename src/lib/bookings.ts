@@ -3,6 +3,13 @@ import { resolveMyOrganizationId } from "@/lib/tenant";
 import { getExchangeRate } from "@/lib/money";
 import { isLegacyQuotation } from "@/lib/quotationItems";
 import {
+  buildPassengerRows,
+  buildServiceRows,
+  mergeQuotationHeader,
+  type QuotationHeader,
+  type QuotationItemLike,
+} from "@/lib/bookingConversion";
+import {
   closeOpportunityAsWon,
   logPipelineCloseIssue,
   stageGroup,
@@ -296,7 +303,15 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     }
   }
 
+  // Idempotencia por oportunidad: la creación directa desde la ficha de la
+  // oportunidad o el panel del cliente no debe generar una segunda reserva
+  // para la misma oportunidad.
+  if (!origin.quotationId && origin.opportunityId) {
+    const existing = await getBookingByOpportunity(origin.opportunityId);
+    if (existing) return existing.id;
+  }
 
+  let header: BookingInput = { ...input };
   let opportunityId = origin.opportunityId ?? null;
   let organizationId = input.organization_id ?? null;
   let clientId = input.client_id;
@@ -308,7 +323,9 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
   if (origin.quotationId) {
     const { data: q } = await supabase
       .from("quotations")
-      .select("opportunity_id, organization_id, client_id, smart_quote_id, status, created_at")
+      .select(
+        "opportunity_id, organization_id, client_id, smart_quote_id, status, created_at, destination, travel_start, travel_end, total_amount, currency, exchange_rate",
+      )
       .eq("id", origin.quotationId)
       .maybeSingle();
     // Intervención 7: sólo una cotización aceptada puede convertirse en reserva.
@@ -336,8 +353,12 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
       organizationId = organizationId ?? q.organization_id ?? null;
       clientId = clientId || (q.client_id ?? clientId);
       smartQuoteId = smartQuoteId ?? q.smart_quote_id ?? null;
+      // Fechas, importe y moneda de la cotización cuando el formulario no los
+      // envió: la reserva no queda con datos comerciales vacíos.
+      header = mergeQuotationHeader(header, q as QuotationHeader);
     }
   }
+
 
   // Origen Smart Quote (v1.10.9.1): completa contexto comercial faltante.
   if (smartQuoteId) {
@@ -367,12 +388,12 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     }
   }
 
-  const stamp = await resolveAppliedRate(input.currency, input.exchange_rate);
+  const stamp = await resolveAppliedRate(header.currency, header.exchange_rate);
 
   const { data, error } = await supabase
     .from("bookings")
     .insert({
-      ...input,
+      ...header,
       ...stamp,
       client_id: clientId,
       assigned_agent_id: agentId,
@@ -447,17 +468,6 @@ async function tryCloseOpportunityAsWon(opportunityId: string, bookingId: string
   }
 }
 
-/** Categoría de `quotation_items` -> tipo de servicio operativo. */
-const ITEM_CATEGORY_TO_SERVICE_KIND: Record<string, string> = {
-  accommodation: "accommodation",
-  excursion: "excursion",
-  vehicle_rental: "car_rental",
-  transfer: "transfer",
-  insurance: "insurance",
-  flight: "flight",
-  other: "other",
-};
-
 /**
  * Traslado idempotente del contenido de la cotización a la reserva. Si la
  * reserva ya tiene servicios o pasajeros, no duplica nada.
@@ -479,7 +489,7 @@ async function copyQuotationContentToBooking(
       supabase
         .from("quotations")
         .select(
-          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id, pax_count",
+          "guest_first_name, guest_last_name, guest_email, guest_whatsapp, currency, organization_id, pax_count, total_amount, travel_start, travel_end, accommodation_name, accommodation_address",
         )
         .eq("id", quotationId)
         .maybeSingle(),
@@ -494,59 +504,33 @@ async function copyQuotationContentToBooking(
         .eq("booking_id", bookingId),
     ]);
 
-  if ((items ?? []).length > 0 && !existingServices) {
-    const rows = (items ?? []).map((i) => ({
-      booking_id: bookingId,
-      user_id: uid,
-      kind: (ITEM_CATEGORY_TO_SERVICE_KIND[i.category as string] ?? "other") as never,
-      title: (i.title as string) || "Servicio",
-      provider_name: (i.provider_name as string | null) ?? null,
-      service_date: (i.service_date as string | null) ?? null,
-      notes: (i.notes as string | null) ?? (i.description as string | null) ?? null,
-      organization_id: quotation?.organization_id ?? null,
-      sale_amount:
-        Number(i.quantity ?? 0) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0),
-      sale_currency: quotation?.currency ?? null,
-      applied_exchange_rate: stamp?.applied_exchange_rate ?? null,
-      applied_rate_date: stamp?.applied_rate_date ?? null,
-      applied_rate_source:
-        stamp?.applied_exchange_rate != null ? ("inherited" as const) : null,
-    }));
-    const { error } = await supabase.from("booking_services").insert(rows as never);
-    if (error) throw error;
+  if (!existingServices) {
+    const rows = buildServiceRows({
+      bookingId,
+      userId: uid,
+      items: (items ?? []) as QuotationItemLike[],
+      quotation: quotation as QuotationHeader | null,
+      stamp,
+    });
+    if (rows.length > 0) {
+      const { error } = await supabase.from("booking_services").insert(rows as never);
+      if (error) throw error;
+    }
   }
 
-  // Titular del viaje + acompañantes según el `pax_count` cotizado.
-  // Los acompañantes nacen como marcadores nominativos para que la operación
-  // sepa cuánta gente viaja; los datos reales se completan en el expediente.
-  const firstName = (quotation?.guest_first_name ?? "").trim();
-  const lastName = (quotation?.guest_last_name ?? "").trim();
-  if (!existingPax && (firstName || lastName)) {
-    const paxTotal = Math.max(1, Number(quotation?.pax_count ?? 1) || 1);
-    const rows = [
-      {
-        booking_id: bookingId,
-        user_id: uid,
-        first_name: firstName || "Titular",
-        last_name: lastName || "—",
-        email: quotation?.guest_email ?? null,
-        phone: quotation?.guest_whatsapp ?? null,
-        is_lead_passenger: true,
-      },
-      ...Array.from({ length: paxTotal - 1 }, (_, i) => ({
-        booking_id: bookingId,
-        user_id: uid,
-        first_name: `Acompañante ${i + 2}`,
-        last_name: "—",
-        is_lead_passenger: false,
-        relationship_to_lead_passenger: "Acompañante",
-        notes: "Datos pendientes de completar (generado desde la cotización).",
-      })),
-    ];
-    const { error } = await supabase.from("booking_passengers").insert(rows as never);
-    if (error) throw error;
+  if (!existingPax) {
+    const rows = buildPassengerRows({
+      bookingId,
+      userId: uid,
+      quotation: quotation as QuotationHeader | null,
+    });
+    if (rows.length > 0) {
+      const { error } = await supabase.from("booking_passengers").insert(rows as never);
+      if (error) throw error;
+    }
   }
 }
+
 
 
 /**
