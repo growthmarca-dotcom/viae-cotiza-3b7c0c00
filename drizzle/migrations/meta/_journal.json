@@ -155,6 +155,13 @@
       "when": 1788404828381,
       "tag": "0021_beneficiary_authorization_history_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788890454096,
+      "tag": "0022_smart_quote_client_response",
+      "breakpoints": true
     }
   ]
 }
