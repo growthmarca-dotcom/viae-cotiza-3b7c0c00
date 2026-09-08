@@ -388,12 +388,12 @@ export async function createBooking(origin: BookingOrigin, input: BookingInput):
     }
   }
 
-  const stamp = await resolveAppliedRate(input.currency, input.exchange_rate);
+  const stamp = await resolveAppliedRate(header.currency, header.exchange_rate);
 
   const { data, error } = await supabase
     .from("bookings")
     .insert({
-      ...input,
+      ...header,
       ...stamp,
       client_id: clientId,
       assigned_agent_id: agentId,
