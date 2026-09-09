@@ -32,6 +32,8 @@ export type PublicSmartQuote = {
   status: string;
   created_at: string;
   share_expires_at: string | null;
+  client_responded_at: string | null;
+  client_response_note: string | null;
 };
 
 export type PublicSmartQuoteBranding = {
@@ -104,7 +106,7 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
       const { data: sq, error } = await supabaseAdmin
         .from("smart_quotes")
         .select(
-          "id, user_id, organization_id, status, title, destination_country, destination_state, destination_city, start_date, end_date, passengers_metadata, currency, total_amount, created_at, share_expires_at",
+          "id, user_id, organization_id, status, title, destination_country, destination_state, destination_city, start_date, end_date, passengers_metadata, currency, total_amount, created_at, share_expires_at, client_responded_at, client_response_note",
         )
         .eq("share_token", data.token)
         .maybeSingle();
@@ -156,6 +158,8 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
         status: sq.status as string,
         created_at: sq.created_at as string,
         share_expires_at: sq.share_expires_at as string | null,
+        client_responded_at: (sq.client_responded_at as string | null) ?? null,
+        client_response_note: (sq.client_response_note as string | null) ?? null,
       };
 
       // Branding: nombre comercial de la organización + estilo del usuario emisor.
@@ -214,3 +218,67 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
       return { quote, items, branding };
     },
   );
+
+
+/** Estados en los que el cliente puede aceptar o rechazar la propuesta. */
+export function clientCanRespondSmartQuote(status: string): boolean {
+  return status === "sent" || status === "ready";
+}
+
+/**
+ * Aceptación / rechazo público de la propuesta por token.
+ * Sólo `sent`/`ready` -> `accepted`/`rejected`, y una única vez: el trigger
+ * de la base genera el aviso interno para el agente responsable.
+ */
+export const respondPublicSmartQuote = createServerFn({ method: "POST" })
+  .inputValidator((data) =>
+    z
+      .object({
+        token: z.string().regex(/^[a-f0-9]{32,64}$/i),
+        action: z.enum(["accept", "reject"]),
+        note: z.string().trim().max(1000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }): Promise<{ status: "accepted" | "rejected" }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const notFound = new Error("Propuesta no encontrada");
+
+    const { data: sq, error } = await supabaseAdmin
+      .from("smart_quotes")
+      .select("id, status, share_expires_at, client_responded_at")
+      .eq("share_token", data.token)
+      .maybeSingle();
+
+    if (error || !sq) throw notFound;
+    if (sq.share_expires_at && new Date(sq.share_expires_at as string) < new Date()) {
+      throw new Error("Esta propuesta ya venció. Contactá a tu agente.");
+    }
+    if (sq.client_responded_at) throw new Error("Esta propuesta ya fue respondida.");
+    if (!clientCanRespondSmartQuote(sq.status as string)) {
+      throw new Error("Esta propuesta no admite respuesta en su estado actual.");
+    }
+
+    const next = data.action === "accept" ? "accepted" : "rejected";
+    const { data: updated, error: updErr } = await supabaseAdmin
+      .from("smart_quotes")
+      .update({
+        status: next,
+        client_responded_at: new Date().toISOString(),
+        client_response_note: data.note?.length ? data.note : null,
+        client_response_channel: "public_link",
+      } as never)
+      .eq("id", sq.id)
+      // Guarda de concurrencia: sólo la primera respuesta persiste.
+      .is("client_responded_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (updErr) {
+      console.error("public smart quote response failed", updErr);
+      throw new Error("No se pudo registrar la respuesta. Intentá de nuevo.");
+    }
+    if (!updated) throw new Error("Esta propuesta ya fue respondida.");
+
+    return { status: next };
+  });
