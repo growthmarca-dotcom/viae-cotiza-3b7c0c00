@@ -21,3 +21,19 @@ export async function resolveMyOrganizationId(explicit?: string | null): Promise
     "Pertenecés a más de una organización: indicá explícitamente la organización propietaria.",
   );
 }
+
+/**
+ * Variante tolerante para entidades donde `organization_id` es opcional
+ * (`leads`, `clients`): si la organización no puede determinarse sin
+ * ambigüedad devuelve `null` en lugar de fallar, para no romper flujos
+ * existentes ni ocultar registros históricos.
+ */
+export async function resolveMyOrganizationIdSoft(
+  explicit?: string | null,
+): Promise<string | null> {
+  try {
+    return await resolveMyOrganizationId(explicit);
+  } catch {
+    return null;
+  }
+}

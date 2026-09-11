@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { resolveMyOrganizationIdSoft } from "@/lib/tenant";
 
 export type Client = Tables<"clients">;
 
@@ -162,10 +163,18 @@ export async function getClient(id: string) {
   return (data ?? null) as Client | null;
 }
 
-export async function createClient(input: ClientInput, userId: string) {
+export async function createClient(
+  input: ClientInput,
+  userId: string,
+  organizationId?: string | null,
+) {
+  // Aislamiento multiagencia: el cliente queda asociado a la organización del
+  // usuario cuando puede determinarse sin ambigüedad (v1.14). La identidad
+  // compartida entre agencias sigue viviendo en `persons`.
+  const orgId = await resolveMyOrganizationIdSoft(organizationId);
   const { data, error } = await supabase
     .from("clients")
-    .insert(inputToRow(input, userId))
+    .insert({ ...inputToRow(input, userId), organization_id: orgId })
     .select("id")
     .single();
   if (error) throw error;

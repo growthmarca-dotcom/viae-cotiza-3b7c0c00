@@ -67,7 +67,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -96,11 +96,19 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       }
       if (!q) throw new Error("Cotización no encontrada");
 
-      const { images, expires_at, archived, user_id, ...quotation } = q as unknown as PublicQuotation & {
+      const {
+        images,
+        expires_at,
+        archived,
+        user_id,
+        organization_id,
+        ...quotation
+      } = q as unknown as PublicQuotation & {
         images: string[] | null;
         expires_at: string | null;
         archived: boolean;
         user_id: string;
+        organization_id: string | null;
       };
 
       if (archived) throw new Error("Cotización no encontrada");
@@ -134,28 +142,56 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         .eq("user_id", user_id)
         .maybeSingle();
 
+      // Marca de la agencia emisora (v1.14 — multiagencia): la organización
+      // propietaria manda; la configuración del usuario queda como respaldo.
+      let org: {
+        trade_name: string | null;
+        logo_path: string | null;
+        address: string | null;
+        whatsapp: string | null;
+        email: string | null;
+        website: string | null;
+        primary_color: string | null;
+        accent_color: string | null;
+        footer_text: string | null;
+        instagram: string | null;
+        facebook: string | null;
+      } | null = null;
+
+      if (organization_id) {
+        const { data: orgRow } = await supabaseAdmin
+          .from("organizations")
+          .select(
+            "trade_name, logo_path, address, whatsapp, email, website, primary_color, accent_color, footer_text, instagram, facebook",
+          )
+          .eq("id", organization_id)
+          .maybeSingle();
+        org = (orgRow as typeof org) ?? null;
+      }
+
+      const logoPath = org?.logo_path ?? settings?.logo_path ?? null;
       let logoUrl: string | null = null;
-      if (settings?.logo_path) {
+      if (logoPath) {
         const { data: signedLogo } = await supabaseAdmin.storage
           .from("company-logos")
-          .createSignedUrl(settings.logo_path, 60 * 60 * 24 * 7);
+          .createSignedUrl(logoPath, 60 * 60 * 24 * 7);
         logoUrl = signedLogo?.signedUrl ?? null;
       }
 
       const company: PublicCompany = {
-        companyName: settings?.company_name ?? null,
+        companyName: org?.trade_name ?? settings?.company_name ?? null,
         logoUrl,
-        address: settings?.address ?? null,
-        whatsapp: settings?.whatsapp ?? null,
-        email: settings?.email ?? null,
-        website: settings?.website ?? null,
-        instagram: settings?.instagram ?? null,
-        facebook: settings?.facebook ?? null,
+        address: org?.address ?? settings?.address ?? null,
+        whatsapp: org?.whatsapp ?? settings?.whatsapp ?? null,
+        email: org?.email ?? settings?.email ?? null,
+        website: org?.website ?? settings?.website ?? null,
+        instagram: org?.instagram ?? settings?.instagram ?? null,
+        facebook: org?.facebook ?? settings?.facebook ?? null,
         tiktok: settings?.tiktok ?? null,
         linkedin: settings?.linkedin ?? null,
-        primaryColor: settings?.primary_color ?? "#1F4636",
-        accentColor: settings?.accent_color ?? "#C4A264",
-        footerText: settings?.footer_text ?? null,
+        primaryColor: org?.primary_color ?? settings?.primary_color ?? "#1F4636",
+        accentColor: org?.accent_color ?? settings?.accent_color ?? "#C4A264",
+        footerText: org?.footer_text ?? settings?.footer_text ?? null,
       };
 
       return { quotation, items, imageUrls, company };

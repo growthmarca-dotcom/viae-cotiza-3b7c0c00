@@ -1422,6 +1422,7 @@ export type Database = {
           last_name: string | null
           notes: string | null
           opportunity_status: Database["public"]["Enums"]["opportunity_status"]
+          organization_id: string | null
           pax_count: number | null
           person_id: string | null
           phone: string | null
@@ -1443,6 +1444,7 @@ export type Database = {
           last_name?: string | null
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
+          organization_id?: string | null
           pax_count?: number | null
           person_id?: string | null
           phone?: string | null
@@ -1464,6 +1466,7 @@ export type Database = {
           last_name?: string | null
           notes?: string | null
           opportunity_status?: Database["public"]["Enums"]["opportunity_status"]
+          organization_id?: string | null
           pax_count?: number | null
           person_id?: string | null
           phone?: string | null
@@ -1474,6 +1477,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clients_person_id_fkey"
             columns: ["person_id"]
@@ -3098,6 +3108,7 @@ export type Database = {
           nights_count: number | null
           notes: string | null
           opportunity_id: string | null
+          organization_id: string | null
           pax_count: number | null
           person_id: string | null
           quotation_id: string | null
@@ -3137,6 +3148,7 @@ export type Database = {
           nights_count?: number | null
           notes?: string | null
           opportunity_id?: string | null
+          organization_id?: string | null
           pax_count?: number | null
           person_id?: string | null
           quotation_id?: string | null
@@ -3176,6 +3188,7 @@ export type Database = {
           nights_count?: number | null
           notes?: string | null
           opportunity_id?: string | null
+          organization_id?: string | null
           pax_count?: number | null
           person_id?: string | null
           quotation_id?: string | null
@@ -3209,6 +3222,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -3704,6 +3724,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          accent_color: string | null
           address: string | null
           analysis_currency_id: string | null
           base_currency_id: string | null
@@ -3712,12 +3733,16 @@ export type Database = {
           country: string | null
           created_at: string
           email: string | null
+          facebook: string | null
+          footer_text: string | null
           id: string
+          instagram: string | null
           legal_name: string | null
           logo_path: string | null
           notes: string | null
           phone: string | null
           postal_code: string | null
+          primary_color: string | null
           state: string | null
           status: Database["public"]["Enums"]["record_status"]
           tax_condition: string | null
@@ -3730,6 +3755,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          accent_color?: string | null
           address?: string | null
           analysis_currency_id?: string | null
           base_currency_id?: string | null
@@ -3738,12 +3764,16 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
+          facebook?: string | null
+          footer_text?: string | null
           id?: string
+          instagram?: string | null
           legal_name?: string | null
           logo_path?: string | null
           notes?: string | null
           phone?: string | null
           postal_code?: string | null
+          primary_color?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["record_status"]
           tax_condition?: string | null
@@ -3756,6 +3786,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          accent_color?: string | null
           address?: string | null
           analysis_currency_id?: string | null
           base_currency_id?: string | null
@@ -3764,12 +3795,16 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
+          facebook?: string | null
+          footer_text?: string | null
           id?: string
+          instagram?: string | null
           legal_name?: string | null
           logo_path?: string | null
           notes?: string | null
           phone?: string | null
           postal_code?: string | null
+          primary_color?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["record_status"]
           tax_condition?: string | null

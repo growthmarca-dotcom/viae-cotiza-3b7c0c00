@@ -170,10 +170,18 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
       let orgEmail: string | null = null;
       let orgWebsite: string | null = null;
 
+      let orgPrimary: string | null = null;
+      let orgAccent: string | null = null;
+      let orgFooter: string | null = null;
+      let orgInstagram: string | null = null;
+      let orgFacebook: string | null = null;
+
       if (sq.organization_id) {
         const { data: org } = await supabaseAdmin
           .from("organizations")
-          .select("trade_name, logo_path, address, whatsapp, email, website")
+          .select(
+            "trade_name, logo_path, address, whatsapp, email, website, primary_color, accent_color, footer_text, instagram, facebook",
+          )
           .eq("id", sq.organization_id)
           .maybeSingle();
         organizationName = (org?.trade_name as string | null) ?? null;
@@ -182,6 +190,11 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
         orgWhatsapp = (org?.whatsapp as string | null) ?? null;
         orgEmail = (org?.email as string | null) ?? null;
         orgWebsite = (org?.website as string | null) ?? null;
+        orgPrimary = (org?.primary_color as string | null) ?? null;
+        orgAccent = (org?.accent_color as string | null) ?? null;
+        orgFooter = (org?.footer_text as string | null) ?? null;
+        orgInstagram = (org?.instagram as string | null) ?? null;
+        orgFacebook = (org?.facebook as string | null) ?? null;
       }
 
       const { data: settings } = await supabaseAdmin
@@ -208,11 +221,11 @@ export const getPublicSmartQuote = createServerFn({ method: "GET" })
         whatsapp: orgWhatsapp ?? (settings?.whatsapp as string | null) ?? null,
         email: orgEmail ?? (settings?.email as string | null) ?? null,
         website: orgWebsite ?? (settings?.website as string | null) ?? null,
-        instagram: (settings?.instagram as string | null) ?? null,
-        facebook: (settings?.facebook as string | null) ?? null,
-        primaryColor: (settings?.primary_color as string | null) ?? "#1F4636",
-        accentColor: (settings?.accent_color as string | null) ?? "#C4A264",
-        footerText: (settings?.footer_text as string | null) ?? null,
+        instagram: orgInstagram ?? (settings?.instagram as string | null) ?? null,
+        facebook: orgFacebook ?? (settings?.facebook as string | null) ?? null,
+        primaryColor: orgPrimary ?? (settings?.primary_color as string | null) ?? "#1F4636",
+        accentColor: orgAccent ?? (settings?.accent_color as string | null) ?? "#C4A264",
+        footerText: orgFooter ?? (settings?.footer_text as string | null) ?? null,
       };
 
       return { quote, items, branding };
