@@ -67,6 +67,12 @@ export type OrganizationInput = {
   contact_name: string;
   status: OrganizationStatus;
   notes: string;
+  /** Marca visible en propuestas y cotizaciones públicas (v1.14). */
+  primary_color: string;
+  accent_color: string;
+  footer_text: string;
+  instagram: string;
+  facebook: string;
 };
 
 export const EMPTY_ORGANIZATION: OrganizationInput = {
