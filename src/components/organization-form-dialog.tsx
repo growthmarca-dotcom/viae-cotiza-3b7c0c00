@@ -280,6 +280,39 @@ export function OrganizationFormDialog({
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label>Instagram</Label>
+            <Input value={form.instagram} onChange={(e) => set("instagram", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Facebook</Label>
+            <Input value={form.facebook} onChange={(e) => set("facebook", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Color principal</Label>
+            <Input
+              value={form.primary_color}
+              onChange={(e) => set("primary_color", e.target.value)}
+              placeholder="#1F4636"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Color de acento</Label>
+            <Input
+              value={form.accent_color}
+              onChange={(e) => set("accent_color", e.target.value)}
+              placeholder="#C4A264"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Texto del pie en propuestas</Label>
+            <Input
+              value={form.footer_text}
+              onChange={(e) => set("footer_text", e.target.value)}
+              placeholder="Gracias por confiar en nuestra agencia"
+            />
+          </div>
+
           <div className="space-y-2 sm:col-span-2">
             <Label>Notas internas</Label>
             <Textarea
