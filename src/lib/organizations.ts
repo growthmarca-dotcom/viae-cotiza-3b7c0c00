@@ -94,6 +94,11 @@ export const EMPTY_ORGANIZATION: OrganizationInput = {
   contact_name: "",
   status: "active",
   notes: "",
+  primary_color: "",
+  accent_color: "",
+  footer_text: "",
+  instagram: "",
+  facebook: "",
 };
 
 const text = (v: string) => (v.trim() ? v.trim() : null);
@@ -118,6 +123,11 @@ export function organizationToInput(o: Organization): OrganizationInput {
     contact_name: o.contact_name ?? "",
     status: (o.status ?? "active") as OrganizationStatus,
     notes: o.notes ?? "",
+    primary_color: o.primary_color ?? "",
+    accent_color: o.accent_color ?? "",
+    footer_text: o.footer_text ?? "",
+    instagram: o.instagram ?? "",
+    facebook: o.facebook ?? "",
   };
 }
 
@@ -141,6 +151,11 @@ function payload(input: OrganizationInput) {
     contact_name: text(input.contact_name),
     status: input.status,
     notes: text(input.notes),
+    primary_color: text(input.primary_color),
+    accent_color: text(input.accent_color),
+    footer_text: text(input.footer_text),
+    instagram: text(input.instagram),
+    facebook: text(input.facebook),
   };
 }
 
