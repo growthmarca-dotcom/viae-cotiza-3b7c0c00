@@ -288,13 +288,16 @@ export async function getLead(id: string) {
   return (data ?? null) as Lead | null;
 }
 
-export async function createLead(input: LeadInput) {
+export async function createLead(input: LeadInput, organizationId?: string | null) {
   const { data: userData } = await supabase.auth.getUser();
   const uid = userData.user?.id;
   if (!uid) throw new Error("Sesión no válida");
+  // Aislamiento multiagencia: la consulta queda asociada a la organización del
+  // usuario cuando puede determinarse sin ambigüedad (v1.14).
+  const orgId = await resolveMyOrganizationIdSoft(organizationId);
   const { data, error } = await supabase
     .from("leads")
-    .insert({ ...toPayload(input), user_id: uid })
+    .insert({ ...toPayload(input), user_id: uid, organization_id: orgId })
     .select("*")
     .single();
   if (error) throw error;
