@@ -67,7 +67,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -96,11 +96,19 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       }
       if (!q) throw new Error("Cotización no encontrada");
 
-      const { images, expires_at, archived, user_id, ...quotation } = q as unknown as PublicQuotation & {
+      const {
+        images,
+        expires_at,
+        archived,
+        user_id,
+        organization_id,
+        ...quotation
+      } = q as unknown as PublicQuotation & {
         images: string[] | null;
         expires_at: string | null;
         archived: boolean;
         user_id: string;
+        organization_id: string | null;
       };
 
       if (archived) throw new Error("Cotización no encontrada");
