@@ -4,6 +4,7 @@ import type { LeadSource, OpportunityStage } from "@/lib/opportunities";
 import { createOpportunity, moveOpportunityStage } from "@/lib/opportunities";
 
 import type { Agent } from "@/lib/agents";
+import { resolveMyOrganizationIdSoft } from "@/lib/tenant";
 
 /**
  * Módulo de Leads (v1.7).
