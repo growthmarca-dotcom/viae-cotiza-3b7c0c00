@@ -169,6 +169,13 @@
       "when": 1789100233010,
       "tag": "0023_multiagency_org_isolation_and_branding",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789178273787,
+      "tag": "0024_org_notification_email_and_acceptance_email_flag",
+      "breakpoints": true
     }
   ]
 }

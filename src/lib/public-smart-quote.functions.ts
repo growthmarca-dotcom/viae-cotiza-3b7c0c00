@@ -293,5 +293,16 @@ export const respondPublicSmartQuote = createServerFn({ method: "POST" })
     }
     if (!updated) throw new Error("Esta propuesta ya fue respondida.");
 
+    // Aviso interno por email (v1.15). Nunca bloquea la aceptación:
+    // la campanita y la conversión a reserva siguen su curso normal.
+    if (next === "accepted") {
+      try {
+        const { notifySmartQuoteAccepted } = await import("@/lib/acceptance-email.server");
+        await notifySmartQuoteAccepted(sq.id as string);
+      } catch (e) {
+        console.error("[acceptance-email] aviso no procesado", e);
+      }
+    }
+
     return { status: next };
   });

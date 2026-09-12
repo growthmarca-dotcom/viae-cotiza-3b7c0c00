@@ -254,6 +254,19 @@ export function OrganizationFormDialog({
             />
           </div>
           <div className="space-y-2">
+            <Label>Email de notificaciones internas</Label>
+            <Input
+              type="email"
+              value={form.notification_email}
+              onChange={(e) => set("notification_email", e.target.value)}
+              placeholder="avisos@miagencia.com"
+            />
+            <p className="text-xs text-muted-foreground">
+              Dirección donde esta agencia recibe los avisos del sistema (por ejemplo, cuando un
+              cliente acepta una propuesta).
+            </p>
+          </div>
+          <div className="space-y-2">
             <Label>Sitio web</Label>
             <Input value={form.website} onChange={(e) => set("website", e.target.value)} />
           </div>
