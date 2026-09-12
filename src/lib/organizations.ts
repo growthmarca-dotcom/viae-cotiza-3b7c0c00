@@ -62,6 +62,8 @@ export type OrganizationInput = {
   phone: string;
   whatsapp: string;
   email: string;
+  /** Casilla interna de alertas del sistema (v1.15). Distinta de `email`. */
+  notification_email: string;
   website: string;
   logo_path: string;
   contact_name: string;
@@ -89,6 +91,7 @@ export const EMPTY_ORGANIZATION: OrganizationInput = {
   phone: "",
   whatsapp: "",
   email: "",
+  notification_email: "",
   website: "",
   logo_path: "",
   contact_name: "",
@@ -118,6 +121,7 @@ export function organizationToInput(o: Organization): OrganizationInput {
     phone: o.phone ?? "",
     whatsapp: o.whatsapp ?? "",
     email: o.email ?? "",
+    notification_email: o.notification_email ?? "",
     website: o.website ?? "",
     logo_path: o.logo_path ?? "",
     contact_name: o.contact_name ?? "",
@@ -146,6 +150,7 @@ function payload(input: OrganizationInput) {
     phone: text(input.phone),
     whatsapp: text(input.whatsapp),
     email: text(input.email),
+    notification_email: text(input.notification_email),
     website: text(input.website),
     logo_path: text(input.logo_path),
     contact_name: text(input.contact_name),
@@ -165,6 +170,11 @@ export function validateOrganization(input: OrganizationInput): string | null {
     return "Seleccioná la provincia antes que la ciudad.";
   if (input.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim()))
     return "El email no tiene un formato válido.";
+  if (
+    input.notification_email.trim() &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.notification_email.trim())
+  )
+    return "El email de notificaciones no tiene un formato válido.";
   return null;
 }
 
