@@ -144,7 +144,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
 
       // Marca de la agencia emisora (v1.14 — multiagencia): la organización
       // propietaria manda; la configuración del usuario queda como respaldo.
-      let org: {
+      type OrgBranding = {
         trade_name: string | null;
         logo_path: string | null;
         address: string | null;
@@ -156,7 +156,8 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         footer_text: string | null;
         instagram: string | null;
         facebook: string | null;
-      } | null = null;
+      };
+      let org: OrgBranding | null = null;
 
       if (organization_id) {
         const { data: orgRow } = await supabaseAdmin
@@ -166,7 +167,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
           )
           .eq("id", organization_id)
           .maybeSingle();
-        org = (orgRow as typeof org) ?? null;
+        org = (orgRow as unknown as OrgBranding | null) ?? null;
       }
 
       const logoPath = org?.logo_path ?? settings?.logo_path ?? null;
