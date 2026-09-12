@@ -3740,6 +3740,7 @@ export type Database = {
           legal_name: string | null
           logo_path: string | null
           notes: string | null
+          notification_email: string | null
           phone: string | null
           postal_code: string | null
           primary_color: string | null
@@ -3771,6 +3772,7 @@ export type Database = {
           legal_name?: string | null
           logo_path?: string | null
           notes?: string | null
+          notification_email?: string | null
           phone?: string | null
           postal_code?: string | null
           primary_color?: string | null
@@ -3802,6 +3804,7 @@ export type Database = {
           legal_name?: string | null
           logo_path?: string | null
           notes?: string | null
+          notification_email?: string | null
           phone?: string | null
           postal_code?: string | null
           primary_color?: string | null
@@ -6502,6 +6505,7 @@ export type Database = {
       }
       smart_quotes: {
         Row: {
+          acceptance_email_sent_at: string | null
           agent_id: string | null
           client_id: string | null
           client_responded_at: string | null
@@ -6531,6 +6535,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          acceptance_email_sent_at?: string | null
           agent_id?: string | null
           client_id?: string | null
           client_responded_at?: string | null
@@ -6560,6 +6565,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          acceptance_email_sent_at?: string | null
           agent_id?: string | null
           client_id?: string | null
           client_responded_at?: string | null
