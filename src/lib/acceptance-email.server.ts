@@ -52,12 +52,32 @@ function money(amount: number | null, currency: string | null): string | null {
 }
 
 /**
- * Envío real. Hoy el proyecto no tiene proveedor de email configurado
- * (falta verificar el dominio remitente de la plataforma), por lo que la
- * integración queda preparada y explícitamente inoperativa.
+ * Envío real a través de la infraestructura central de email de la plataforma.
+ * El remitente es único (plataforma) y el contenido identifica a la agencia
+ * emisora. Nunca bloquea la aceptación: cualquier fallo devuelve un motivo.
  */
-async function deliver(_payload: AcceptanceEmailPayload): Promise<AcceptanceEmailResult> {
-  return { sent: false, reason: "provider_not_configured" };
+async function deliver(payload: AcceptanceEmailPayload): Promise<AcceptanceEmailResult> {
+  if (!process.env["LOVABLE_API_KEY"]) {
+    return { sent: false, reason: "provider_not_configured" };
+  }
+
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const result = await sendTemplateEmail("smart-quote-accepted", payload.to, {
+    idempotencyKey: `smart-quote-accepted-${payload.quoteReference}`,
+    replyTo: payload.to,
+    templateData: {
+      organizationName: payload.organizationName,
+      quoteTitle: payload.subject.replace(/^Propuesta aceptada — /, ""),
+      quoteReference: payload.quoteReference,
+      clientName: payload.clientName,
+      totalLabel: payload.totalLabel,
+      acceptedAt: payload.acceptedAt,
+      bookingReference: payload.bookingReference,
+      internalUrl: payload.internalUrl,
+    },
+  });
+
+  return result.sent ? { sent: true, reason: "sent" } : { sent: false, reason: "send_failed" };
 }
 
 export async function notifySmartQuoteAccepted(
