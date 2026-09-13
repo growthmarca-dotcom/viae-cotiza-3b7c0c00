@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "ViaE Quotations Hub"
+const SITE_NAME = "ViaE Sales Hub"
 const SENDER_DOMAIN = "notify.notificaciones.viaetravel.com"
 const ROOT_DOMAIN = "notificaciones.viaetravel.com"
 const FROM_DOMAIN = "notificaciones.viaetravel.com"
