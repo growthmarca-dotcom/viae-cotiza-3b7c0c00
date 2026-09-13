@@ -1,0 +1,80 @@
+import * as React from 'react'
+
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Preview,
+  Text,
+} from '@react-email/components'
+
+interface RecoveryEmailProps {
+  siteName: string
+  confirmationUrl: string
+}
+
+export const RecoveryEmail = ({
+  siteName,
+  confirmationUrl,
+}: RecoveryEmailProps) => (
+  <Html lang="es" dir="ltr">
+    <Head>
+      <style>{darkModeCss}</style>
+    </Head>
+    <Preview>Restablecé tu contraseña de {siteName}</Preview>
+    <Body style={main}>
+      <Container style={container}>
+        <Heading style={h1}>Restablecer contraseña</Heading>
+        <Text style={text}>
+          Recibimos una solicitud para restablecer tu contraseña de {siteName}.
+          Hacé clic en el botón para elegir una nueva contraseña.
+        </Text>
+        <Button className="dm-btn" style={button} href={confirmationUrl}>
+          Restablecer contraseña
+        </Button>
+        <Text style={footer}>
+          Si no solicitaste este cambio, podés ignorar este correo. Tu
+          contraseña no se modificará.
+        </Text>
+      </Container>
+    </Body>
+  </Html>
+)
+
+export default RecoveryEmail
+
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const container = { padding: '24px 25px', borderTop: '4px solid #C9A227' }
+const h1 = {
+  fontSize: '22px',
+  fontWeight: 'bold' as const,
+  color: '#1C3F33',
+  margin: '0 0 20px',
+}
+const text = {
+  fontSize: '14px',
+  color: '#55575d',
+  lineHeight: '1.5',
+  margin: '0 0 25px',
+}
+const button = {
+  backgroundColor: '#1C3F33',
+  color: '#ffffff',
+  fontSize: '14px',
+  border: '1px solid #1C3F33',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
+}
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+// Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
+const darkModeCss = `
+  @media (prefers-color-scheme: dark) {
+    .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  }
+  [data-ogsc] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  [data-ogsb] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+`
