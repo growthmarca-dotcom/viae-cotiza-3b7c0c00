@@ -51,6 +51,7 @@ import { Route as AuthenticatedLeadsIdRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
 import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
 import { Route as AuthenticatedAgentsIdRouteImport } from './routes/_authenticated/agents_.$id'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as AuthenticatedQuotationsIdEditRouteImport } from './routes/_authenticated/quotations/$id_.edit'
 
 const AuthRoute = AuthRouteImport.update({
@@ -277,6 +278,12 @@ const AuthenticatedAgentsIdRoute = AuthenticatedAgentsIdRouteImport.update({
   path: '/agents/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedQuotationsIdEditRoute =
   AuthenticatedQuotationsIdEditRouteImport.update({
     id: '/quotations/$id_/edit',
@@ -327,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -371,6 +379,7 @@ export interface FileRoutesByTo {
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -417,6 +426,7 @@ export interface FileRoutesById {
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/_authenticated/quotations/$id_/edit': typeof AuthenticatedQuotationsIdEditRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/quotations/'
     | '/smart-quotes/'
     | '/quotations/$id/edit'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/quotations'
     | '/smart-quotes'
     | '/quotations/$id/edit'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -552,6 +564,7 @@ export interface FileRouteTypes {
     | '/_authenticated/quotations/'
     | '/_authenticated/smart-quotes/'
     | '/_authenticated/quotations/$id_/edit'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -562,6 +575,7 @@ export interface RootRouteChildren {
   InvitacionTokenRoute: typeof InvitacionTokenRoute
   PropuestaTokenRoute: typeof PropuestaTokenRoute
   SeguimientoTokenRoute: typeof SeguimientoTokenRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -860,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgentsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/quotations/$id_/edit': {
       id: '/_authenticated/quotations/$id_/edit'
       path: '/quotations/$id/edit'
@@ -959,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitacionTokenRoute: InvitacionTokenRoute,
   PropuestaTokenRoute: PropuestaTokenRoute,
   SeguimientoTokenRoute: SeguimientoTokenRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
