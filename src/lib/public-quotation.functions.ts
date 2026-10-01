@@ -50,6 +50,8 @@ export type PublicQuotationItem = {
   notes: string | null;
   /** Reproductor de YouTube/Vimeo copiado al agregar el producto; null si no hay. */
   video_embed_url: string | null;
+  /** Galería del producto en el orden definido en el Catálogo (primera = portada). */
+  gallery: string[];
 };
 
 /** Solo URLs de embed reconocidas (YouTube/Vimeo); cualquier otra se descarta. */
@@ -137,12 +139,44 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         )
         .eq("quotation_id", quotation.id)
         .order("position", { ascending: true });
-      const items: PublicQuotationItem[] = (itemRows ?? []).map((r) => {
+      const rows = (itemRows ?? []).map((r) => {
         const { details, ...rest } = r as unknown as PublicQuotationItem & { details: unknown };
-        const cat = (details as { catalog?: { video_url?: unknown } } | null)?.catalog;
+        const cat = (details as { catalog?: { video_url?: unknown; product_id?: unknown } } | null)?.catalog;
         const raw = typeof cat?.video_url === "string" ? cat.video_url : null;
-        return { ...rest, video_embed_url: raw ? publicVideoEmbed(raw) : null };
+        const productId = typeof cat?.product_id === "string" ? cat.product_id : null;
+        return { rest, productId, video_embed_url: raw ? publicVideoEmbed(raw) : null };
       });
+      // Galería: única fuente = product_media del Catálogo, ordenada por order_index.
+      // Solo se exponen las URLs de imagen (firmadas si son archivos propios).
+      const productIds = [...new Set(rows.map((r) => r.productId).filter(Boolean))] as string[];
+      const galleryByProduct = new Map<string, string[]>();
+      if (productIds.length) {
+        const { data: media } = await supabaseAdmin
+          .from("product_media")
+          .select("product_id, url, order_index")
+          .in("product_id", productIds)
+          .eq("type", "image")
+          .order("order_index", { ascending: true });
+        const prefix = "storage://catalog-images/";
+        const stored = (media ?? []).filter((m) => m.url.startsWith(prefix)).map((m) => m.url.slice(prefix.length));
+        const signedMap = new Map<string, string>();
+        if (stored.length) {
+          const { data: signed } = await supabaseAdmin.storage.from("catalog-images").createSignedUrls(stored, 60 * 60 * 6);
+          (signed ?? []).forEach((s) => { if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl); });
+        }
+        for (const m of media ?? []) {
+          const url = m.url.startsWith(prefix) ? signedMap.get(m.url.slice(prefix.length)) : /^https:\/\//i.test(m.url) ? m.url : undefined;
+          if (!url) continue;
+          const list = galleryByProduct.get(m.product_id) ?? [];
+          list.push(url);
+          galleryByProduct.set(m.product_id, list);
+        }
+      }
+      const items: PublicQuotationItem[] = rows.map((r) => ({
+        ...r.rest,
+        video_embed_url: r.video_embed_url,
+        gallery: r.productId ? galleryByProduct.get(r.productId) ?? [] : [],
+      }));
 
       let imageUrls: string[] = [];
       if (images && images.length > 0) {

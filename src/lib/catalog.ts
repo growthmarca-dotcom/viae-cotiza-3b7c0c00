@@ -228,7 +228,7 @@ export async function getCatalogProduct(id: string): Promise<CatalogProduct | nu
 
 export function primaryImage(p: Pick<CatalogProduct, "media">): string | null {
   const imgs = (p.media ?? []).filter((m) => m.type === "image");
-  return (imgs.find((m) => m.is_primary) ?? [...imgs].sort((a, b) => a.order_index - b.order_index)[0])?.url ?? null;
+  return [...imgs].sort((a, b) => a.order_index - b.order_index)[0]?.url ?? null;
 }
 
 export function productDestinationNames(p: Pick<CatalogProduct, "destinations">): string[] {
@@ -271,14 +271,14 @@ async function replaceChildren(productId: string, i: CatalogInput) {
   const { error: mErr } = await supabase.from("product_media").delete().eq("product_id", productId);
   if (mErr) throw friendly(mErr);
   if (i.images.length) {
-    const hasPrimary = i.images.some((m) => m.is_primary);
+    // El orden de la lista es la única fuente: la primera imagen es la portada.
     const { error } = await supabase.from("product_media").insert(
       i.images.map((m, idx) => ({
         product_id: productId,
         type: "image" as const,
         url: m.url.trim(),
         order_index: idx,
-        is_primary: hasPrimary ? m.is_primary : idx === 0,
+        is_primary: idx === 0,
       })),
     );
     if (error) throw friendly(error);
@@ -363,8 +363,9 @@ export function productToInput(p: CatalogProduct): CatalogInput {
       .map((d) => d.destination_id),
     images: [...(p.media ?? [])]
       .filter((m) => m.type === "image")
-      .sort((a, b) => a.order_index - b.order_index)
-      .map((m) => ({ url: m.url, is_primary: m.is_primary })),
+      // Portada anterior primero (compatibilidad), luego el orden guardado.
+      .sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.order_index - b.order_index)
+      .map((m, idx) => ({ url: m.url, is_primary: idx === 0 })),
     commercial_origin: p.commercial_origin,
     visibility: p.visibility,
     seller_commission_pct: p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null,

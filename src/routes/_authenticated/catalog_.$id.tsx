@@ -136,7 +136,7 @@ function ProductPage() {
   const embed = p.video_url ? videoEmbedUrl(p.video_url) : null;
   const meta = (p.metadata ?? {}) as Record<string, unknown>;
   const metaEntries = Object.entries(meta).filter(([k, v]) => META_LABELS[k] && String(v ?? "").trim() !== "");
-  const images = [...p.media].filter((m) => m.type === "image").sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.order_index - b.order_index);
+  const images = [...p.media].filter((m) => m.type === "image").sort((a, b) => a.order_index - b.order_index);
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-16">

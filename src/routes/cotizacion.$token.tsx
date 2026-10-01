@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PublicGallery } from "@/components/public-gallery";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -312,7 +313,7 @@ function PublicQuotationPage() {
                   key={`${g.category}-${idx}`}
                   className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 pb-3 last:border-0 last:pb-0"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium">{i.title || CATEGORY_LABELS[g.category]}</p>
                     {itemDetail(i) && (
                       <p className="text-xs text-muted-foreground">{itemDetail(i)}</p>
@@ -326,6 +327,9 @@ function PublicQuotationPage() {
                       <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
                         {i.notes}
                       </p>
+                    )}
+                    {i.gallery?.length > 0 && (
+                      <PublicGallery images={i.gallery} title={i.title ?? CATEGORY_LABELS[g.category]} />
                     )}
                     {i.video_embed_url && (
                       <div className="mt-3 aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border">
