@@ -22,6 +22,8 @@ export type PrintQuotationItem = {
   unit_amount: number | null;
   taxes: number | null;
   notes: string | null;
+  /** Fotos del producto del Catálogo, en su orden (primera = portada). */
+  gallery?: string[];
 };
 
 
@@ -62,7 +64,11 @@ export function QuotationPrintDocument({
   company,
   imageUrls = [],
   items = [],
+  accommodationGallery = [],
+  accommodationMapsUrl = null,
 }: {
+  accommodationGallery?: string[];
+  accommodationMapsUrl?: string | null;
   quotation: PrintQuotation;
   items?: PrintQuotationItem[];
   // El documento del cliente nunca lleva ajustes internos (moneda de análisis
@@ -144,13 +150,7 @@ export function QuotationPrintDocument({
         </div>
       </section>
 
-      {imageUrls.length > 0 ? (
-        <section className="print-gallery">
-          {imageUrls.slice(0, 3).map((u, i) => (
-            <img key={u} src={u} alt={`Foto ${i + 1}`} />
-          ))}
-        </section>
-      ) : null}
+      {imageUrls.length > 0 ? <PrintPhotos images={imageUrls} title="Foto" /> : null}
 
       <section className="print-grid">
         <PrintField label="Ingreso" value={q.travel_start} />
@@ -162,8 +162,17 @@ export function QuotationPrintDocument({
       <PrintBlock title="Alojamiento" color={company.primaryColor}>
         <PrintField label="Nombre" value={q.accommodation_name} />
         <PrintField label="Dirección" value={q.accommodation_address} />
+        <PrintField label="Destino" value={q.destination} />
+        {accommodationMapsUrl ? (
+          <a href={accommodationMapsUrl} className="print-maps" style={{ background: company.primaryColor }}>
+            Ver ubicación en Google Maps
+          </a>
+        ) : null}
         {q.accommodation_description ? (
           <p className="print-text">{q.accommodation_description}</p>
+        ) : null}
+        {accommodationGallery.length > 0 ? (
+          <PrintPhotos images={accommodationGallery} title={q.accommodation_name ?? "Alojamiento"} />
         ) : null}
       </PrintBlock>
 
@@ -176,13 +185,17 @@ export function QuotationPrintDocument({
       {groups.map((g) => (
         <PrintBlock key={g.category} title={g.label} color={company.primaryColor}>
           {g.list.map((i, idx) => (
-            <div key={`${g.category}-${idx}`} className="print-line">
-              <span>
-                {i.title || CATEGORY_LABELS[g.category]}
-                {detail(i) ? ` — ${detail(i)}` : ""}
-                {i.description ? ` · ${i.description}` : ""}
-              </span>
-              <span>{money(itemAmount(i))}</span>
+            <div key={`${g.category}-${idx}`} className="print-item">
+              <div className="print-line">
+                <strong>{i.title || CATEGORY_LABELS[g.category]}</strong>
+                <span>{money(itemAmount(i))}</span>
+              </div>
+              {detail(i) ? <div className="print-item-detail">{detail(i)}</div> : null}
+              {i.description ? <p className="print-text">{i.description}</p> : null}
+              {i.notes ? <p className="print-text">{i.notes}</p> : null}
+              {i.gallery && i.gallery.length > 0 ? (
+                <PrintPhotos images={i.gallery} title={i.title ?? CATEGORY_LABELS[g.category]} />
+              ) : null}
             </div>
           ))}
         </PrintBlock>
@@ -248,6 +261,23 @@ export function QuotationPrintDocument({
         </div>
         {socials.length > 0 ? <div className="print-socials">{socials.join(" · ")}</div> : null}
       </footer>
+    </div>
+  );
+}
+
+/** Portada grande y el resto en grilla ordenada, sin deformar (object-fit: cover). */
+function PrintPhotos({ images, title }: { images: string[]; title: string }) {
+  const [cover, ...rest] = images;
+  return (
+    <div className="print-photos">
+      <img src={cover} alt={`${title} — portada`} className="print-cover" loading="eager" />
+      {rest.length > 0 ? (
+        <div className="print-thumbs">
+          {rest.map((u, i) => (
+            <img key={u} src={u} alt={`${title} — foto ${i + 2}`} loading="eager" />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
