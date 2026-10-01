@@ -2,6 +2,8 @@ import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
 import { CatalogImage } from "@/components/catalog-image";
 import { useQuery } from "@tanstack/react-query";
 import { getCatalogProduct } from "@/lib/catalog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PAYMENT_METHODS, isPromotionAvailable, listPromotions } from "@/lib/promotions";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,12 @@ export type QuotationFormState = {
   currency: string;
   exchangeRate: string;
   observations: string;
+  /** Claves de PAYMENT_METHODS ofrecidas al cliente. */
+  paymentMethods?: string[];
+  /** Promoción del catálogo de origen (referencia) + copia del texto al incorporarla. */
+  promotionId?: string;
+  promotionTitle?: string;
+  promotionText?: string;
 };
 
 
@@ -411,6 +419,9 @@ export function QuotationForm({
 
       {summarySlot?.(form.currency)}
 
+      <PaymentAndPromotionSection form={form} set={set} />
+
+
       <Section title="Observaciones" cols={1}>
         <Field label="Notas adicionales">
           <Textarea rows={4} value={form.observations} onChange={(e) => set("observations", e.target.value)} placeholder="Cualquier detalle que quieras dejar registrado." maxLength={2000} />
@@ -462,5 +473,89 @@ function Field({ label, children, required, className }: { label: string; childr
       </Label>
       {children}
     </div>
+  );
+}
+
+function PaymentAndPromotionSection({
+  form,
+  set,
+}: {
+  form: QuotationFormState;
+  set: <K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) => void;
+}) {
+  const { data: promotions = [] } = useQuery({ queryKey: ["promotions"], queryFn: listPromotions });
+  const available = promotions.filter((p) => isPromotionAvailable(p));
+  const selected = new Set(form.paymentMethods ?? []);
+  const mode = form.promotionId ? form.promotionId : form.promotionTitle || form.promotionText ? "__custom" : "__none";
+  const [custom, setCustom] = useState(mode === "__custom");
+  const value = custom ? "__custom" : mode;
+
+  function toggle(key: string, on: boolean) {
+    const next = new Set(selected);
+    if (on) next.add(key);
+    else next.delete(key);
+    set("paymentMethods", PAYMENT_METHODS.map((m) => m.key).filter((k) => next.has(k)));
+  }
+
+  function pick(v: string) {
+    if (v === "__none") {
+      setCustom(false);
+      set("promotionId", "");
+      set("promotionTitle", "");
+      set("promotionText", "");
+    } else if (v === "__custom") {
+      setCustom(true);
+      set("promotionId", "");
+    } else {
+      const p = promotions.find((x) => x.id === v);
+      if (!p) return;
+      setCustom(false);
+      // Copia del texto al momento de incorporarla: cambios futuros del catálogo no la alteran.
+      set("promotionId", p.id);
+      set("promotionTitle", p.title);
+      set("promotionText", p.description ?? "");
+    }
+  }
+
+  // Si la promoción guardada ya no está disponible, se sigue mostrando como opción.
+  const savedNotListed = form.promotionId && !available.some((p) => p.id === form.promotionId);
+
+  return (
+    <Section title="Medios de pago y promoción" cols={1}>
+      <Field label="Medios de pago disponibles para el cliente">
+        <div className="grid gap-2 sm:grid-cols-3" data-testid="payment-methods">
+          {PAYMENT_METHODS.map((m) => (
+            <label key={m.key} className="flex items-center gap-2 text-sm">
+              <Checkbox checked={selected.has(m.key)} onCheckedChange={(v) => toggle(m.key, v === true)} aria-label={m.label} />
+              {m.label}
+            </label>
+          ))}
+        </div>
+      </Field>
+      <Field label="Promoción">
+        <Select value={value} onValueChange={pick}>
+          <SelectTrigger data-testid="promotion-select"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none">Sin promoción</SelectItem>
+            {available.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+            ))}
+            {savedNotListed && <SelectItem value={form.promotionId!}>{form.promotionTitle || "Promoción guardada"}</SelectItem>}
+            <SelectItem value="__custom">Promoción especial (solo esta cotización)</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      {value !== "__none" && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Título de la promoción">
+            <Input value={form.promotionTitle ?? ""} maxLength={150} onChange={(e) => set("promotionTitle", e.target.value)} placeholder="Bonificación especial por reserva anticipada" />
+          </Field>
+          <Field label="Texto para el cliente">
+            <Textarea rows={2} value={form.promotionText ?? ""} maxLength={1000} onChange={(e) => set("promotionText", e.target.value)} />
+          </Field>
+          <p className="text-xs text-muted-foreground sm:col-span-2">Es información comercial: no modifica el precio de la cotización.</p>
+        </div>
+      )}
+    </Section>
   );
 }

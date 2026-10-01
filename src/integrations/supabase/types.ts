@@ -5138,6 +5138,53 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          organization_id: string | null
+          title: string
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string | null
+          title: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string | null
+          title?: string
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_evaluations: {
         Row: {
           compliance: number
@@ -5531,7 +5578,11 @@ export type Database = {
           organization_id: string
           other_charges: number | null
           pax_count: number | null
+          payment_methods: string[]
           price_per_night: number | null
+          promotion_id: string | null
+          promotion_text: string | null
+          promotion_title: string | null
           quotation_number: string
           rejected_at: string | null
           rejected_by: string | null
@@ -5581,7 +5632,11 @@ export type Database = {
           organization_id: string
           other_charges?: number | null
           pax_count?: number | null
+          payment_methods?: string[]
           price_per_night?: number | null
+          promotion_id?: string | null
+          promotion_text?: string | null
+          promotion_title?: string | null
           quotation_number?: string
           rejected_at?: string | null
           rejected_by?: string | null
@@ -5631,7 +5686,11 @@ export type Database = {
           organization_id?: string
           other_charges?: number | null
           pax_count?: number | null
+          payment_methods?: string[]
           price_per_night?: number | null
+          promotion_id?: string | null
+          promotion_text?: string | null
+          promotion_title?: string | null
           quotation_number?: string
           rejected_at?: string | null
           rejected_by?: string | null
@@ -5682,6 +5741,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
           {

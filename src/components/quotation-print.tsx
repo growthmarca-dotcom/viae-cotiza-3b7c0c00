@@ -1,3 +1,4 @@
+import { paymentMethodLabels } from "@/lib/promotions";
 import type { CompanyInfo } from "@/lib/company";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import {
@@ -43,6 +44,9 @@ export type PrintQuotation = {
   accommodation_description: string | null;
   accommodation_services: string | null;
   cancellation_policy: string | null;
+  payment_methods?: string[] | null;
+  promotion_title?: string | null;
+  promotion_text?: string | null;
   price_per_night: number | null;
   taxes: number | null;
   other_charges?: number | null;
@@ -239,6 +243,19 @@ export function QuotationPrintDocument({
         />
       </PrintBlock>
 
+
+      {q.promotion_title || q.promotion_text ? (
+        <PrintBlock title="Promoción" color={company.primaryColor}>
+          {q.promotion_title ? <p className="print-text"><strong>{q.promotion_title}</strong></p> : null}
+          {q.promotion_text ? <p className="print-text">{q.promotion_text}</p> : null}
+        </PrintBlock>
+      ) : null}
+
+      {paymentMethodLabels(q.payment_methods).length > 0 ? (
+        <PrintBlock title="Medios de pago" color={company.primaryColor}>
+          <p className="print-text">{paymentMethodLabels(q.payment_methods).join(" · ")}</p>
+        </PrintBlock>
+      ) : null}
 
       {q.cancellation_policy ? (
         <PrintBlock title="Política de cancelación" color={company.primaryColor}>

@@ -1,3 +1,4 @@
+import { paymentMethodLabels } from "@/lib/promotions";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -443,6 +444,25 @@ function PublicQuotationPage() {
           </dl>
 
         </section>
+
+        {(q.promotion_title || q.promotion_text) && (
+          <section className="rounded-2xl border border-accent/40 bg-accent/10 p-6 shadow-sm" data-testid="public-promotion">
+            <h2 className="font-display text-xl font-semibold">Promoción</h2>
+            {q.promotion_title && <p className="mt-2 font-medium">{q.promotion_title}</p>}
+            {q.promotion_text && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{q.promotion_text}</p>}
+          </section>
+        )}
+
+        {paymentMethodLabels(q.payment_methods).length > 0 && (
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm" data-testid="public-payment-methods">
+            <h2 className="font-display text-xl font-semibold">Medios de pago</h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {paymentMethodLabels(q.payment_methods).map((l) => (
+                <li key={l} className="rounded-full border border-border bg-background px-3 py-1 text-sm">{l}</li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {q.cancellation_policy && (
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">

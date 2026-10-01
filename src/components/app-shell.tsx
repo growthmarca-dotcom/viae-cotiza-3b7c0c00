@@ -2,6 +2,7 @@ import { useManagedOrganizations } from "@/hooks/use-managed-organizations";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Library,
+  BadgePercent,
   Boxes,
   CalendarDays,
   ClipboardList,
@@ -44,6 +45,7 @@ const baseNav = [
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/catalog", label: "Catálogo", icon: Library },
+  { to: "/promotions", label: "Promociones", icon: BadgePercent },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/persons", label: "Personas", icon: UserSquare2 },

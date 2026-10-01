@@ -218,6 +218,13 @@
       "when": 1790883057424,
       "tag": "0030_quotation_accommodation_catalog_product",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790885309462,
+      "tag": "0031_quotation_payment_methods_and_promotions",
+      "breakpoints": true
     }
   ]
 }
