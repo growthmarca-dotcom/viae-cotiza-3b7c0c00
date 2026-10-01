@@ -10,6 +10,8 @@ import { toast } from "sonner";
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup"]).optional(),
+  email: z.string().optional(),
+  redirect: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -27,7 +29,10 @@ function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signin");
-  const [email, setEmail] = useState("");
+  // Solo se permite volver a una invitación de este mismo sitio.
+  const redirectTo = search.redirect && /^\/invitacion\/[0-9a-f-]{36}$/i.test(search.redirect) ? search.redirect : null;
+  const lockedEmail = redirectTo && search.email ? search.email : null;
+  const [email, setEmail] = useState(lockedEmail ?? "");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [agencyName, setAgencyName] = useState("");
@@ -35,7 +40,10 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) {
+        if (redirectTo) window.location.replace(redirectTo);
+        else navigate({ to: "/dashboard", replace: true });
+      }
     });
   }, [navigate]);
 
@@ -48,21 +56,24 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}${redirectTo ?? "/dashboard"}`,
             data: { full_name: fullName, agency_name: agencyName },
           },
         });
         if (error) throw error;
         await supabase.auth.signOut();
         toast.success(
-          "Registro enviado. Un administrador debe aprobar tu cuenta antes de que puedas ingresar.",
+          redirectTo
+            ? "Cuenta creada. Confirmá tu email desde el correo que te enviamos y luego aceptá la invitación."
+            : "Registro enviado. Un administrador debe aprobar tu cuenta antes de que puedas ingresar.",
         );
         setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bienvenido de vuelta.");
-        navigate({ to: "/dashboard", replace: true });
+        if (redirectTo) window.location.replace(redirectTo);
+        else navigate({ to: "/dashboard", replace: true });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ocurrió un error");
@@ -137,6 +148,7 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                readOnly={Boolean(lockedEmail)}
                 required
                 maxLength={255}
               />
