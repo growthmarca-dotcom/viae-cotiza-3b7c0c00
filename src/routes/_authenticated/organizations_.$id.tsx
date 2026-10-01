@@ -64,6 +64,8 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 function OrganizationDetailPage() {
   const { id } = Route.useParams();
   const { isOperations, isAdmin } = useAccount();
+  const { data: managed = [] } = useManagedOrganizations();
+  const canManageMembers = isAdmin || managed.some((m) => m.organization_id === id);
   const qc = useQueryClient();
   const [openEdit, setOpenEdit] = useState(false);
 
