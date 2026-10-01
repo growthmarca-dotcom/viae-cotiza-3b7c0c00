@@ -11,7 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { expireDueQuotations } from "@/lib/quotationStatus";
 import { Button } from "@/components/ui/button";
-import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
+import { listOpportunities, OPPORTUNITY_STAGES, stageGroup } from "@/lib/opportunities";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { useAccount } from "@/hooks/use-account";
