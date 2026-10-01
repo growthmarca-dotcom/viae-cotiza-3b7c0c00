@@ -19,7 +19,7 @@ type PublicQuotation = {
   accommodation_services: string | null;
   cancellation_policy: string | null;
   payment_methods?: string[] | null;
-  promotions?: unknown;
+  promotions?: { promotion_id?: string | null; title?: string; text?: string }[] | null;
   price_per_night: number | null;
   taxes: number | null;
   other_charges: number | null;
