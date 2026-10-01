@@ -188,7 +188,7 @@ function PublicQuotationPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} />
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} accommodationGallery={data.accommodationGallery ?? []} accommodationMapsUrl={data.accommodationMapsUrl ?? null} />
     <div
       className="min-h-screen bg-background print-screen-hide"
       style={

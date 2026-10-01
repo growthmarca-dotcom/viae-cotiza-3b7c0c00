@@ -94,6 +94,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       items: PublicQuotationItem[];
       imageUrls: string[];
       accommodationGallery: string[];
+      accommodationMapsUrl: string | null;
       company: PublicCompany;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -250,7 +251,14 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       };
 
       const accommodationGallery = accProductId ? galleryByProduct.get(accProductId) ?? [] : [];
-      return { quotation, items, imageUrls, accommodationGallery, company };
+      // Enlace de Google Maps del producto del Catálogo (solo si es una URL https de Google).
+      let accommodationMapsUrl: string | null = null;
+      if (accProductId) {
+        const { data: prod } = await supabaseAdmin.from("products").select("metadata").eq("id", accProductId).maybeSingle();
+        const raw = (prod?.metadata as { maps_url?: unknown } | null)?.maps_url;
+        if (typeof raw === "string" && /^https:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+|goo\.gl|maps\.app\.goo\.gl)\//i.test(raw.trim())) accommodationMapsUrl = raw.trim();
+      }
+      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, company };
     },
   );
 
