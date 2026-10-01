@@ -204,6 +204,13 @@
       "when": 1790872903888,
       "tag": "0028_organization_invitations_email_flow",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790874654753,
+      "tag": "0029_org_member_read_child_records",
+      "breakpoints": true
     }
   ]
 }
