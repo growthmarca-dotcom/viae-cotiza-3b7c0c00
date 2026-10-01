@@ -206,6 +206,16 @@ export function CatalogProductFormDialog({
   }, [open, orgs, f.organization_id]);
 
   const set = <K extends keyof CatalogInput>(k: K, v: CatalogInput[K]) => setF((p) => ({ ...p, [k]: v }));
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const moveImage = (from: number, to: number) => {
+    if (from === to) return;
+    setF((p) => {
+      const list = [...p.images];
+      const [m] = list.splice(from, 1);
+      list.splice(to, 0, m);
+      return { ...p, images: list.map((x, i) => ({ ...x, is_primary: i === 0 })) };
+    });
+  };
   const setMeta = (k: string, v: string) => setF((p) => ({ ...p, metadata: { ...p.metadata, [k]: v } }));
   const txt = (v: string) => (v.trim() === "" ? null : v);
   const num = (v: string) => (v.trim() === "" ? null : Number(v));
