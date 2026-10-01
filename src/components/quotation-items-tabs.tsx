@@ -5,6 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatMoney } from "@/lib/currency";
+import { toast } from "sonner";
+import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
+import {
+  buildCatalogSnapshot,
+  snapshotDescription,
+  type CatalogProduct,
+} from "@/lib/catalog";
 import {
   CATEGORY_ADD_LABEL,
   QUOTATION_ITEM_CATEGORIES,
@@ -116,6 +123,16 @@ const CONFIG: Record<
   },
 };
 
+/** Categorías del catálogo seleccionables en cada pestaña. */
+const CATALOG_FOR: Partial<Record<QuotationItemCategory, string[]>> = {
+  excursion: ["excursion", "activity"],
+  vehicle_rental: ["rental"],
+  transfer: ["transfer"],
+  insurance: ["insurance"],
+  flight: ["flight"],
+  other: ["other"],
+};
+
 /**
  * Constructor de la cotización integral: 7 categorías en pestañas sobre una
  * única cotización. El estado vive en el formulario padre, por lo que cambiar
@@ -132,6 +149,23 @@ export function QuotationItemsTabs({
 }) {
   function add(category: QuotationItemCategory) {
     onChange([...items, emptyItem(category)]);
+  }
+  function addFromCatalog(category: QuotationItemCategory, p: CatalogProduct) {
+    if (p.currency !== currency) {
+      toast.warning(
+        `El producto está en ${p.currency} y la cotización en ${currency}. Revisá la tarifa antes de enviar.`,
+      );
+    }
+    onChange([
+      ...items,
+      emptyItem(category, {
+        title: p.name,
+        description: snapshotDescription(p),
+        provider_name: p.provider?.trade_name ?? "",
+        unit_amount: p.sale_amount != null ? String(Number(p.sale_amount)) : "",
+        catalog: buildCatalogSnapshot(p),
+      }),
+    ]);
   }
   function update(key: string, patch: Partial<QuotationItemDraft>) {
     onChange(items.map((i) => (i.key === key ? { ...i, ...patch } : i)));
@@ -185,6 +219,11 @@ export function QuotationItemsTabs({
                 <div key={item.key} className="space-y-4 rounded-xl border border-border bg-background p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
+                      {item.catalog && (
+                        <span className="mr-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                          Del catálogo · precio copiado {formatMoney(item.catalog.currency, item.catalog.sale_amount ?? 0)}
+                        </span>
+                      )}
                       {item.requirement && (
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">
                           Requerimiento de la consulta
@@ -262,9 +301,17 @@ export function QuotationItemsTabs({
                 </div>
               ))}
 
-              <Button type="button" variant="outline" onClick={() => add(category)}>
-                <Plus className="mr-2 h-4 w-4" /> {CATEGORY_ADD_LABEL[category]}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={() => add(category)}>
+                  <Plus className="mr-2 h-4 w-4" /> {CATEGORY_ADD_LABEL[category]}
+                </Button>
+                {CATALOG_FOR[category] && (
+                  <CatalogPickerButton
+                    categories={CATALOG_FOR[category]!}
+                    onPick={(p) => addFromCatalog(category, p)}
+                  />
+                )}
+              </div>
             </TabsContent>
           );
         })}
