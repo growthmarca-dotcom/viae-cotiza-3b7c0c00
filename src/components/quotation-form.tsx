@@ -3,6 +3,8 @@ import { CatalogImage } from "@/components/catalog-image";
 import { useQuery } from "@tanstack/react-query";
 import { getCatalogProduct } from "@/lib/catalog";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { QuotationRecommendation } from "@/lib/recommendations";
+import { ACTIVE_CATALOG_CATEGORIES, primaryImage, productDestinationNames } from "@/lib/catalog";
 import { PAYMENT_METHOD_OPTIONS, isPromotionAvailable, listPromotions, type QuotationPromotion } from "@/lib/promotions";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
@@ -48,6 +50,8 @@ export type QuotationFormState = {
   paymentMethods?: string[];
   /** Promociones incorporadas: copia del texto al momento de elegirlas. */
   promotions?: QuotationPromotion[];
+  /** Recomendados (venta cruzada): no suman al total ni pasan a la reserva. */
+  recommendations?: QuotationRecommendation[];
 };
 
 
@@ -419,6 +423,8 @@ export function QuotationForm({
 
       <PaymentAndPromotionSection form={form} set={set} />
 
+      <RecommendationsSection form={form} set={set} />
+
 
       <Section title="Observaciones" cols={1}>
         <Field label="Notas adicionales">
@@ -562,6 +568,69 @@ function PaymentAndPromotionSection({
           + Promoción especial (solo esta cotización)
         </Button>
         <p className="mt-2 text-xs text-muted-foreground">Las promociones son información comercial: no modifican el precio de la cotización.</p>
+      </div>
+    </Section>
+  );
+}
+
+const RECOMMENDABLE_CATEGORIES = ACTIVE_CATALOG_CATEGORIES.map((c) => c.value as string);
+
+function RecommendationsSection({
+  form,
+  set,
+}: {
+  form: QuotationFormState;
+  set: <K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) => void;
+}) {
+  const list = form.recommendations ?? [];
+  const [covers, setCovers] = useState<Record<string, string | null>>({});
+  return (
+    <Section title="Recomendados" cols={1}>
+      <p className="text-sm text-muted-foreground">
+        Sugerencias adicionales para el cliente. No forman parte de la propuesta: no suman al total ni pasan a la reserva.
+      </p>
+      {list.length > 0 && (
+        <ul className="grid gap-3 sm:grid-cols-2" data-testid="recommendations-list">
+          {list.map((r) => (
+            <li key={r.product_id} className="flex items-start gap-3 rounded-xl border border-dashed border-border p-3">
+              {covers[r.product_id] ? (
+                <CatalogImage src={covers[r.product_id]!} alt={r.title} className="h-14 w-20 shrink-0 rounded-md object-cover" />
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{r.title}</p>
+                {r.destination && <p className="text-xs text-muted-foreground">{r.destination}</p>}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label={`Quitar ${r.title}`}
+                onClick={() => set("recommendations", list.filter((x) => x.product_id !== r.product_id))}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div>
+        <CatalogPickerButton
+          categories={RECOMMENDABLE_CATEGORIES}
+          label="+ Agregar recomendados"
+          onPick={(p) => {
+            if (list.some((x) => x.product_id === p.id)) return;
+            setCovers((c) => ({ ...c, [p.id]: primaryImage(p) }));
+            set("recommendations", [
+              ...list,
+              {
+                product_id: p.id,
+                title: p.name,
+                description: p.short_description ?? p.description ?? "",
+                destination: productDestinationNames(p).join(", "),
+              },
+            ]);
+          }}
+        />
       </div>
     </Section>
   );
