@@ -2725,6 +2725,50 @@ export type Database = {
           },
         ]
       }
+      destinations: {
+        Row: {
+          active: boolean
+          country: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          organization_id: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          organization_id?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          organization_id?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destinations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates: {
         Row: {
           base_currency: string
@@ -4689,10 +4733,47 @@ export type Database = {
         }
         Relationships: []
       }
+      product_destinations: {
+        Row: {
+          created_at: string
+          destination_id: string
+          is_primary: boolean
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination_id: string
+          is_primary?: boolean
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          destination_id?: string
+          is_primary?: boolean
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_destinations_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_destinations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_media: {
         Row: {
           created_at: string
           id: string
+          is_primary: boolean
           order_index: number
           product_id: string
           title: string | null
@@ -4702,6 +4783,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_primary?: boolean
           order_index?: number
           product_id: string
           title?: string | null
@@ -4711,6 +4793,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_primary?: boolean
           order_index?: number
           product_id?: string
           title?: string | null
@@ -4844,16 +4927,27 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["product_category"]
           city: string | null
+          cost_amount: number | null
           country: string | null
           created_at: string
+          currency: string
           description: string | null
+          external_code: string | null
+          external_product_id: string | null
+          external_provider_id: string | null
           id: string
+          internal_code: string | null
+          internal_notes: string | null
+          last_synced_at: string | null
           latitude: number | null
           longitude: number | null
           metadata: Json
           name: string
           organization_id: string
+          provider_id: string | null
+          sale_amount: number | null
           short_description: string | null
+          source_type: Database["public"]["Enums"]["product_source_type"]
           state: string | null
           status: Database["public"]["Enums"]["product_status"]
           updated_at: string
@@ -4862,16 +4956,27 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["product_category"]
           city?: string | null
+          cost_amount?: number | null
           country?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
+          external_code?: string | null
+          external_product_id?: string | null
+          external_provider_id?: string | null
           id?: string
+          internal_code?: string | null
+          internal_notes?: string | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           metadata?: Json
           name: string
           organization_id: string
+          provider_id?: string | null
+          sale_amount?: number | null
           short_description?: string | null
+          source_type?: Database["public"]["Enums"]["product_source_type"]
           state?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
@@ -4880,16 +4985,27 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["product_category"]
           city?: string | null
+          cost_amount?: number | null
           country?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
+          external_code?: string | null
+          external_product_id?: string | null
+          external_provider_id?: string | null
           id?: string
+          internal_code?: string | null
+          internal_notes?: string | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           metadata?: Json
           name?: string
           organization_id?: string
+          provider_id?: string | null
+          sale_amount?: number | null
           short_description?: string | null
+          source_type?: Database["public"]["Enums"]["product_source_type"]
           state?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
@@ -4901,6 +5017,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
@@ -5109,6 +5232,7 @@ export type Database = {
           organization_id: string | null
           phone: string | null
           provider_type: Database["public"]["Enums"]["provider_type"]
+          source_kind: Database["public"]["Enums"]["provider_source_kind"]
           state: string | null
           status: Database["public"]["Enums"]["provider_status"]
           tax_condition: string | null
@@ -5134,6 +5258,7 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           provider_type?: Database["public"]["Enums"]["provider_type"]
+          source_kind?: Database["public"]["Enums"]["provider_source_kind"]
           state?: string | null
           status?: Database["public"]["Enums"]["provider_status"]
           tax_condition?: string | null
@@ -5159,6 +5284,7 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           provider_type?: Database["public"]["Enums"]["provider_type"]
+          source_kind?: Database["public"]["Enums"]["provider_source_kind"]
           state?: string | null
           status?: Database["public"]["Enums"]["provider_status"]
           tax_condition?: string | null
@@ -7444,6 +7570,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      can_edit_org_catalog: { Args: { _org_id: string }; Returns: boolean }
       can_manage_availability_profile: {
         Args: { _profile_id: string }
         Returns: boolean
@@ -7476,6 +7603,7 @@ export type Database = {
         Args: { _template_id: string }
         Returns: boolean
       }
+      can_read_product: { Args: { _product_id: string }; Returns: boolean }
       can_read_search_request: {
         Args: { _request_id: string }
         Returns: boolean
@@ -8229,7 +8357,10 @@ export type Database = {
         | "rental"
         | "package"
         | "other"
+        | "insurance"
+        | "flight"
       product_media_type: "image" | "video" | "document"
+      product_source_type: "manual" | "api" | "feed" | "import" | "other"
       product_status: "draft" | "active" | "inactive" | "archived"
       provider_operation_mode:
         | "manual"
@@ -8245,6 +8376,12 @@ export type Database = {
         | "priority"
         | "commission"
         | "quality"
+      provider_source_kind:
+        | "direct"
+        | "wholesaler_b2b"
+        | "platform"
+        | "api"
+        | "other"
       provider_status: "active" | "inactive" | "suspended" | "archived"
       provider_type:
         | "wholesaler"
@@ -8912,8 +9049,11 @@ export const Constants = {
         "rental",
         "package",
         "other",
+        "insurance",
+        "flight",
       ],
       product_media_type: ["image", "video", "document"],
+      product_source_type: ["manual", "api", "feed", "import", "other"],
       product_status: ["draft", "active", "inactive", "archived"],
       provider_operation_mode: [
         "manual",
@@ -8930,6 +9070,13 @@ export const Constants = {
         "priority",
         "commission",
         "quality",
+      ],
+      provider_source_kind: [
+        "direct",
+        "wholesaler_b2b",
+        "platform",
+        "api",
+        "other",
       ],
       provider_status: ["active", "inactive", "suspended", "archived"],
       provider_type: [
