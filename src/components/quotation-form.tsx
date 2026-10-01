@@ -1,4 +1,7 @@
 import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
+import { CatalogImage } from "@/components/catalog-image";
+import { useQuery } from "@tanstack/react-query";
+import { getCatalogProduct } from "@/lib/catalog";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,6 +123,16 @@ export function QuotationForm({
     () => files.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
     [files],
   );
+
+  const catalogProductId = form.accommodationCatalogProductId || "";
+  const { data: catalogAcc } = useQuery({
+    queryKey: ["catalog-product", catalogProductId],
+    queryFn: () => getCatalogProduct(catalogProductId),
+    enabled: Boolean(catalogProductId),
+  });
+  const catalogImages = [...(catalogAcc?.media ?? [])]
+    .filter((m) => m.type === "image")
+    .sort((a, b) => a.order_index - b.order_index);
 
   function set<K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) {
     setForm((p) => ({ ...p, [k]: v }));
@@ -255,6 +268,24 @@ export function QuotationForm({
 
 
 
+      {catalogImages.length > 0 ? (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm" data-testid="catalog-accommodation-images">
+          <h2 className="font-display text-xl font-semibold">Imágenes del alojamiento</h2>
+          <p className="text-sm text-muted-foreground">
+            Fotos del Catálogo, en su orden. La primera es la portada. Para cambiarlas, editá el producto en el Catálogo.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {catalogImages.map((m, i) => (
+              <div key={m.id} className={`relative overflow-hidden rounded-xl border ${i === 0 ? "border-primary ring-1 ring-primary" : "border-border"}`}>
+                <CatalogImage src={m.url} alt={`Foto ${i + 1} del alojamiento`} className="aspect-[4/3] w-full object-cover" />
+                <span className="absolute left-1.5 top-1.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[11px] font-medium">
+                  {i === 0 ? "Portada" : i + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -316,6 +347,7 @@ export function QuotationForm({
           </div>
         )}
       </div>
+      )}
 
       <Section title="Precio del alojamiento">
         <Field label="Precio por noche">
