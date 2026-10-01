@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { readQuotationPromotions } from "@/lib/promotions";
 import type { QuotationFormState } from "@/components/quotation-form";
 
 type SaveArgs = {
@@ -41,9 +42,9 @@ export function formToRow(form: QuotationFormState, autoTotal?: string) {
     exchange_rate: form.exchangeRate ? Number(form.exchangeRate) : null,
     notes: form.observations || null,
     payment_methods: form.paymentMethods ?? [],
-    promotion_id: form.promotionId || null,
-    promotion_title: form.promotionTitle?.trim() || null,
-    promotion_text: form.promotionText?.trim() || null,
+    promotions: (form.promotions ?? [])
+      .map((p) => ({ promotion_id: p.promotion_id, title: p.title.trim(), text: p.text.trim() }))
+      .filter((p) => p.title || p.text),
   };
 
 }
@@ -117,9 +118,7 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     exchangeRate: s(row.exchange_rate),
     observations: s(row.notes),
     paymentMethods: Array.isArray(row.payment_methods) ? (row.payment_methods as string[]) : [],
-    promotionId: s(row.promotion_id),
-    promotionTitle: s(row.promotion_title),
-    promotionText: s(row.promotion_text),
+    promotions: readQuotationPromotions(row.promotions),
   };
 
 }

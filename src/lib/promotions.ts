@@ -11,6 +11,27 @@ export const PAYMENT_METHODS = [
   { key: "mercado_pago", label: "Mercado Pago" },
 ] as const;
 
+/** Medios ofrecidos como opción al armar la cotización ("Dinero en cuenta" quedó retirado). */
+export const PAYMENT_METHOD_OPTIONS = PAYMENT_METHODS.filter((m) => m.key !== "account_money");
+
+/** Copia de una promoción guardada en la cotización (no cambia si luego se edita el catálogo). */
+export type QuotationPromotion = { promotion_id: string | null; title: string; text: string };
+
+/** Lee las promociones guardadas en una cotización; tolera datos vacíos o antiguos. */
+export function readQuotationPromotions(raw: unknown): QuotationPromotion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((r) => {
+      const o = (r ?? {}) as Record<string, unknown>;
+      return {
+        promotion_id: typeof o.promotion_id === "string" ? o.promotion_id : null,
+        title: typeof o.title === "string" ? o.title : "",
+        text: typeof o.text === "string" ? o.text : "",
+      };
+    })
+    .filter((p) => p.title.trim() || p.text.trim());
+}
+
 /** Etiquetas de los medios guardados, en el orden canónico; ignora claves desconocidas. */
 export function paymentMethodLabels(keys: readonly string[] | null | undefined): string[] {
   const set = new Set(keys ?? []);

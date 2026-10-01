@@ -1,4 +1,4 @@
-import { paymentMethodLabels } from "@/lib/promotions";
+import { paymentMethodLabels, readQuotationPromotions } from "@/lib/promotions";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -445,11 +445,18 @@ function PublicQuotationPage() {
 
         </section>
 
-        {(q.promotion_title || q.promotion_text) && (
+        {readQuotationPromotions(q.promotions).length > 0 && (
           <section className="rounded-2xl border border-accent/40 bg-accent/10 p-6 shadow-sm" data-testid="public-promotion">
-            <h2 className="font-display text-xl font-semibold">Promoción</h2>
-            {q.promotion_title && <p className="mt-2 font-medium">{q.promotion_title}</p>}
-            {q.promotion_text && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">{q.promotion_text}</p>}
+            <h2 className="font-display text-xl font-semibold">Promociones disponibles</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Opciones comerciales ofrecidas para esta propuesta. Consultá con tu agente cuál aplica a tu pago.</p>
+            <ul className="mt-3 space-y-2">
+              {readQuotationPromotions(q.promotions).map((p, i) => (
+                <li key={i} className="text-sm">
+                  <span className="font-medium">• {p.title}</span>
+                  {p.text && <span className="block whitespace-pre-wrap pl-3 text-muted-foreground">{p.text}</span>}
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 
