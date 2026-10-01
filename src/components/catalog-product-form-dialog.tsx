@@ -35,6 +35,12 @@ import {
   type CatalogInput,
   type SourceType,
   isStoredCatalogImage,
+  COMMERCIAL_ORIGINS,
+  VISIBILITIES,
+  SHARING_DECLARATION,
+  sellerCommissionSplit,
+  type CommercialOrigin,
+  type Visibility,
   uploadCatalogImage,
   validateCatalogImageFile,
 } from "@/lib/catalog";
@@ -103,6 +109,11 @@ const blank = (orgId = ""): CatalogInput => ({
   metadata: {},
   destination_ids: [],
   images: [],
+  commercial_origin: "own",
+  visibility: "private",
+  seller_commission_pct: null,
+  sharing_declared: false,
+  video_url: null,
 });
 
 const NONE = "__none__";
@@ -278,6 +289,12 @@ export function CatalogProductFormDialog({
             <p className="text-xs text-muted-foreground">El primer destino elegido queda como principal.</p>
           </section>
 
+          <section className="space-y-2">
+            <h3 className="font-display text-lg font-semibold">Multimedia · Video (opcional)</h3>
+            <Input placeholder="https://www.youtube.com/watch?v=… o https://vimeo.com/…" value={f.video_url ?? ""} onChange={(e) => set("video_url", txt(e.target.value))} />
+            <p className="text-xs text-muted-foreground">Pegá el enlace de YouTube o Vimeo. Dejalo vacío para quitar el video; las imágenes no se modifican.</p>
+          </section>
+
           {meta && (
             <section className="space-y-3">
               <h3 className="font-display text-lg font-semibold">{meta.title}</h3>
@@ -371,7 +388,69 @@ export function CatalogProductFormDialog({
           </section>
 
           <section className="space-y-3">
-            <h3 className="font-display text-lg font-semibold">Imágenes</h3>
+            <h3 className="font-display text-lg font-semibold">Origen y visibilidad</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Origen</Label>
+                <Select
+                  value={f.commercial_origin}
+                  onValueChange={(v) =>
+                    setF((p) => ({
+                      ...p,
+                      commercial_origin: v as CommercialOrigin,
+                      ...(v === "external" ? { visibility: "private" as const, seller_commission_pct: null } : {}),
+                    }))
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {COMMERCIAL_ORIGINS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Visibilidad</Label>
+                <Select value={f.visibility} onValueChange={(v) => set("visibility", v as Visibility)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {VISIBILITIES.map((o) => (
+                      <SelectItem key={o.value} value={o.value} disabled={f.commercial_origin === "external" && o.value !== "private"}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {f.commercial_origin === "external" && (
+              <p className="rounded-xl bg-secondary/60 p-3 text-sm text-muted-foreground">
+                Los productos provenientes de proveedores externos o mayoristas no pueden publicarse como productos propios compartidos. Podés utilizarlos normalmente en tus cotizaciones.
+              </p>
+            )}
+            {f.visibility !== "private" && (
+              <div className="space-y-3 rounded-xl border border-border p-4">
+                <div className="max-w-xs space-y-2">
+                  <Label>Comisión para agencia vendedora (%)</Label>
+                  <Input type="number" min={0} max={100} step="0.01" value={f.seller_commission_pct ?? ""} onChange={(e) => set("seller_commission_pct", num(e.target.value))} />
+                </div>
+                {(() => {
+                  const sp = sellerCommissionSplit(f.sale_amount, f.seller_commission_pct);
+                  return sp ? (
+                    <p className="text-sm text-muted-foreground">
+                      Sobre {f.currency} {f.sale_amount}: la agencia vendedora recibe {f.currency} {sp.commission} y tu agencia {f.currency} {sp.owner}.
+                    </p>
+                  ) : null;
+                })()}
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1" checked={f.sharing_declared} onChange={(e) => set("sharing_declared", e.target.checked)} />
+                  <span>{SHARING_DECLARATION}</span>
+                </label>
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="font-display text-lg font-semibold">Multimedia · Imágenes</h3>
             {f.images.map((img, idx) => (
               <div key={`${img.url}-${idx}`} className="flex items-center gap-3 rounded-xl border border-border p-2">
                 <CatalogImage src={img.url} alt={`Imagen ${idx + 1} del producto`} className="h-12 w-16 rounded object-cover" />

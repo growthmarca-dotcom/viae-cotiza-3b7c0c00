@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { GEO_COUNTRIES, cityNamesOf, regionsOf } from "@/lib/geo";
 import { TAX_CONDITIONS } from "@/lib/providers";
+import { useQuery } from "@tanstack/react-query";
+import { listAgencyNetworks } from "@/lib/catalog";
 import {
   EMPTY_ORGANIZATION,
   ORGANIZATION_ROLES,
@@ -55,6 +57,7 @@ export function OrganizationFormDialog({
 }: Props) {
   const [form, setForm] = useState<OrganizationInput>(initial ?? EMPTY_ORGANIZATION);
   const [roles, setRoles] = useState<OrganizationRole[]>(initialRoles);
+  const { data: networks = [] } = useQuery({ queryKey: ["agency-networks"], queryFn: listAgencyNetworks, enabled: open });
 
   useEffect(() => {
     if (open) {
@@ -264,6 +267,25 @@ export function OrganizationFormDialog({
             <p className="text-xs text-muted-foreground">
               Dirección donde esta agencia recibe los avisos del sistema (por ejemplo, cuando un
               cliente acepta una propuesta).
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Red de agencias</Label>
+            <Select value={form.network_id || "__none__"} onValueChange={(v) => set("network_id", v === "__none__" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sin red</SelectItem>
+                {networks.map((n) => (
+                  <SelectItem key={n.id} value={n.id}>
+                    {n.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Las agencias de una misma red ven los productos marcados como “Compartido con mi red”.
             </p>
           </div>
           <div className="space-y-2">

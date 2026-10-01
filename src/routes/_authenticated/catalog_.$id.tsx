@@ -16,12 +16,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney } from "@/lib/currency";
+import { listMyQuotationOrganizations } from "@/lib/quotations";
 import { CatalogImage } from "@/components/catalog-image";
 import { CatalogProductFormDialog } from "@/components/catalog-product-form-dialog";
 import {
   CATALOG_CATEGORY_LABELS,
   PROVIDER_SOURCE_KIND_LABELS,
   SOURCE_TYPE_LABELS,
+  COMMERCIAL_ORIGIN_LABELS,
+  VISIBILITY_LABELS,
+  sellerCommissionSplit,
+  videoEmbedUrl,
   deleteCatalogProduct,
   duplicateCatalogProduct,
   getCatalogProduct,
@@ -87,6 +92,7 @@ function ProductPage() {
   const [edit, setEdit] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const { data: myOrgs = [] } = useQuery({ queryKey: ["my-quotation-organizations"], queryFn: listMyQuotationOrganizations });
   const { data: p, isLoading } = useQuery({ queryKey: ["catalog-product", id], queryFn: () => getCatalogProduct(id) });
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["catalog-product", id] });
@@ -123,6 +129,11 @@ function ProductPage() {
     );
   }
 
+  const isOwner = isAdmin || myOrgs.some((o) => o.id === p.organization_id);
+  const split = p.visibility !== "private"
+    ? sellerCommissionSplit(p.sale_amount != null ? Number(p.sale_amount) : null, p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null)
+    : null;
+  const embed = p.video_url ? videoEmbedUrl(p.video_url) : null;
   const meta = (p.metadata ?? {}) as Record<string, unknown>;
   const metaEntries = Object.entries(meta).filter(([k, v]) => META_LABELS[k] && String(v ?? "").trim() !== "");
   const images = [...p.media].filter((m) => m.type === "image").sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.order_index - b.order_index);
@@ -149,6 +160,7 @@ function ProductPage() {
           >
             <FileText className="mr-2 h-4 w-4" /> Utilizar en cotización
           </Button>
+          {isOwner && (<>
           <Button variant="outline" onClick={() => setEdit(true)}><Pencil className="mr-2 h-4 w-4" /> Editar</Button>
           <Button variant="outline" onClick={() => toggle.mutate()} disabled={toggle.isPending}>
             <Power className="mr-2 h-4 w-4" /> {p.status === "active" ? "Desactivar" : "Activar"}
@@ -157,6 +169,7 @@ function ProductPage() {
           <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar
           </Button>
+          </>)}
         </div>
       </header>
 
@@ -168,13 +181,32 @@ function ProductPage() {
         </div>
       )}
 
+      {p.video_url && (
+        <section className="space-y-2">
+          {embed ? (
+            <iframe src={embed} title={`Video de ${p.name}`} className="aspect-video w-full rounded-xl" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+          ) : (
+            <a href={p.video_url} target="_blank" rel="noreferrer" className="text-sm underline">Ver video del producto</a>
+          )}
+        </section>
+      )}
+
       <section className="grid gap-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:grid-cols-3">
         <Row label="Precio de venta" value={p.sale_amount != null ? formatMoney(p.currency, Number(p.sale_amount)) : null} />
         {isAdmin && <Row label="Costo del proveedor" value={p.cost_amount != null ? formatMoney(p.currency, Number(p.cost_amount)) : null} />}
         <Row label="Moneda" value={p.currency} />
         <Row label="Proveedor / fuente" value={p.provider ? `${p.provider.trade_name} · ${PROVIDER_SOURCE_KIND_LABELS[p.provider.source_kind] ?? ""}` : null} />
         <Row label="Destinos" value={productDestinationNames(p).join(", ")} />
-        <Row label="Origen" value={SOURCE_TYPE_LABELS[p.source_type]} />
+        <Row label="Origen" value={COMMERCIAL_ORIGIN_LABELS[p.commercial_origin]} />
+        <Row label="Carga de datos" value={SOURCE_TYPE_LABELS[p.source_type]} />
+        <Row label="Agencia titular" value={p.owner?.name} />
+        <Row label="Visibilidad" value={VISIBILITY_LABELS[p.visibility]} />
+        {p.visibility !== "private" && (
+          <Row
+            label="Comisión agencia vendedora"
+            value={p.seller_commission_pct != null ? `${Number(p.seller_commission_pct)}%${split ? ` · ${formatMoney(p.currency, split.commission)} vendedora / ${formatMoney(p.currency, split.owner)} titular` : ""}` : null}
+          />
+        )}
         <Row label="Código interno" value={p.internal_code} />
         <Row label="Código externo" value={p.external_code} />
         <Row label="Última sincronización" value={p.last_synced_at ? new Date(p.last_synced_at).toLocaleString("es-AR") : "No aplica (sin integración)"} />

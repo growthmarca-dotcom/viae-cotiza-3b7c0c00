@@ -72,6 +72,46 @@ export const PROVIDER_SOURCE_KIND_LABELS: Record<string, string> = Object.fromEn
   PROVIDER_SOURCE_KINDS.map((s) => [s.value, s.label]),
 );
 
+export const COMMERCIAL_ORIGINS = [
+  { value: "own", label: "Propio / acuerdo directo" },
+  { value: "external", label: "Proveedor externo / mayorista" },
+] as const;
+export type CommercialOrigin = (typeof COMMERCIAL_ORIGINS)[number]["value"];
+export const COMMERCIAL_ORIGIN_LABELS: Record<string, string> = Object.fromEntries(COMMERCIAL_ORIGINS.map((s) => [s.value, s.label]));
+
+export const VISIBILITIES = [
+  { value: "private", label: "Privado" },
+  { value: "network", label: "Compartido con mi red" },
+  { value: "public", label: "Público en ViaE" },
+] as const;
+export type Visibility = (typeof VISIBILITIES)[number]["value"];
+export const VISIBILITY_LABELS: Record<string, string> = Object.fromEntries(VISIBILITIES.map((s) => [s.value, s.label]));
+
+export const SHARING_DECLARATION =
+  "Declaro que tengo derecho a comercializar este producto y autorizar su utilización por otras agencias según las condiciones establecidas.";
+
+export async function listAgencyNetworks() {
+  const { data, error } = await supabase.from("agency_networks").select("id, name").order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Embed de YouTube/Vimeo a partir de la URL; null si no se reconoce. */
+export function videoEmbedUrl(url: string): string | null {
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/i);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  return null;
+}
+
+/** Reparto de comisión entre agencia vendedora y titular. */
+export function sellerCommissionSplit(sale: number | null, pct: number | null) {
+  if (sale == null || pct == null) return null;
+  const commission = Math.round(sale * pct) / 100;
+  return { commission, owner: Math.round((sale - commission) * 100) / 100 };
+}
+
 export const CATALOG_CURRENCIES = ["USD", "ARS", "EUR", "BRL", "CLP"] as const;
 
 /** Mapeo categoría del catálogo → categoría del ítem de cotización. */
@@ -93,6 +133,7 @@ export type ProductMediaRow = Tables<"product_media">;
 
 export type CatalogProduct = ProductRow & {
   provider: { id: string; trade_name: string; source_kind: string } | null;
+  owner: { id: string; name: string } | null;
   destinations: { destination_id: string; is_primary: boolean; destinations: { id: string; name: string } | null }[];
   media: ProductMediaRow[];
 };
@@ -119,10 +160,16 @@ export type CatalogInput = {
   metadata: Record<string, unknown>;
   destination_ids: string[];
   images: CatalogImage[];
+  commercial_origin: CommercialOrigin;
+  visibility: Visibility;
+  seller_commission_pct: number | null;
+  /** true cuando el usuario aceptó la declaración de derechos al compartir. */
+  sharing_declared: boolean;
+  video_url: string | null;
 };
 
 const SELECT =
-  "*, provider:providers(id, trade_name, source_kind), destinations:product_destinations(destination_id, is_primary, destinations(id, name)), media:product_media(*)";
+  "*, owner:organizations!products_organization_id_fkey(id, name:trade_name), provider:providers(id, trade_name, source_kind), destinations:product_destinations(destination_id, is_primary, destinations(id, name)), media:product_media(*)";
 
 export async function listDestinations(): Promise<Destination[]> {
   const { data, error } = await supabase
@@ -200,6 +247,12 @@ export function validateCatalogInput(i: CatalogInput): string | null {
   if (!i.organization_id) return "Falta la agencia propietaria.";
   if (i.cost_amount != null && (Number.isNaN(i.cost_amount) || i.cost_amount < 0)) return "El costo no es válido.";
   if (i.sale_amount != null && (Number.isNaN(i.sale_amount) || i.sale_amount < 0)) return "El precio de venta no es válido.";
+  if (i.commercial_origin === "external" && i.visibility !== "private")
+    return "Los productos de proveedores externos o mayoristas no pueden compartirse.";
+  if (i.visibility !== "private" && !i.sharing_declared) return "Aceptá la declaración de derechos para compartir el producto.";
+  if (i.seller_commission_pct != null && (Number.isNaN(i.seller_commission_pct) || i.seller_commission_pct < 0 || i.seller_commission_pct > 100))
+    return "La comisión debe estar entre 0 y 100%.";
+  if (i.video_url && !/^https?:\/\//i.test(i.video_url)) return "El video debe ser una dirección web (https://...).";
   for (const img of i.images) {
     if (!/^https?:\/\//i.test(img.url) && !isStoredCatalogImage(img.url)) return "Las imágenes deben ser direcciones web (https://...).";
   }
@@ -251,6 +304,11 @@ function toRow(i: CatalogInput) {
     currency: i.currency,
     internal_notes: i.internal_notes,
     metadata: i.metadata as never,
+    commercial_origin: i.commercial_origin,
+    visibility: i.commercial_origin === "external" ? ("private" as const) : i.visibility,
+    seller_commission_pct: i.visibility === "private" ? null : i.seller_commission_pct,
+    sharing_declared_at: i.visibility !== "private" && i.sharing_declared ? new Date().toISOString() : null,
+    video_url: i.video_url?.trim() || null,
   };
 }
 
@@ -307,6 +365,11 @@ export function productToInput(p: CatalogProduct): CatalogInput {
       .filter((m) => m.type === "image")
       .sort((a, b) => a.order_index - b.order_index)
       .map((m) => ({ url: m.url, is_primary: m.is_primary })),
+    commercial_origin: p.commercial_origin,
+    visibility: p.visibility,
+    seller_commission_pct: p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null,
+    sharing_declared: Boolean(p.sharing_declared_at),
+    video_url: p.video_url,
   };
 }
 
@@ -321,6 +384,8 @@ export async function duplicateCatalogProduct(p: CatalogProduct): Promise<string
     external_provider_id: null,
     external_product_id: null,
     external_code: null,
+    visibility: "private",
+    sharing_declared: false,
   });
 }
 
@@ -350,9 +415,21 @@ export type CatalogSnapshot = {
   destinations: string[];
   metadata: Record<string, unknown>;
   captured_at: string;
+  /** Agencia titular del producto (no cambia aunque otra agencia lo venda). */
+  owner_organization_id?: string;
+  owner_organization_name?: string | null;
+  commercial_origin?: string;
+  visibility?: string;
+  seller_commission_pct?: number | null;
+  /** Comisión de la agencia vendedora sobre sale_amount (solo registro). */
+  seller_commission_amount?: number | null;
+  owner_amount?: number | null;
 };
 
 export function buildCatalogSnapshot(p: CatalogProduct): CatalogSnapshot {
+  const split = p.visibility !== "private"
+    ? sellerCommissionSplit(p.sale_amount != null ? Number(p.sale_amount) : null, p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null)
+    : null;
   return {
     product_id: p.id,
     name: p.name,
@@ -370,6 +447,13 @@ export function buildCatalogSnapshot(p: CatalogProduct): CatalogSnapshot {
     destinations: productDestinationNames(p),
     metadata: (p.metadata ?? {}) as Record<string, unknown>,
     captured_at: new Date().toISOString(),
+    owner_organization_id: p.organization_id,
+    owner_organization_name: p.owner?.name ?? null,
+    commercial_origin: p.commercial_origin,
+    visibility: p.visibility,
+    seller_commission_pct: p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null,
+    seller_commission_amount: split?.commission ?? null,
+    owner_amount: split?.owner ?? null,
   };
 }
 

@@ -184,6 +184,7 @@ function CatalogPage() {
                   {p.provider?.trade_name ?? "Sin proveedor"}
                   {" · "}
                   Origen: {SOURCE_TYPE_LABELS[p.source_type]}
+                  {p.visibility !== "private" && ` · ${p.visibility === "network" ? "Compartido con mi red" : "Público en ViaE"}${p.owner?.name ? ` · Titular: ${p.owner.name}` : ""}`}
                 </p>
               </div>
               <span className="shrink-0 text-right font-medium">
