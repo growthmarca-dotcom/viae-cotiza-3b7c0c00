@@ -101,8 +101,8 @@ function EditQuotationPage() {
             return;
           }
           // P0.1: sólo las cotizaciones del modelo vigente exigen ítems.
-          if (!legacy && items.length === 0) {
-            toast.error("Cargá al menos un servicio de la cotización.");
+          if (!legacy && items.length === 0 && !form.accommodationName.trim()) {
+            toast.error("Cargá el alojamiento o al menos un servicio de la cotización.");
             return;
           }
           setSubmitting(true);

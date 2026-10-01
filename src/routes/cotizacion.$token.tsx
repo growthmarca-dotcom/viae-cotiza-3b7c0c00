@@ -119,7 +119,8 @@ function PublicQuotationPage() {
   const company = data.company;
   const guestName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
   const totals = convertTotals(q.total_amount, q.currency, q.exchange_rate);
-  const items = data.items ?? [];
+  // Servicios opcionales: los que no tienen importe no se muestran al cliente.
+  const items = (data.items ?? []).filter((i) => Number(i.quantity ?? 1) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0) > 0);
   const itemAmount = (i: (typeof items)[number]) =>
     Number(i.quantity ?? 1) * Number(i.unit_amount ?? 0) + Number(i.taxes ?? 0);
   const groups = QUOTATION_ITEM_CATEGORIES.map((c) => ({
