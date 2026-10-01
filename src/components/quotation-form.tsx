@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCatalogProduct } from "@/lib/catalog";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { QuotationRecommendation } from "@/lib/recommendations";
-import { ACTIVE_CATALOG_CATEGORIES, primaryImage, productDestinationNames } from "@/lib/catalog";
+import { ACTIVE_CATALOG_CATEGORIES, listCatalogProducts, primaryImage, productDestinationNames } from "@/lib/catalog";
 import { PAYMENT_METHOD_OPTIONS, isPromotionAvailable, listPromotions, type QuotationPromotion } from "@/lib/promotions";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
@@ -583,7 +583,12 @@ function RecommendationsSection({
   set: <K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) => void;
 }) {
   const list = form.recommendations ?? [];
-  const [covers, setCovers] = useState<Record<string, string | null>>({});
+  const { data: catalog = [] } = useQuery({
+    queryKey: ["catalog-products"],
+    queryFn: listCatalogProducts,
+    enabled: list.length > 0,
+  });
+  const covers: Record<string, string | null> = Object.fromEntries(catalog.map((p) => [p.id, primaryImage(p)]));
   return (
     <Section title="Recomendados" cols={1}>
       <p className="text-sm text-muted-foreground">
@@ -619,7 +624,6 @@ function RecommendationsSection({
           label="+ Agregar recomendados"
           onPick={(p) => {
             if (list.some((x) => x.product_id === p.id)) return;
-            setCovers((c) => ({ ...c, [p.id]: primaryImage(p) }));
             set("recommendations", [
               ...list,
               {

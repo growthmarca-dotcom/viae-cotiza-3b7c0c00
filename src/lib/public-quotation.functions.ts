@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { readRecommendationInterests, readRecommendations } from "@/lib/recommendations";
 import { z } from "zod";
 
 type PublicQuotation = {
@@ -19,6 +20,7 @@ type PublicQuotation = {
   accommodation_services: string | null;
   cancellation_policy: string | null;
   payment_methods?: string[] | null;
+  recommendations?: { product_id?: string; title?: string; description?: string; destination?: string }[] | null;
   promotions?: { promotion_id?: string | null; title?: string; text?: string }[] | null;
   price_per_night: number | null;
   taxes: number | null;
@@ -82,7 +84,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, payment_methods, promotions, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, payment_methods, promotions, recommendations, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -98,6 +100,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       accommodationGallery: string[];
       accommodationMapsUrl: string | null;
       accommodationMapCoords: { lat: number; lng: number } | null;
+      recommendations: { product_id: string; title: string; description: string; destination: string; cover: string | null }[];
       company: PublicCompany;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -154,7 +157,8 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       // Galería: única fuente = product_media del Catálogo, ordenada por order_index.
       // Solo se exponen las URLs de imagen (firmadas si son archivos propios).
       const accProductId = (q as { accommodation_catalog_product_id?: string | null }).accommodation_catalog_product_id ?? null;
-      const productIds = [...new Set([...rows.map((r) => r.productId), accProductId].filter(Boolean))] as string[];
+      const recs = readRecommendations((q as { recommendations?: unknown }).recommendations);
+      const productIds = [...new Set([...rows.map((r) => r.productId), accProductId, ...recs.map((r) => r.product_id)].filter(Boolean))] as string[];
       const galleryByProduct = new Map<string, string[]>();
       if (productIds.length) {
         const { data: media } = await supabaseAdmin
@@ -285,7 +289,8 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
           accommodationMapCoords = null;
         }
       }
-      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, accommodationMapCoords, company };
+      const recommendations = recs.map((r) => ({ ...r, cover: galleryByProduct.get(r.product_id)?.[0] ?? null }));
+      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, accommodationMapCoords, recommendations, company };
     },
   );
 
@@ -350,4 +355,82 @@ export const respondPublicQuotation = createServerFn({ method: "POST" })
       throw new Error("No se pudo registrar la respuesta. Intentá de nuevo.");
     }
     return { status: next };
+  });
+
+/**
+ * "Me interesa" de un recomendado desde el enlace público. Solo registra la
+ * señal: no agrega servicios, no cambia precios ni el estado de la cotización.
+ * Reutiliza el centro de notificaciones interno (campana) con los mismos
+ * destinatarios que la respuesta del cliente: agente de la oportunidad + dueño.
+ */
+export const registerRecommendationInterest = createServerFn({ method: "POST" })
+  .inputValidator((data) =>
+    z
+      .object({
+        token: z.string().regex(/^[a-f0-9]{20,64}$/i),
+        productId: z.string().uuid(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }): Promise<{ ok: true; already: boolean }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: q, error } = await supabaseAdmin
+      .from("quotations")
+      .select("id, user_id, opportunity_id, organization_id, client_id, quotation_number, guest_first_name, guest_last_name, archived, recommendations, recommendation_interests")
+      .eq("share_token", data.token)
+      .maybeSingle();
+    if (error || !q || q.archived) throw new Error("Cotización no encontrada");
+    const rec = readRecommendations(q.recommendations).find((r) => r.product_id === data.productId);
+    if (!rec) throw new Error("Recomendado no encontrado");
+    const interests = readRecommendationInterests(q.recommendation_interests);
+    if (interests.some((i) => i.product_id === rec.product_id)) return { ok: true, already: true };
+    const at = new Date().toISOString();
+    const { error: updErr } = await supabaseAdmin
+      .from("quotations")
+      .update({ recommendation_interests: [...interests, { product_id: rec.product_id, title: rec.title, at }] } as never)
+      .eq("id", q.id);
+    if (updErr) {
+      console.error("recommendation interest failed", updErr);
+      throw new Error("No se pudo registrar tu interés. Intentá de nuevo.");
+    }
+
+    let clientName = `${q.guest_first_name ?? ""} ${q.guest_last_name ?? ""}`.trim();
+    if (q.client_id) {
+      const { data: c } = await supabaseAdmin.from("clients").select("full_name, last_name").eq("id", q.client_id).maybeSingle();
+      const n = `${c?.full_name ?? ""} ${c?.last_name ?? ""}`.trim();
+      if (n) clientName = n;
+    }
+    clientName ||= "Cliente";
+    const recipients = new Set<string>();
+    if (q.opportunity_id) {
+      const { data: o } = await supabaseAdmin.from("opportunities").select("assigned_agent_id").eq("id", q.opportunity_id).maybeSingle();
+      if (o?.assigned_agent_id) {
+        const { data: a } = await supabaseAdmin.from("agents").select("user_id").eq("id", o.assigned_agent_id).maybeSingle();
+        if (a?.user_id) recipients.add(a.user_id);
+      }
+    }
+    if (q.user_id) recipients.add(q.user_id);
+    if (recipients.size) {
+      const { error: nErr } = await supabaseAdmin.from("notifications").insert(
+        [...recipients].map((user_id) => ({
+          user_id,
+          kind: "quotation_recommendation_interest",
+          title: "Interés en un recomendado",
+          body: `${clientName} · ${q.quotation_number ?? "Cotización"} · ${rec.title}`,
+          entity: "quotations",
+          entity_id: q.id,
+          data: {
+            quotation_number: q.quotation_number,
+            client_name: clientName,
+            product_id: rec.product_id,
+            product_title: rec.title,
+            at,
+            organization_id: q.organization_id,
+            link: `/quotations/${q.id}`,
+          },
+        })),
+      );
+      if (nErr) console.error("recommendation interest notification failed", nErr);
+    }
+    return { ok: true, already: false };
   });
