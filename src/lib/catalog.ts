@@ -201,7 +201,7 @@ export function validateCatalogInput(i: CatalogInput): string | null {
   if (i.cost_amount != null && (Number.isNaN(i.cost_amount) || i.cost_amount < 0)) return "El costo no es válido.";
   if (i.sale_amount != null && (Number.isNaN(i.sale_amount) || i.sale_amount < 0)) return "El precio de venta no es válido.";
   for (const img of i.images) {
-    if (!/^https?:\/\//i.test(img.url)) return "Las imágenes deben ser direcciones web (https://...).";
+    if (!/^https?:\/\//i.test(img.url) && !isStoredCatalogImage(img.url)) return "Las imágenes deben ser direcciones web (https://...).";
   }
   return null;
 }
@@ -382,4 +382,52 @@ export function snapshotDescription(p: CatalogProduct): string {
       .join(" · ");
   }
   return p.short_description ?? "";
+}
+
+/* ------------------------------------------------------------------ */
+/* Imágenes propias (bucket privado catalog-images)                    */
+/* ------------------------------------------------------------------ */
+
+const IMAGE_PREFIX = "storage://catalog-images/";
+export const CATALOG_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const CATALOG_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export function isStoredCatalogImage(url: string): boolean {
+  return url.startsWith(IMAGE_PREFIX);
+}
+
+export function validateCatalogImageFile(file: File): string | null {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!CATALOG_IMAGE_TYPES.includes(file.type) || !["jpg", "jpeg", "png", "webp"].includes(ext))
+    return "Formato no admitido. Usá JPG, PNG o WebP.";
+  if (file.size > CATALOG_IMAGE_MAX_BYTES) return "La imagen supera los 5 MB.";
+  return null;
+}
+
+/** Sube el archivo y devuelve la referencia que se guarda en product_media.url. */
+export async function uploadCatalogImage(organizationId: string, file: File): Promise<string> {
+  const v = validateCatalogImageFile(file);
+  if (v) throw new Error(v);
+  if (!organizationId) throw new Error("Elegí la agencia antes de subir imágenes.");
+  const ext = file.name.split(".").pop()!.toLowerCase();
+  const path = `${organizationId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("catalog-images")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) {
+    const msg = /row-level security|unauthorized|403/i.test(error.message)
+      ? "No tenés permisos para subir imágenes en esta agencia."
+      : `No se pudo subir la imagen: ${error.message}`;
+    throw new Error(msg);
+  }
+  return IMAGE_PREFIX + path;
+}
+
+export async function resolveCatalogImageUrl(ref: string): Promise<string | null> {
+  if (!isStoredCatalogImage(ref)) return ref;
+  const { data, error } = await supabase.storage
+    .from("catalog-images")
+    .createSignedUrl(ref.slice(IMAGE_PREFIX.length), 60 * 60);
+  if (error) return null;
+  return data.signedUrl;
 }

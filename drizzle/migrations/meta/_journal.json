@@ -183,6 +183,13 @@
       "when": 1790866807858,
       "tag": "0025_catalog_products_providers_destinations",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790869697903,
+      "tag": "0026_catalog_images_storage_policies",
+      "breakpoints": true
     }
   ]
 }
