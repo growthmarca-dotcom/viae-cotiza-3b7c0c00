@@ -25,10 +25,19 @@ import {
 } from "@/lib/quotations";
 import {
   itemsTotal as sumItems,
+  emptyItem,
   requirementsFromLead,
   saveQuotationItems,
+  type QuotationItemCategory,
   type QuotationItemDraft,
 } from "@/lib/quotationItems";
+import {
+  CATALOG_TO_QUOTATION_CATEGORY,
+  buildCatalogSnapshot,
+  getCatalogProduct,
+  productDestinationNames,
+  snapshotDescription,
+} from "@/lib/catalog";
 import { getLead, ensureOpportunityForLead, serviceLabels, leadFullName } from "@/lib/leads";
 import { upsertClientFromQuotation } from "@/lib/crm";
 import { resolveMyOrganizationId } from "@/lib/tenant";
@@ -37,13 +46,15 @@ import { getOpportunity } from "@/lib/pipeline";
 import { getClient } from "@/lib/clients";
 import { quotationInitialFromContext } from "@/lib/quotationPrefill";
 
-type Search = { leadId?: string; opportunityId?: string };
+type Search = { leadId?: string; opportunityId?: string; catalogProductId?: string };
 
 export const Route = createFileRoute("/_authenticated/quotations/new")({
   component: NewQuotationPage,
   validateSearch: (search: Record<string, unknown>): Search => ({
     leadId: typeof search.leadId === "string" ? search.leadId : undefined,
     opportunityId: typeof search.opportunityId === "string" ? search.opportunityId : undefined,
+    catalogProductId:
+      typeof search.catalogProductId === "string" ? search.catalogProductId : undefined,
   }),
   head: () => ({
     meta: [
@@ -66,11 +77,12 @@ export const Route = createFileRoute("/_authenticated/quotations/new")({
 
 function NewQuotationPage() {
   const navigate = useNavigate();
-  const { leadId, opportunityId: opportunityIdParam } = Route.useSearch();
+  const { leadId, opportunityId: opportunityIdParam, catalogProductId } = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
   const [organizationId, setOrganizationId] = useState("");
   const [items, setItems] = useState<QuotationItemDraft[]>([]);
   const [itemsSeeded, setItemsSeeded] = useState(false);
+  const [catalogSeeded, setCatalogSeeded] = useState(false);
 
   const { data: organizations } = useQuery({
     queryKey: ["my-quotation-organizations"],
@@ -100,19 +112,62 @@ function NewQuotationPage() {
     enabled: Boolean(opportunity?.client_id) && !effectiveLeadId,
   });
 
-  const initial = useMemo(
-    () =>
-      quotationInitialFromContext({
-        lead,
-        opportunity: opportunity ?? null,
-        client: contextClient ?? null,
-      }),
-    [lead, opportunity, contextClient],
-  );
+  // "Utilizar en cotización" desde el Catálogo: se copian los datos (snapshot).
+  const { data: catalogProduct, isLoading: catalogLoading } = useQuery({
+    queryKey: ["catalog-product", catalogProductId],
+    queryFn: () => getCatalogProduct(catalogProductId as string),
+    enabled: Boolean(catalogProductId),
+  });
+
+  const initial = useMemo(() => {
+    const base = quotationInitialFromContext({
+      lead,
+      opportunity: opportunity ?? null,
+      client: contextClient ?? null,
+    });
+    const p = catalogProduct;
+    if (!p) return base;
+    const dest = productDestinationNames(p)[0] ?? "";
+    const out = { ...base, destination: base.destination || dest };
+    if (p.category === "accommodation") {
+      const m = (p.metadata ?? {}) as Record<string, string>;
+      Object.assign(out, {
+        accommodationName: p.name,
+        address: m.address ?? "",
+        description: p.description ?? p.short_description ?? "",
+        services: m.services ?? "",
+        cancellationPolicy: m.policies ?? "",
+        pricePerNight: p.sale_amount != null ? String(Number(p.sale_amount)) : "",
+        currency: p.currency,
+      });
+    } else {
+      Object.assign(out, { currency: p.currency });
+    }
+    return out;
+  }, [lead, opportunity, contextClient, catalogProduct]);
+
+  if (catalogProduct && !catalogSeeded) {
+    setCatalogSeeded(true);
+    if (catalogProduct.category !== "accommodation") {
+      const category = (CATALOG_TO_QUOTATION_CATEGORY[catalogProduct.category] ??
+        "other") as QuotationItemCategory;
+      setItems((prev) => [
+        ...prev,
+        emptyItem(category, {
+          title: catalogProduct.name,
+          description: snapshotDescription(catalogProduct),
+          provider_name: catalogProduct.provider?.trade_name ?? "",
+          unit_amount:
+            catalogProduct.sale_amount != null ? String(Number(catalogProduct.sale_amount)) : "",
+          catalog: buildCatalogSnapshot(catalogProduct),
+        }),
+      ]);
+    }
+  }
 
   if (lead && !itemsSeeded) {
     setItemsSeeded(true);
-    setItems(requirementsFromLead(lead));
+    setItems((prev) => [...requirementsFromLead(lead), ...prev]);
   }
 
   const orgs = organizations ?? [];
@@ -122,7 +177,8 @@ function NewQuotationPage() {
   const loadingContext =
     (Boolean(opportunityIdParam) && opportunityLoading) ||
     (Boolean(effectiveLeadId) && leadLoading) ||
-    clientLoading;
+    clientLoading ||
+    (Boolean(catalogProductId) && catalogLoading);
 
   if (loadingContext) {
     return <p className="py-16 text-center text-sm text-muted-foreground">Cargando consulta...</p>;

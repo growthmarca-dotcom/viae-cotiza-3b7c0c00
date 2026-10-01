@@ -1,4 +1,5 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  Library, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Boxes,
   CalendarDays,
@@ -41,6 +42,7 @@ const baseNav = [
   // { to: "/smart-quotes", label: "Cotizaciones inteligentes", icon: Sparkles },
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
+  { to: "/catalog", label: "Catálogo", icon: Library },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/persons", label: "Personas", icon: UserSquare2 },

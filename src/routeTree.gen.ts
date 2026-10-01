@@ -31,6 +31,7 @@ import { Route as AuthenticatedDriverRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCommissionsRouteImport } from './routes/_authenticated/commissions'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedCatalogRouteImport } from './routes/_authenticated/catalog'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAgreementsRouteImport } from './routes/_authenticated/agreements'
 import { Route as AuthenticatedAgentsRouteImport } from './routes/_authenticated/agents'
@@ -49,6 +50,7 @@ import { Route as AuthenticatedOrganizationsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpportunitiesIdRouteImport } from './routes/_authenticated/opportunities_.$id'
 import { Route as AuthenticatedLeadsIdRouteImport } from './routes/_authenticated/leads_.$id'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients_.$id'
+import { Route as AuthenticatedCatalogIdRouteImport } from './routes/_authenticated/catalog_.$id'
 import { Route as AuthenticatedBookingsIdRouteImport } from './routes/_authenticated/bookings_.$id'
 import { Route as AuthenticatedAgentsIdRouteImport } from './routes/_authenticated/agents_.$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -170,6 +172,11 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCatalogRoute = AuthenticatedCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -270,6 +277,11 @@ const AuthenticatedClientsIdRoute = AuthenticatedClientsIdRouteImport.update({
   path: '/clients/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCatalogIdRoute = AuthenticatedCatalogIdRouteImport.update({
+  id: '/catalog_/$id',
+  path: '/catalog/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBookingsIdRoute = AuthenticatedBookingsIdRouteImport.update({
   id: '/bookings_/$id',
   path: '/bookings/$id',
@@ -311,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AuthenticatedAgentsRoute
   '/agreements': typeof AuthenticatedAgreementsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/catalog': typeof AuthenticatedCatalogRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/commissions': typeof AuthenticatedCommissionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -332,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
+  '/catalog/$id': typeof AuthenticatedCatalogIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
   '/opportunities/$id': typeof AuthenticatedOpportunitiesIdRoute
@@ -358,6 +372,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AuthenticatedAgentsRoute
   '/agreements': typeof AuthenticatedAgreementsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/catalog': typeof AuthenticatedCatalogRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/commissions': typeof AuthenticatedCommissionsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -379,6 +394,7 @@ export interface FileRoutesByTo {
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/agents/$id': typeof AuthenticatedAgentsIdRoute
   '/bookings/$id': typeof AuthenticatedBookingsIdRoute
+  '/catalog/$id': typeof AuthenticatedCatalogIdRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
   '/opportunities/$id': typeof AuthenticatedOpportunitiesIdRoute
@@ -407,6 +423,7 @@ export interface FileRoutesById {
   '/_authenticated/agents': typeof AuthenticatedAgentsRoute
   '/_authenticated/agreements': typeof AuthenticatedAgreementsRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
+  '/_authenticated/catalog': typeof AuthenticatedCatalogRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/commissions': typeof AuthenticatedCommissionsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -428,6 +445,7 @@ export interface FileRoutesById {
   '/seguimiento/$token': typeof SeguimientoTokenRoute
   '/_authenticated/agents_/$id': typeof AuthenticatedAgentsIdRoute
   '/_authenticated/bookings_/$id': typeof AuthenticatedBookingsIdRoute
+  '/_authenticated/catalog_/$id': typeof AuthenticatedCatalogIdRoute
   '/_authenticated/clients_/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/leads_/$id': typeof AuthenticatedLeadsIdRoute
   '/_authenticated/opportunities_/$id': typeof AuthenticatedOpportunitiesIdRoute
@@ -456,6 +474,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/agreements'
     | '/bookings'
+    | '/catalog'
     | '/clients'
     | '/commissions'
     | '/dashboard'
@@ -477,6 +496,7 @@ export interface FileRouteTypes {
     | '/seguimiento/$token'
     | '/agents/$id'
     | '/bookings/$id'
+    | '/catalog/$id'
     | '/clients/$id'
     | '/leads/$id'
     | '/opportunities/$id'
@@ -503,6 +523,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/agreements'
     | '/bookings'
+    | '/catalog'
     | '/clients'
     | '/commissions'
     | '/dashboard'
@@ -524,6 +545,7 @@ export interface FileRouteTypes {
     | '/seguimiento/$token'
     | '/agents/$id'
     | '/bookings/$id'
+    | '/catalog/$id'
     | '/clients/$id'
     | '/leads/$id'
     | '/opportunities/$id'
@@ -551,6 +573,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agents'
     | '/_authenticated/agreements'
     | '/_authenticated/bookings'
+    | '/_authenticated/catalog'
     | '/_authenticated/clients'
     | '/_authenticated/commissions'
     | '/_authenticated/dashboard'
@@ -572,6 +595,7 @@ export interface FileRouteTypes {
     | '/seguimiento/$token'
     | '/_authenticated/agents_/$id'
     | '/_authenticated/bookings_/$id'
+    | '/_authenticated/catalog_/$id'
     | '/_authenticated/clients_/$id'
     | '/_authenticated/leads_/$id'
     | '/_authenticated/opportunities_/$id'
@@ -760,6 +784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/catalog': {
+      id: '/_authenticated/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof AuthenticatedCatalogRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bookings': {
       id: '/_authenticated/bookings'
       path: '/bookings'
@@ -886,6 +917,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/catalog_/$id': {
+      id: '/_authenticated/catalog_/$id'
+      path: '/catalog/$id'
+      fullPath: '/catalog/$id'
+      preLoaderRoute: typeof AuthenticatedCatalogIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bookings_/$id': {
       id: '/_authenticated/bookings_/$id'
       path: '/bookings/$id'
@@ -937,6 +975,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgentsRoute: typeof AuthenticatedAgentsRoute
   AuthenticatedAgreementsRoute: typeof AuthenticatedAgreementsRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
+  AuthenticatedCatalogRoute: typeof AuthenticatedCatalogRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedCommissionsRoute: typeof AuthenticatedCommissionsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -954,6 +993,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTransportRoute: typeof AuthenticatedTransportRoute
   AuthenticatedAgentsIdRoute: typeof AuthenticatedAgentsIdRoute
   AuthenticatedBookingsIdRoute: typeof AuthenticatedBookingsIdRoute
+  AuthenticatedCatalogIdRoute: typeof AuthenticatedCatalogIdRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedLeadsIdRoute: typeof AuthenticatedLeadsIdRoute
   AuthenticatedOpportunitiesIdRoute: typeof AuthenticatedOpportunitiesIdRoute
@@ -976,6 +1016,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgentsRoute: AuthenticatedAgentsRoute,
   AuthenticatedAgreementsRoute: AuthenticatedAgreementsRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
+  AuthenticatedCatalogRoute: AuthenticatedCatalogRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedCommissionsRoute: AuthenticatedCommissionsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -993,6 +1034,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTransportRoute: AuthenticatedTransportRoute,
   AuthenticatedAgentsIdRoute: AuthenticatedAgentsIdRoute,
   AuthenticatedBookingsIdRoute: AuthenticatedBookingsIdRoute,
+  AuthenticatedCatalogIdRoute: AuthenticatedCatalogIdRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedLeadsIdRoute: AuthenticatedLeadsIdRoute,
   AuthenticatedOpportunitiesIdRoute: AuthenticatedOpportunitiesIdRoute,
