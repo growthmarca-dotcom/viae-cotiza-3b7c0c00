@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, Loader2, Mail, RefreshCw, UserMinus, Users } from "lucide-react";
@@ -49,6 +50,15 @@ export function OrganizationMembersPanel({
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<OrganizationMemberRole>("agent");
+
+  const network = useQuery({
+    queryKey: ["organization-network", organizationId],
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("network:agency_networks(name)").eq("id", organizationId).maybeSingle();
+      return (data?.network as { name: string } | null)?.name ?? null;
+    },
+  });
+  const networkLabel = networkName ?? network.data ?? null;
 
   const members = useQuery({
     queryKey: ["organization-members", organizationId],
@@ -282,7 +292,7 @@ export function OrganizationMembersPanel({
                         <p className="font-medium">{inv.email}</p>
                         <p className="text-xs text-muted-foreground">{organizationMemberRoleLabel(inv.role)}</p>
                       </td>
-                      <td className="py-2 pr-3">{networkName ?? "—"}</td>
+                      <td className="py-2 pr-3">{networkLabel ?? "—"}</td>
                       <td className="py-2 pr-3">{new Date(inv.created_at).toLocaleDateString("es-AR")}</td>
                       <td className="py-2 pr-3">{INVITATION_STATE_LABELS[st]}</td>
                       <td className="py-2">
