@@ -95,6 +95,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       imageUrls: string[];
       accommodationGallery: string[];
       accommodationMapsUrl: string | null;
+      accommodationMapCoords: { lat: number; lng: number } | null;
       company: PublicCompany;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -258,7 +259,31 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         const raw = (prod?.metadata as { maps_url?: unknown } | null)?.maps_url;
         if (typeof raw === "string" && /^https:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+|goo\.gl|maps\.app\.goo\.gl)\//i.test(raw.trim())) accommodationMapsUrl = raw.trim();
       }
-      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, company };
+      // Coordenadas del pin: se leen del propio enlace de Google Maps (siguiendo la
+      // redirección del enlace corto). Nunca se inventan; si no aparecen, no hay mapa.
+      let accommodationMapCoords: { lat: number; lng: number } | null = null;
+      if (accommodationMapsUrl) {
+        try {
+          let full = accommodationMapsUrl;
+          if (/goo\.gl\//i.test(full)) {
+            const res = await fetch(full, { redirect: "manual", signal: AbortSignal.timeout(4000) });
+            full = res.headers.get("location") ?? full;
+          }
+          const decoded = decodeURIComponent(full);
+          const pin = decoded.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+          const at = decoded.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+          const q = decoded.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+          const m = pin ?? q ?? at;
+          if (m) {
+            const lat = Number(m[1]);
+            const lng = Number(m[2]);
+            if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) accommodationMapCoords = { lat, lng };
+          }
+        } catch {
+          accommodationMapCoords = null;
+        }
+      }
+      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, accommodationMapCoords, company };
     },
   );
 
