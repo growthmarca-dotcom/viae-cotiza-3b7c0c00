@@ -42,6 +42,12 @@ export type QuotationFormState = {
   currency: string;
   exchangeRate: string;
   observations: string;
+  /** Claves de PAYMENT_METHODS ofrecidas al cliente. */
+  paymentMethods?: string[];
+  /** Promoción del catálogo de origen (referencia) + copia del texto al incorporarla. */
+  promotionId?: string;
+  promotionTitle?: string;
+  promotionText?: string;
 };
 
 
@@ -410,6 +416,9 @@ export function QuotationForm({
       {itemsSlot?.(form.currency)}
 
       {summarySlot?.(form.currency)}
+
+      <PaymentAndPromotionSection form={form} set={set} />
+
 
       <Section title="Observaciones" cols={1}>
         <Field label="Notas adicionales">

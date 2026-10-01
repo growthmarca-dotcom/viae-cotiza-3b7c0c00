@@ -40,6 +40,10 @@ export function formToRow(form: QuotationFormState, autoTotal?: string) {
     currency: form.currency || "USD",
     exchange_rate: form.exchangeRate ? Number(form.exchangeRate) : null,
     notes: form.observations || null,
+    payment_methods: form.paymentMethods ?? [],
+    promotion_id: form.promotionId || null,
+    promotion_title: form.promotionTitle?.trim() || null,
+    promotion_text: form.promotionText?.trim() || null,
   };
 
 }
@@ -112,6 +116,10 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     currency: s(row.currency) || "USD",
     exchangeRate: s(row.exchange_rate),
     observations: s(row.notes),
+    paymentMethods: Array.isArray(row.payment_methods) ? (row.payment_methods as string[]) : [],
+    promotionId: s(row.promotion_id),
+    promotionTitle: s(row.promotion_title),
+    promotionText: s(row.promotion_text),
   };
 
 }

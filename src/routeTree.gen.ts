@@ -21,6 +21,7 @@ import { Route as AuthenticatedSettlementsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
+import { Route as AuthenticatedPromotionsRouteImport } from './routes/_authenticated/promotions'
 import { Route as AuthenticatedPersonsRouteImport } from './routes/_authenticated/persons'
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedOpportunitiesRouteImport } from './routes/_authenticated/opportunities'
@@ -116,6 +117,11 @@ const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
 const AuthenticatedProvidersRoute = AuthenticatedProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPromotionsRoute = AuthenticatedPromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPersonsRoute = AuthenticatedPersonsRouteImport.update({
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/persons': typeof AuthenticatedPersonsRoute
+  '/promotions': typeof AuthenticatedPromotionsRoute
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -383,6 +390,7 @@ export interface FileRoutesByTo {
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
   '/persons': typeof AuthenticatedPersonsRoute
+  '/promotions': typeof AuthenticatedPromotionsRoute
   '/providers': typeof AuthenticatedProvidersRoute
   '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/_authenticated/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
   '/_authenticated/persons': typeof AuthenticatedPersonsRoute
+  '/_authenticated/promotions': typeof AuthenticatedPromotionsRoute
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
   '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -485,6 +494,7 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/organizations'
     | '/persons'
+    | '/promotions'
     | '/providers'
     | '/resources'
     | '/settings'
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/organizations'
     | '/persons'
+    | '/promotions'
     | '/providers'
     | '/resources'
     | '/settings'
@@ -584,6 +595,7 @@ export interface FileRouteTypes {
     | '/_authenticated/opportunities'
     | '/_authenticated/organizations'
     | '/_authenticated/persons'
+    | '/_authenticated/promotions'
     | '/_authenticated/providers'
     | '/_authenticated/resources'
     | '/_authenticated/settings'
@@ -712,6 +724,13 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/providers'
       preLoaderRoute: typeof AuthenticatedProvidersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/promotions': {
+      id: '/_authenticated/promotions'
+      path: '/promotions'
+      fullPath: '/promotions'
+      preLoaderRoute: typeof AuthenticatedPromotionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/persons': {
@@ -986,6 +1005,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpportunitiesRoute: typeof AuthenticatedOpportunitiesRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
   AuthenticatedPersonsRoute: typeof AuthenticatedPersonsRoute
+  AuthenticatedPromotionsRoute: typeof AuthenticatedPromotionsRoute
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
   AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -1027,6 +1047,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpportunitiesRoute: AuthenticatedOpportunitiesRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
   AuthenticatedPersonsRoute: AuthenticatedPersonsRoute,
+  AuthenticatedPromotionsRoute: AuthenticatedPromotionsRoute,
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
   AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
