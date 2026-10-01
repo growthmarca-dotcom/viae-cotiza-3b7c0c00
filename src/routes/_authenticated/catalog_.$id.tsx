@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAccount } from "@/hooks/use-account";
 import { formatMoney } from "@/lib/currency";
+import { CatalogImage } from "@/components/catalog-image";
 import { CatalogProductFormDialog } from "@/components/catalog-product-form-dialog";
 import {
   CATALOG_CATEGORY_LABELS,
@@ -162,7 +163,7 @@ function ProductPage() {
       {images.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-3">
           {images.map((m, i) => (
-            <img key={m.id} src={m.url} alt={`${p.name} — imagen ${i + 1}`} loading="lazy" className={`w-full rounded-xl object-cover ${i === 0 ? "aspect-video sm:col-span-2 sm:row-span-2" : "aspect-video"}`} />
+            <CatalogImage key={m.id} src={m.url} alt={`${p.name} — imagen ${i + 1}`} className={`w-full rounded-xl object-cover ${i === 0 ? "aspect-video sm:col-span-2 sm:row-span-2" : "aspect-video"}`} />
           ))}
         </div>
       )}

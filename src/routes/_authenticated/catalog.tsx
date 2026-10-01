@@ -1,3 +1,4 @@
+import { CatalogImage } from "@/components/catalog-image";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -168,7 +169,7 @@ function CatalogPage() {
               className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary"
             >
               <div className="grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">
-                {img ? <img src={img} alt={p.name} className="h-full w-full object-cover" loading="lazy" /> : <ImageOff className="h-5 w-5 text-muted-foreground" />}
+                {img ? <CatalogImage src={img} alt={p.name} className="h-full w-full object-cover" /> : <ImageOff className="h-5 w-5 text-muted-foreground" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">

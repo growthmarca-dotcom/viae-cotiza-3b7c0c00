@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Star, Trash2 } from "lucide-react";
+import { Loader2, Plus, Star, Trash2, Upload } from "lucide-react";
+import { CatalogImage } from "@/components/catalog-image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -341,8 +342,8 @@ export function CatalogProductFormDialog({
             <h3 className="font-display text-lg font-semibold">Imágenes</h3>
             {f.images.map((img, idx) => (
               <div key={`${img.url}-${idx}`} className="flex items-center gap-3 rounded-xl border border-border p-2">
-                <img src={img.url} alt={`Imagen ${idx + 1} del producto`} className="h-12 w-16 rounded object-cover" loading="lazy" />
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{img.url}</span>
+                <CatalogImage src={img.url} alt={`Imagen ${idx + 1} del producto`} className="h-12 w-16 rounded object-cover" />
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{isStoredCatalogImage(img.url) ? "Imagen subida" : img.url}</span>
                 <Button
                   type="button"
                   variant={img.is_primary ? "default" : "ghost"}
@@ -356,6 +357,25 @@ export function CatalogProductFormDialog({
                 </Button>
               </div>
             ))}
+            {pending && (
+              <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-2">
+                <img src={pending.preview} alt="Vista previa de la imagen a subir" className="h-16 w-20 rounded object-cover" />
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{pending.file.name}</span>
+                <Button type="button" size="sm" disabled={uploading} onClick={confirmUpload}>
+                  {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />} Subir imagen
+                </Button>
+                <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={clearPending}>
+                  Cancelar
+                </Button>
+              </div>
+            )}
+            <div>
+              <Label htmlFor="catalog-image-file" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent">
+                <Upload className="h-4 w-4" /> Elegir imagen del dispositivo
+              </Label>
+              <input id="catalog-image-file" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="sr-only" onChange={pickFile} />
+              <p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP, hasta 5 MB. También podés pegar una dirección web.</p>
+            </div>
             <div className="flex gap-2">
               <Input placeholder="https://… dirección de la imagen" value={newImg} onChange={(e) => setNewImg(e.target.value)} />
               <Button
