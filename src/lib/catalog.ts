@@ -424,6 +424,8 @@ export type CatalogSnapshot = {
   /** Comisión de la agencia vendedora sobre sale_amount (solo registro). */
   seller_commission_amount?: number | null;
   owner_amount?: number | null;
+  /** Video del producto al momento de agregarlo (se publica en la cotización). */
+  video_url?: string | null;
 };
 
 export function buildCatalogSnapshot(p: CatalogProduct): CatalogSnapshot {
@@ -454,6 +456,7 @@ export function buildCatalogSnapshot(p: CatalogProduct): CatalogSnapshot {
     seller_commission_pct: p.seller_commission_pct != null ? Number(p.seller_commission_pct) : null,
     seller_commission_amount: split?.commission ?? null,
     owner_amount: split?.owner ?? null,
+    video_url: p.video_url ?? null,
   };
 }
 

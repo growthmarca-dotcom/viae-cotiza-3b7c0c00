@@ -327,6 +327,18 @@ function PublicQuotationPage() {
                         {i.notes}
                       </p>
                     )}
+                    {i.video_embed_url && (
+                      <div className="mt-3 aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border">
+                        <iframe
+                          src={i.video_embed_url}
+                          title={`Video: ${i.title ?? ""}`}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                   </div>
                   <span className="font-medium">
                     {formatMoney(q.currency, itemAmount(i))}

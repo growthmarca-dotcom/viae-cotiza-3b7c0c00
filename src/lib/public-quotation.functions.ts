@@ -48,7 +48,18 @@ export type PublicQuotationItem = {
   unit_amount: number | null;
   taxes: number | null;
   notes: string | null;
+  /** Reproductor de YouTube/Vimeo copiado al agregar el producto; null si no hay. */
+  video_embed_url: string | null;
 };
+
+/** Solo URLs de embed reconocidas (YouTube/Vimeo); cualquier otra se descarta. */
+function publicVideoEmbed(url: string): string | null {
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/i);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  return null;
+}
 
 export type PublicCompany = {
   companyName: string | null;
@@ -117,14 +128,21 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       }
 
       // Servicios de la cotización integral (sin proveedor ni costos internos).
+      // El video sale SOLO de la copia guardada en el ítem (details.catalog),
+      // nunca del Catálogo vivo; del snapshot no se publica ningún otro dato.
       const { data: itemRows } = await supabaseAdmin
         .from("quotation_items")
         .select(
-          "category, title, description, service_date, end_date, time_label, origin, destination, quantity, pax_count, unit_amount, taxes, notes",
+          "category, title, description, service_date, end_date, time_label, origin, destination, quantity, pax_count, unit_amount, taxes, notes, details",
         )
         .eq("quotation_id", quotation.id)
         .order("position", { ascending: true });
-      const items = (itemRows ?? []) as unknown as PublicQuotationItem[];
+      const items: PublicQuotationItem[] = (itemRows ?? []).map((r) => {
+        const { details, ...rest } = r as unknown as PublicQuotationItem & { details: unknown };
+        const cat = (details as { catalog?: { video_url?: unknown } } | null)?.catalog;
+        const raw = typeof cat?.video_url === "string" ? cat.video_url : null;
+        return { ...rest, video_embed_url: raw ? publicVideoEmbed(raw) : null };
+      });
 
       let imageUrls: string[] = [];
       if (images && images.length > 0) {
