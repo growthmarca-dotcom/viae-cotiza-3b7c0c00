@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Star, Trash2, Upload } from "lucide-react";
+import { GripVertical, Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { CatalogImage } from "@/components/catalog-image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -182,10 +182,9 @@ export function CatalogProductFormDialog({
     }
     if (uploaded.length) {
       setF((prev) => {
-        const hasPrimary = prev.images.some((m) => m.is_primary);
         return {
           ...prev,
-          images: [...prev.images, ...uploaded.map((url, i) => ({ url, is_primary: !hasPrimary && i === 0 }))],
+          images: [...prev.images, ...uploaded.map((url) => ({ url, is_primary: false }))].map((m, i) => ({ ...m, is_primary: i === 0 })),
         };
       });
       toast.success(uploaded.length === 1 ? "Imagen subida" : `${uploaded.length} imágenes subidas`);
@@ -476,23 +475,41 @@ export function CatalogProductFormDialog({
 
           <section className="space-y-3">
             <h3 className="font-display text-lg font-semibold">Multimedia · Imágenes</h3>
-            {f.images.map((img, idx) => (
-              <div key={`${img.url}-${idx}`} className="flex items-center gap-3 rounded-xl border border-border p-2">
-                <CatalogImage src={img.url} alt={`Imagen ${idx + 1} del producto`} className="h-12 w-16 rounded object-cover" />
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{isStoredCatalogImage(img.url) ? "Imagen subida" : img.url}</span>
-                <Button
-                  type="button"
-                  variant={img.is_primary ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => set("images", f.images.map((m, i) => ({ ...m, is_primary: i === idx })))}
-                >
-                  <Star className="mr-1 h-3.5 w-3.5" /> {img.is_primary ? "Principal" : "Hacer principal"}
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => set("images", f.images.filter((_, i) => i !== idx))}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            {f.images.length > 0 && (
+              <p className="text-xs text-muted-foreground">Arrastrá las miniaturas para ordenarlas. La primera es la portada.</p>
+            )}
+            {f.images.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {f.images.map((img, idx) => (
+                  <div
+                    key={`${img.url}-${idx}`}
+                    data-testid="catalog-image-thumb"
+                    draggable
+                    onDragStart={(e) => { setDragIdx(idx); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                    onDrop={(e) => { e.preventDefault(); if (dragIdx != null) moveImage(dragIdx, idx); setDragIdx(null); }}
+                    onDragEnd={() => setDragIdx(null)}
+                    className={`group relative cursor-grab overflow-hidden rounded-xl border bg-card active:cursor-grabbing ${idx === 0 ? "border-primary ring-1 ring-primary" : "border-border"} ${dragIdx === idx ? "opacity-50" : ""}`}
+                  >
+                    <CatalogImage src={img.url} alt={`Imagen ${idx + 1} del producto`} className="aspect-[4/3] w-full object-cover" />
+                    <span className="absolute left-1.5 top-1.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[11px] font-medium">
+                      {idx === 0 ? "Portada" : idx + 1}
+                    </span>
+                    <GripVertical className="absolute bottom-1.5 left-1.5 h-4 w-4 text-foreground/70" />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      aria-label={`Eliminar imagen ${idx + 1}`}
+                      className="absolute right-1.5 top-1.5 h-7 w-7"
+                      onClick={() => set("images", f.images.filter((_, i) => i !== idx).map((m, i) => ({ ...m, is_primary: i === 0 })))}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
             {pending.length > 0 && (
               <div className="space-y-2 rounded-xl border border-dashed border-border p-2">
                 {pending.map((p) => (
