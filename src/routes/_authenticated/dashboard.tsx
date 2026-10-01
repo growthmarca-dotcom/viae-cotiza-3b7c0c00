@@ -11,7 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { expireDueQuotations } from "@/lib/quotationStatus";
 import { Button } from "@/components/ui/button";
-import { listOpportunities, OPPORTUNITY_STAGES } from "@/lib/opportunities";
+import { listOpportunities, OPPORTUNITY_STAGES, stageGroup } from "@/lib/opportunities";
 import { formatMoney, toAnalysisCurrency } from "@/lib/currency";
 import { useAnalysisCurrency } from "@/hooks/use-analysis-currency";
 import { useAccount } from "@/hooks/use-account";
@@ -427,34 +427,35 @@ function TransportEconomicsSection() {
 }
 
 
-/** Indicadores del pipeline comercial (oportunidades). */
+/**
+ * Indicadores del pipeline comercial (oportunidades).
+ * Clasifica por grupo de etapa existente (open / won / lost) y totaliza por
+ * moneda original, sin conversión ni tipo de cambio.
+ */
 function PipelineSection() {
-  const analysisCurrency = useAnalysisCurrency();
-
   const { data } = useQuery({
-    queryKey: ["opportunity-stats", analysisCurrency],
+    queryKey: ["opportunity-stats-by-currency"],
     queryFn: async () => {
       const rows = await listOpportunities();
+      const groups = { open: [], won: [], lost: [] } as Record<
+        "open" | "won" | "lost",
+        typeof rows
+      >;
+      for (const r of rows) groups[stageGroup(r.stage)].push(r);
 
-      // Tipo de cambio de la cotización vinculada, para no mezclar monedas.
-      const quotationIds = rows.map((r) => r.quotation_id).filter(Boolean) as string[];
-      const rates = new Map<string, number | null>();
-      if (quotationIds.length) {
-        const { data: qs } = await supabase
-          .from("quotations")
-          .select("id, exchange_rate")
-          .in("id", quotationIds);
-        for (const q of qs ?? []) rates.set(q.id, q.exchange_rate);
-      }
+      const sum = (list: typeof rows, cur: string) =>
+        list
+          .filter((r) => (r.currency || "USD") === cur)
+          .reduce((acc, r) => acc + Number(r.estimated_value ?? 0), 0);
+      const other = (list: typeof rows) =>
+        list.filter((r) => !["ARS", "USD"].includes(r.currency || "USD")).length;
 
-      const converted = rows.map((r) =>
-        toAnalysisCurrency(
-          r.estimated_value,
-          r.currency,
-          analysisCurrency,
-          r.quotation_id ? rates.get(r.quotation_id) : null,
-        ),
-      );
+      const block = (list: typeof rows) => ({
+        count: list.length,
+        ars: sum(list, "ARS"),
+        usd: sum(list, "USD"),
+        other: other(list),
+      });
 
       const byStage = OPPORTUNITY_STAGES.map((s) => ({
         label: s.label,
@@ -462,45 +463,76 @@ function PipelineSection() {
       }));
 
       return {
-        count: rows.length,
-        totalValue: converted.reduce((acc: number, v) => acc + (v ?? 0), 0),
-        excluded: converted.filter((v) => v == null).length,
+        open: block(groups.open),
+        won: block(groups.won),
+        lost: block(groups.lost),
         quoted: rows.filter((r) => r.stage === "quoted").length,
-        booked: rows.filter((r) => r.stage === "booked").length,
-        lost: rows.filter((r) => r.stage === "lost" || r.stage === "cancelled").length,
         byStage,
       };
     },
   });
 
-  const cards = [
-    { label: "Oportunidades", value: String(data?.count ?? 0) },
+  const blocks = [
     {
-      label: `Valor total estimado (${analysisCurrency})`,
-      value: formatMoney(analysisCurrency, data?.totalValue ?? 0),
+      title: "Pipeline activo",
+      countLabel: "Oportunidades activas",
+      b: data?.open,
+      prefix: "Valor pipeline",
     },
-    { label: "Cotizaciones enviadas", value: String(data?.quoted ?? 0) },
-    { label: "Reservas confirmadas", value: String(data?.booked ?? 0) },
-    { label: "Ventas perdidas", value: String(data?.lost ?? 0) },
+    {
+      title: "Confirmado",
+      countLabel: "Operaciones ganadas/confirmadas",
+      b: data?.won,
+      prefix: "Valor confirmado",
+    },
+    {
+      title: "Perdido / Rechazado",
+      countLabel: "Operaciones perdidas/rechazadas",
+      b: data?.lost,
+      prefix: "Valor perdido",
+    },
   ];
+  const otherCount =
+    (data?.open.other ?? 0) + (data?.won.other ?? 0) + (data?.lost.other ?? 0);
 
   return (
     <section className="space-y-4">
       <h2 className="font-display text-2xl font-semibold tracking-tight">Pipeline comercial</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {cards.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <span className="text-sm text-muted-foreground">{c.label}</span>
-            <p className="mt-3 font-display text-2xl font-semibold tracking-tight">{c.value}</p>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {blocks.map(({ title, countLabel, b, prefix }) => (
+          <div
+            key={title}
+            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            data-testid={`pipeline-${title}`}
+          >
+            <h3 className="font-display text-lg font-semibold">{title}</h3>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{countLabel}</dt>
+                <dd className="font-medium">{b?.count ?? 0}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{prefix} ARS</dt>
+                <dd className="font-display text-lg font-semibold">
+                  {formatMoney("ARS", b?.ars ?? 0)}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted-foreground">{prefix} USD</dt>
+                <dd className="font-display text-lg font-semibold">
+                  {formatMoney("USD", b?.usd ?? 0)}
+                </dd>
+              </div>
+            </dl>
           </div>
         ))}
       </div>
-      {(data?.excluded ?? 0) > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {data?.excluded} oportunidad(es) quedaron fuera del total porque su moneda no es
-          convertible a {analysisCurrency}.
-        </p>
-      )}
+      <p className="text-xs text-muted-foreground">
+        Cotizaciones enviadas: {data?.quoted ?? 0}. Los importes se muestran en su moneda original,
+        sin conversión.
+        {otherCount > 0 &&
+          ` ${otherCount} oportunidad(es) en otras monedas no se incluyen en estos totales.`}
+      </p>
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h3 className="mb-4 font-display text-lg font-semibold">Oportunidades por estado</h3>
         <div className="grid gap-3 sm:grid-cols-3">
