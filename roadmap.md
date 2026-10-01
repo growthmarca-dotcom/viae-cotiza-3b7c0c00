@@ -40,3 +40,8 @@
 - `smart_quotes.acceptance_email_sent_at` como marca de idempotencia del aviso.
 - `src/lib/acceptance-email.server.ts`: resuelve destinatario desde la organización propietaria, arma el aviso (cliente, referencia, importe, fecha, agencia, reserva si existe, enlace interno) y nunca bloquea la aceptación.
 - PENDIENTE EXTERNO: dominio remitente de plataforma (`notificaciones.viaetravel.com`) sin verificar → el envío real todavía no está operativo (`provider_not_configured`).
+
+## Catálogo ViaE + proveedores/fuentes (v1.15)
+- [x] Catálogo sobre `products` existente, destinos, tipo de fuente en `providers`, origen e identificación externa, costo/venta/moneda, imágenes por URL
+- [x] Pantallas /catalog y /catalog/$id; selector "Desde catálogo" en cotización con copia inmutable de los datos
+- [ ] Integraciones externas (HotelDO, Civitatis, etc.) — fuera de alcance por decisión
