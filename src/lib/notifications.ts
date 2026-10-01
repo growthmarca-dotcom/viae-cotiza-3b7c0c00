@@ -45,6 +45,7 @@ const KIND_LABEL: Record<string, string> = {
   operation_service: "Servicio de la reserva",
   operation_incident: "Incidencia operativa",
   quotation_client_response: "Respuesta del cliente",
+  quotation_recommendation_interest: "Interés en recomendado",
 };
 
 /** Enlace interno del aviso, cuando la notificación lo trae en `data.link`. */
