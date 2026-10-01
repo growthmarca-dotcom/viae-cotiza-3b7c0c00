@@ -18,6 +18,9 @@ type PublicQuotation = {
   accommodation_description: string | null;
   accommodation_services: string | null;
   cancellation_policy: string | null;
+  payment_methods?: string[] | null;
+  promotion_title?: string | null;
+  promotion_text?: string | null;
   price_per_night: number | null;
   taxes: number | null;
   other_charges: number | null;
@@ -80,7 +83,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, payment_methods, promotion_title, promotion_text, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
