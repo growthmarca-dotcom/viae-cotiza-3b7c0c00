@@ -169,7 +169,7 @@ export type CatalogInput = {
 };
 
 const SELECT =
-  "*, owner:organizations!products_organization_id_fkey(id, name), provider:providers(id, trade_name, source_kind), destinations:product_destinations(destination_id, is_primary, destinations(id, name)), media:product_media(*)";
+  "*, owner:organizations!products_organization_id_fkey(id, name:trade_name), provider:providers(id, trade_name, source_kind), destinations:product_destinations(destination_id, is_primary, destinations(id, name)), media:product_media(*)";
 
 export async function listDestinations(): Promise<Destination[]> {
   const { data, error } = await supabase
