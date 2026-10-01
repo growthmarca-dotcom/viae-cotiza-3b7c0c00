@@ -232,6 +232,13 @@
       "when": 1790886378658,
       "tag": "0032_quotation_multiple_promotions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790886730325,
+      "tag": "0033_quotation_recommendations",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Sparkles,
+  Heart,
   Compass,
   Copy,
   Download,
@@ -25,6 +27,7 @@ import {
   clientCanRespond,
   getPublicQuotation,
   respondPublicQuotation,
+  registerRecommendationInterest,
 } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
 import { convertTotals, formatMoney } from "@/lib/currency";
@@ -69,6 +72,21 @@ function PublicQuotationPage() {
   const { token } = Route.useParams();
   const fetchFn = useServerFn(getPublicQuotation);
   const respondFn = useServerFn(respondPublicQuotation);
+  const interestFn = useServerFn(registerRecommendationInterest);
+  const [interested, setInterested] = useState<Record<string, boolean>>({});
+  const [interestBusy, setInterestBusy] = useState<string | null>(null);
+  async function markInterest(productId: string) {
+    setInterestBusy(productId);
+    try {
+      await interestFn({ data: { token, productId } });
+      setInterested((m) => ({ ...m, [productId]: true }));
+      toast.success("¡Gracias! Tu agente te va a contactar.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo registrar tu interés.");
+    } finally {
+      setInterestBusy(null);
+    }
+  }
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<"accept" | "reject" | null>(null);
   const [answer, setAnswer] = useState<"accepted" | "rejected" | null>(null);
@@ -189,7 +207,7 @@ function PublicQuotationPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} accommodationGallery={data.accommodationGallery ?? []} accommodationMapsUrl={data.accommodationMapsUrl ?? null} />
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} accommodationGallery={data.accommodationGallery ?? []} accommodationMapsUrl={data.accommodationMapsUrl ?? null} recommendations={data.recommendations ?? []} />
     <div
       className="min-h-screen bg-background print-screen-hide"
       style={
@@ -559,6 +577,50 @@ function PublicQuotationPage() {
                 </div>
               </>
             )}
+          </section>
+        )}
+
+        {(data.recommendations ?? []).length > 0 && (
+          <section
+            data-testid="public-recommendations"
+            className="rounded-2xl border border-dashed bg-muted/30 p-5 sm:p-6"
+            style={{ borderColor: `${company.accentColor}99` }}
+          >
+            <h2 className="flex items-center gap-2 font-display text-xl font-semibold" style={{ color: company.primaryColor }}>
+              <Sparkles className="h-5 w-5" style={{ color: company.accentColor }} /> Recomendados
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sugerencias opcionales para tu viaje. No están incluidas en esta propuesta ni en su total.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {(data.recommendations ?? []).map((r) => (
+                <article key={r.product_id} className="overflow-hidden rounded-xl border bg-card">
+                  {r.cover ? (
+                    <img src={r.cover} alt={r.title} loading="lazy" className="aspect-[16/10] w-full object-cover" />
+                  ) : null}
+                  <div className="space-y-2 p-4">
+                    <h3 className="font-display text-base font-semibold">{r.title}</h3>
+                    {r.destination && <p className="text-xs uppercase tracking-wide text-muted-foreground">{r.destination}</p>}
+                    {r.description && <p className="line-clamp-4 text-sm text-muted-foreground">{r.description}</p>}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={interested[r.product_id] || interestBusy === r.product_id}
+                      onClick={() => markInterest(r.product_id)}
+                    >
+                      {interestBusy === r.product_id ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : interested[r.product_id] ? (
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Heart className="mr-2 h-4 w-4" />
+                      )}
+                      {interested[r.product_id] ? "Interés enviado" : "Me interesa"}
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
         )}
 
