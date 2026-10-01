@@ -5502,6 +5502,7 @@ export type Database = {
           accepted_at: string | null
           accepted_by: string | null
           accommodation_address: string | null
+          accommodation_catalog_product_id: string | null
           accommodation_description: string | null
           accommodation_name: string | null
           accommodation_services: string | null
@@ -5551,6 +5552,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           accommodation_address?: string | null
+          accommodation_catalog_product_id?: string | null
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
@@ -5600,6 +5602,7 @@ export type Database = {
           accepted_at?: string | null
           accepted_by?: string | null
           accommodation_address?: string | null
+          accommodation_catalog_product_id?: string | null
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
@@ -5646,6 +5649,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quotations_accommodation_catalog_product_id_fkey"
+            columns: ["accommodation_catalog_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotations_client_id_fkey"
             columns: ["client_id"]

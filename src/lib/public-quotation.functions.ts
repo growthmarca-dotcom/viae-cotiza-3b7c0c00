@@ -80,7 +80,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -93,6 +93,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       quotation: PublicQuotation;
       items: PublicQuotationItem[];
       imageUrls: string[];
+      accommodationGallery: string[];
       company: PublicCompany;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -148,7 +149,8 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       });
       // Galería: única fuente = product_media del Catálogo, ordenada por order_index.
       // Solo se exponen las URLs de imagen (firmadas si son archivos propios).
-      const productIds = [...new Set(rows.map((r) => r.productId).filter(Boolean))] as string[];
+      const accProductId = (q as { accommodation_catalog_product_id?: string | null }).accommodation_catalog_product_id ?? null;
+      const productIds = [...new Set([...rows.map((r) => r.productId), accProductId].filter(Boolean))] as string[];
       const galleryByProduct = new Map<string, string[]>();
       if (productIds.length) {
         const { data: media } = await supabaseAdmin
@@ -247,7 +249,8 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         footerText: org?.footer_text ?? settings?.footer_text ?? null,
       };
 
-      return { quotation, items, imageUrls, company };
+      const accommodationGallery = accProductId ? galleryByProduct.get(accProductId) ?? [] : [];
+      return { quotation, items, imageUrls, accommodationGallery, company };
     },
   );
 

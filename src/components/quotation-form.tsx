@@ -26,6 +26,8 @@ export type QuotationFormState = {
   nights: string;
   pax: string;
   accommodationName: string;
+  /** Producto del Catálogo elegido como alojamiento (su galería se publica). */
+  accommodationCatalogProductId?: string;
   address: string;
   description: string;
   services: string;
@@ -222,6 +224,7 @@ export function QuotationForm({
               setForm((f) => ({
                 ...f,
                 accommodationName: p.name,
+                accommodationCatalogProductId: p.id,
                 address: m.address ?? f.address,
                 description: p.description ?? p.short_description ?? f.description,
                 services: m.services ?? f.services,

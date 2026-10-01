@@ -133,6 +133,7 @@ function NewQuotationPage() {
       const m = (p.metadata ?? {}) as Record<string, string>;
       Object.assign(out, {
         accommodationName: p.name,
+        accommodationCatalogProductId: p.id,
         address: m.address ?? "",
         description: p.description ?? p.short_description ?? "",
         services: m.services ?? "",
