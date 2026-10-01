@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_networks: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           access_status: Database["public"]["Enums"]["agent_access_status"]
@@ -3783,6 +3801,7 @@ export type Database = {
           instagram: string | null
           legal_name: string | null
           logo_path: string | null
+          network_id: string | null
           notes: string | null
           notification_email: string | null
           phone: string | null
@@ -3815,6 +3834,7 @@ export type Database = {
           instagram?: string | null
           legal_name?: string | null
           logo_path?: string | null
+          network_id?: string | null
           notes?: string | null
           notification_email?: string | null
           phone?: string | null
@@ -3847,6 +3867,7 @@ export type Database = {
           instagram?: string | null
           legal_name?: string | null
           logo_path?: string | null
+          network_id?: string | null
           notes?: string | null
           notification_email?: string | null
           phone?: string | null
@@ -3876,6 +3897,13 @@ export type Database = {
             columns: ["base_currency_id"]
             isOneToOne: false
             referencedRelation: "currencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "agency_networks"
             referencedColumns: ["id"]
           },
         ]
@@ -4927,6 +4955,7 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["product_category"]
           city: string | null
+          commercial_origin: Database["public"]["Enums"]["product_commercial_origin"]
           cost_amount: number | null
           country: string | null
           created_at: string
@@ -4946,16 +4975,23 @@ export type Database = {
           organization_id: string
           provider_id: string | null
           sale_amount: number | null
+          seller_commission_fixed: number | null
+          seller_commission_pct: number | null
+          sharing_declared_at: string | null
+          sharing_declared_by: string | null
           short_description: string | null
           source_type: Database["public"]["Enums"]["product_source_type"]
           state: string | null
           status: Database["public"]["Enums"]["product_status"]
           updated_at: string
           user_id: string
+          video_url: string | null
+          visibility: Database["public"]["Enums"]["product_visibility"]
         }
         Insert: {
           category?: Database["public"]["Enums"]["product_category"]
           city?: string | null
+          commercial_origin?: Database["public"]["Enums"]["product_commercial_origin"]
           cost_amount?: number | null
           country?: string | null
           created_at?: string
@@ -4975,16 +5011,23 @@ export type Database = {
           organization_id: string
           provider_id?: string | null
           sale_amount?: number | null
+          seller_commission_fixed?: number | null
+          seller_commission_pct?: number | null
+          sharing_declared_at?: string | null
+          sharing_declared_by?: string | null
           short_description?: string | null
           source_type?: Database["public"]["Enums"]["product_source_type"]
           state?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
           user_id?: string
+          video_url?: string | null
+          visibility?: Database["public"]["Enums"]["product_visibility"]
         }
         Update: {
           category?: Database["public"]["Enums"]["product_category"]
           city?: string | null
+          commercial_origin?: Database["public"]["Enums"]["product_commercial_origin"]
           cost_amount?: number | null
           country?: string | null
           created_at?: string
@@ -5004,12 +5047,18 @@ export type Database = {
           organization_id?: string
           provider_id?: string | null
           sale_amount?: number | null
+          seller_commission_fixed?: number | null
+          seller_commission_pct?: number | null
+          sharing_declared_at?: string | null
+          sharing_declared_by?: string | null
           short_description?: string | null
           source_type?: Database["public"]["Enums"]["product_source_type"]
           state?: string | null
           status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
           user_id?: string
+          video_url?: string | null
+          visibility?: Database["public"]["Enums"]["product_visibility"]
         }
         Relationships: [
           {
@@ -7609,6 +7658,13 @@ export type Database = {
         Returns: boolean
       }
       can_read_search_result: { Args: { _result_id: string }; Returns: boolean }
+      can_read_shared_product: {
+        Args: {
+          _org_id: string
+          _visibility: Database["public"]["Enums"]["product_visibility"]
+        }
+        Returns: boolean
+      }
       can_read_smart_quote: { Args: { _quote_id: string }; Returns: boolean }
       change_organization_member_role: {
         Args: {
@@ -8359,9 +8415,11 @@ export type Database = {
         | "other"
         | "insurance"
         | "flight"
+      product_commercial_origin: "own" | "external"
       product_media_type: "image" | "video" | "document"
       product_source_type: "manual" | "api" | "feed" | "import" | "other"
       product_status: "draft" | "active" | "inactive" | "archived"
+      product_visibility: "private" | "network" | "public"
       provider_operation_mode:
         | "manual"
         | "viae_portal"
@@ -9052,9 +9110,11 @@ export const Constants = {
         "insurance",
         "flight",
       ],
+      product_commercial_origin: ["own", "external"],
       product_media_type: ["image", "video", "document"],
       product_source_type: ["manual", "api", "feed", "import", "other"],
       product_status: ["draft", "active", "inactive", "archived"],
+      product_visibility: ["private", "network", "public"],
       provider_operation_mode: [
         "manual",
         "viae_portal",
