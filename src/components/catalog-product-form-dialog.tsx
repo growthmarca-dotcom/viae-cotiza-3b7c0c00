@@ -139,34 +139,59 @@ export function CatalogProductFormDialog({
   const [f, setF] = useState<CatalogInput>(initial ?? blank());
   const [newDest, setNewDest] = useState("");
   const [newImg, setNewImg] = useState("");
-  const [pending, setPending] = useState<{ file: File; preview: string } | null>(null);
+  type Pending = { key: string; file: File; preview: string; status: "ready" | "uploading" | "error"; error?: string };
+  const [pending, setPending] = useState<Pending[]>([]);
   const [uploading, setUploading] = useState(false);
   const clearPending = () => {
-    if (pending) URL.revokeObjectURL(pending.preview);
-    setPending(null);
+    pending.forEach((p) => URL.revokeObjectURL(p.preview));
+    setPending([]);
   };
+  const removePending = (key: string) =>
+    setPending((list) => {
+      const p = list.find((x) => x.key === key);
+      if (p) URL.revokeObjectURL(p.preview);
+      return list.filter((x) => x.key !== key);
+    });
   const pickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
-    const err = validateCatalogImageFile(file);
-    if (err) return void toast.error(err);
-    clearPending();
-    setPending({ file, preview: URL.createObjectURL(file) });
+    const ok: Pending[] = [];
+    for (const file of files) {
+      const err = validateCatalogImageFile(file);
+      if (err) toast.error(`${file.name}: ${err}`);
+      else ok.push({ key: crypto.randomUUID(), file, preview: URL.createObjectURL(file), status: "ready" });
+    }
+    if (ok.length) setPending((list) => [...list, ...ok]);
   };
   const confirmUpload = async () => {
-    if (!pending) return;
+    const queue = pending.filter((p) => p.status !== "uploading");
+    if (!queue.length) return;
     setUploading(true);
-    try {
-      const ref = await uploadCatalogImage(f.organization_id, pending.file);
-      set("images", [...f.images, { url: ref, is_primary: f.images.length === 0 }]);
-      clearPending();
-      toast.success("Imagen subida");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setUploading(false);
+    const uploaded: string[] = [];
+    let failed = 0;
+    for (const p of queue) {
+      setPending((list) => list.map((x) => (x.key === p.key ? { ...x, status: "uploading", error: undefined } : x)));
+      try {
+        uploaded.push(await uploadCatalogImage(f.organization_id, p.file));
+        URL.revokeObjectURL(p.preview);
+        setPending((list) => list.filter((x) => x.key !== p.key));
+      } catch (e) {
+        failed += 1;
+        setPending((list) => list.map((x) => (x.key === p.key ? { ...x, status: "error", error: (e as Error).message } : x)));
+      }
     }
+    if (uploaded.length) {
+      setF((prev) => {
+        const hasPrimary = prev.images.some((m) => m.is_primary);
+        return {
+          ...prev,
+          images: [...prev.images, ...uploaded.map((url, i) => ({ url, is_primary: !hasPrimary && i === 0 }))],
+        };
+      });
+      toast.success(uploaded.length === 1 ? "Imagen subida" : `${uploaded.length} imágenes subidas`);
+    }
+    if (failed) toast.error(failed === 1 ? "Una imagen no se pudo subir" : `${failed} imágenes no se pudieron subir`);
+    setUploading(false);
   };
 
   const { data: orgs = [] } = useQuery({ queryKey: ["my-quotation-organizations"], queryFn: listMyQuotationOrganizations, enabled: open });
@@ -468,24 +493,43 @@ export function CatalogProductFormDialog({
                 </Button>
               </div>
             ))}
-            {pending && (
-              <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-2">
-                <img src={pending.preview} alt="Vista previa de la imagen a subir" className="h-16 w-20 rounded object-cover" />
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{pending.file.name}</span>
-                <Button type="button" size="sm" disabled={uploading} onClick={confirmUpload}>
-                  {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />} Subir imagen
-                </Button>
-                <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={clearPending}>
-                  Cancelar
-                </Button>
+            {pending.length > 0 && (
+              <div className="space-y-2 rounded-xl border border-dashed border-border p-2">
+                {pending.map((p) => (
+                  <div key={p.key} className="flex items-center gap-3">
+                    <img src={p.preview} alt={`Vista previa de ${p.file.name}`} className="h-16 w-20 rounded object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs text-muted-foreground">{p.file.name}</p>
+                      <p className={`text-xs ${p.status === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+                        {p.status === "uploading" ? "Subiendo…" : p.status === "error" ? (p.error ?? "Error al subir") : "Lista para subir"}
+                      </p>
+                    </div>
+                    {p.status === "uploading" ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={() => removePending(p.key)}>
+                        Quitar
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" disabled={uploading} onClick={confirmUpload}>
+                    {uploading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Upload className="mr-1 h-4 w-4" />}
+                    {pending.length === 1 ? "Subir imagen" : `Subir ${pending.length} imágenes`}
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" disabled={uploading} onClick={clearPending}>
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             )}
             <div>
               <Label htmlFor="catalog-image-file" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent">
-                <Upload className="h-4 w-4" /> Elegir imagen del dispositivo
+                <Upload className="h-4 w-4" /> Elegir imágenes del dispositivo
               </Label>
-              <input id="catalog-image-file" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="sr-only" onChange={pickFile} />
-              <p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP, hasta 5 MB. También podés pegar una dirección web.</p>
+              <input id="catalog-image-file" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" className="sr-only" multiple onChange={pickFile} />
+              <p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP, hasta 5 MB cada una. Podés elegir varias a la vez. También podés pegar una dirección web.</p>
             </div>
             <div className="flex gap-2">
               <Input placeholder="https://… dirección de la imagen" value={newImg} onChange={(e) => setNewImg(e.target.value)} />
