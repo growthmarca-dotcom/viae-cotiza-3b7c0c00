@@ -1,3 +1,4 @@
+import { PROVIDER_SOURCE_KINDS } from "@/lib/catalog";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,24 @@ export function ProviderFormDialog({
                 {PROVIDER_TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Tipo de fuente</Label>
+            <Select
+              value={form.source_kind}
+              onValueChange={(v) => set("source_kind", v as ProviderInput["source_kind"])}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDER_SOURCE_KINDS.map((k) => (
+                  <SelectItem key={k.value} value={k.value}>
+                    {k.label}
                   </SelectItem>
                 ))}
               </SelectContent>
