@@ -225,6 +225,13 @@
       "when": 1790885309462,
       "tag": "0031_quotation_payment_methods_and_promotions",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790886378658,
+      "tag": "0032_quotation_multiple_promotions",
+      "breakpoints": true
     }
   ]
 }

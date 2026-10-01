@@ -1,4 +1,4 @@
-import { paymentMethodLabels } from "@/lib/promotions";
+import { paymentMethodLabels, readQuotationPromotions } from "@/lib/promotions";
 import type { CompanyInfo } from "@/lib/company";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import {
@@ -45,8 +45,7 @@ export type PrintQuotation = {
   accommodation_services: string | null;
   cancellation_policy: string | null;
   payment_methods?: string[] | null;
-  promotion_title?: string | null;
-  promotion_text?: string | null;
+  promotions?: unknown;
   price_per_night: number | null;
   taxes: number | null;
   other_charges?: number | null;
@@ -244,10 +243,12 @@ export function QuotationPrintDocument({
       </PrintBlock>
 
 
-      {q.promotion_title || q.promotion_text ? (
-        <PrintBlock title="Promoción" color={company.primaryColor}>
-          {q.promotion_title ? <p className="print-text"><strong>{q.promotion_title}</strong></p> : null}
-          {q.promotion_text ? <p className="print-text">{q.promotion_text}</p> : null}
+      {readQuotationPromotions(q.promotions).length > 0 ? (
+        <PrintBlock title="Promociones disponibles" color={company.primaryColor}>
+          <p className="print-text" style={{ fontStyle: "italic" }}>Opciones comerciales ofrecidas para esta propuesta (no acumulables salvo indicación).</p>
+          {readQuotationPromotions(q.promotions).map((p, i) => (
+            <p key={i} className="print-text">• <strong>{p.title}</strong>{p.text ? ` — ${p.text}` : ""}</p>
+          ))}
         </PrintBlock>
       ) : null}
 

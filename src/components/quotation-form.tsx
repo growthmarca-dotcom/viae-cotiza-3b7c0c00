@@ -3,7 +3,7 @@ import { CatalogImage } from "@/components/catalog-image";
 import { useQuery } from "@tanstack/react-query";
 import { getCatalogProduct } from "@/lib/catalog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PAYMENT_METHODS, isPromotionAvailable, listPromotions } from "@/lib/promotions";
+import { PAYMENT_METHOD_OPTIONS, isPromotionAvailable, listPromotions, type QuotationPromotion } from "@/lib/promotions";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,10 +46,8 @@ export type QuotationFormState = {
   observations: string;
   /** Claves de PAYMENT_METHODS ofrecidas al cliente. */
   paymentMethods?: string[];
-  /** Promoción del catálogo de origen (referencia) + copia del texto al incorporarla. */
-  promotionId?: string;
-  promotionTitle?: string;
-  promotionText?: string;
+  /** Promociones incorporadas: copia del texto al momento de elegirlas. */
+  promotions?: QuotationPromotion[];
 };
 
 
@@ -486,45 +484,38 @@ function PaymentAndPromotionSection({
   const { data: promotions = [] } = useQuery({ queryKey: ["promotions"], queryFn: listPromotions });
   const available = promotions.filter((p) => isPromotionAvailable(p));
   const selected = new Set(form.paymentMethods ?? []);
-  const mode = form.promotionId ? form.promotionId : form.promotionTitle || form.promotionText ? "__custom" : "__none";
-  const [custom, setCustom] = useState(mode === "__custom");
-  const value = custom ? "__custom" : mode;
+  const chosen = form.promotions ?? [];
+  const chosenIds = new Set(chosen.map((p) => p.promotion_id).filter(Boolean));
+  // Guardadas en la cotización que ya no están disponibles (inactivas/vencidas): se conservan visibles.
+  const savedNotListed = chosen.filter((p) => p.promotion_id && !available.some((a) => a.id === p.promotion_id));
+  const specials = chosen.map((p, i) => ({ p, i })).filter(({ p }) => !p.promotion_id);
 
   function toggle(key: string, on: boolean) {
     const next = new Set(selected);
     if (on) next.add(key);
     else next.delete(key);
-    set("paymentMethods", PAYMENT_METHODS.map((m) => m.key).filter((k) => next.has(k)));
+    set("paymentMethods", PAYMENT_METHOD_OPTIONS.map((m) => m.key as string).filter((k) => next.has(k)).concat(
+      [...next].filter((k) => !PAYMENT_METHOD_OPTIONS.some((m) => m.key === k)),
+    ));
   }
 
-  function pick(v: string) {
-    if (v === "__none") {
-      setCustom(false);
-      set("promotionId", "");
-      set("promotionTitle", "");
-      set("promotionText", "");
-    } else if (v === "__custom") {
-      setCustom(true);
-      set("promotionId", "");
-    } else {
-      const p = promotions.find((x) => x.id === v);
-      if (!p) return;
-      setCustom(false);
-      // Copia del texto al momento de incorporarla: cambios futuros del catálogo no la alteran.
-      set("promotionId", p.id);
-      set("promotionTitle", p.title);
-      set("promotionText", p.description ?? "");
-    }
+  function togglePromotion(id: string, on: boolean) {
+    if (!on) return set("promotions", chosen.filter((p) => p.promotion_id !== id));
+    const p = promotions.find((x) => x.id === id);
+    if (!p || chosenIds.has(id)) return;
+    // Copia del texto al momento de incorporarla: cambios futuros del catálogo no la alteran.
+    set("promotions", [...chosen, { promotion_id: p.id, title: p.title, text: p.description ?? "" }]);
   }
 
-  // Si la promoción guardada ya no está disponible, se sigue mostrando como opción.
-  const savedNotListed = form.promotionId && !available.some((p) => p.id === form.promotionId);
+  function updateSpecial(i: number, patch: Partial<QuotationPromotion>) {
+    set("promotions", chosen.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  }
 
   return (
     <Section title="Medios de pago y promoción" cols={1}>
       <Field label="Medios de pago disponibles para el cliente">
         <div className="grid gap-2 sm:grid-cols-3" data-testid="payment-methods">
-          {PAYMENT_METHODS.map((m) => (
+          {PAYMENT_METHOD_OPTIONS.map((m) => (
             <label key={m.key} className="flex items-center gap-2 text-sm">
               <Checkbox checked={selected.has(m.key)} onCheckedChange={(v) => toggle(m.key, v === true)} aria-label={m.label} />
               {m.label}
@@ -532,30 +523,46 @@ function PaymentAndPromotionSection({
           ))}
         </div>
       </Field>
-      <Field label="Promoción">
-        <Select value={value} onValueChange={pick}>
-          <SelectTrigger data-testid="promotion-select"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none">Sin promoción</SelectItem>
-            {available.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-            ))}
-            {savedNotListed && <SelectItem value={form.promotionId!}>{form.promotionTitle || "Promoción guardada"}</SelectItem>}
-            <SelectItem value="__custom">Promoción especial (solo esta cotización)</SelectItem>
-          </SelectContent>
-        </Select>
+      <Field label="Promociones disponibles">
+        <div className="grid gap-2 sm:grid-cols-2" data-testid="promotion-options">
+          {available.length === 0 && savedNotListed.length === 0 && (
+            <p className="text-sm text-muted-foreground">No hay promociones activas. Cargalas en la página Promociones.</p>
+          )}
+          {available.map((p) => (
+            <label key={p.id} className="flex items-start gap-2 text-sm">
+              <Checkbox className="mt-0.5" checked={chosenIds.has(p.id)} onCheckedChange={(v) => togglePromotion(p.id, v === true)} aria-label={p.title} />
+              <span>{p.title}</span>
+            </label>
+          ))}
+          {savedNotListed.map((p) => (
+            <label key={p.promotion_id!} className="flex items-start gap-2 text-sm">
+              <Checkbox className="mt-0.5" checked onCheckedChange={() => togglePromotion(p.promotion_id!, false)} aria-label={p.title} />
+              <span>{p.title} <span className="text-xs text-muted-foreground">(ya no disponible)</span></span>
+            </label>
+          ))}
+        </div>
       </Field>
-      {value !== "__none" && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Título de la promoción">
-            <Input value={form.promotionTitle ?? ""} maxLength={150} onChange={(e) => set("promotionTitle", e.target.value)} placeholder="Bonificación especial por reserva anticipada" />
+      {specials.map(({ p, i }) => (
+        <div key={i} className="grid gap-4 rounded-xl border border-dashed border-border p-4 sm:grid-cols-2">
+          <Field label="Promoción especial (solo esta cotización)">
+            <Input value={p.title} maxLength={150} onChange={(e) => updateSpecial(i, { title: e.target.value })} placeholder="Bonificación especial por reserva anticipada" />
           </Field>
           <Field label="Texto para el cliente">
-            <Textarea rows={2} value={form.promotionText ?? ""} maxLength={1000} onChange={(e) => set("promotionText", e.target.value)} />
+            <Textarea rows={2} value={p.text} maxLength={1000} onChange={(e) => updateSpecial(i, { text: e.target.value })} />
           </Field>
-          <p className="text-xs text-muted-foreground sm:col-span-2">Es información comercial: no modifica el precio de la cotización.</p>
+          <div className="sm:col-span-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => set("promotions", chosen.filter((_, j) => j !== i))}>
+              <X className="mr-1 h-3.5 w-3.5" /> Quitar
+            </Button>
+          </div>
         </div>
-      )}
+      ))}
+      <div>
+        <Button type="button" variant="outline" size="sm" onClick={() => set("promotions", [...chosen, { promotion_id: null, title: "", text: "" }])}>
+          + Promoción especial (solo esta cotización)
+        </Button>
+        <p className="mt-2 text-xs text-muted-foreground">Las promociones son información comercial: no modifican el precio de la cotización.</p>
+      </div>
     </Section>
   );
 }
