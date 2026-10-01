@@ -1,0 +1,3 @@
+ALTER TABLE public.quotations ADD COLUMN IF NOT EXISTS accommodation_catalog_product_id uuid NULL REFERENCES public.products(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS quotations_accommodation_catalog_product_idx ON public.quotations(accommodation_catalog_product_id);
+COMMENT ON COLUMN public.quotations.accommodation_catalog_product_id IS 'Producto del Catálogo elegido como alojamiento; sus imágenes ordenadas (product_media) forman la galería pública.';
