@@ -31,6 +31,54 @@ export interface OrganizationInvitation {
   accepted_by: string | null
   created_at: string;
   updated_at: string;
+  /** Estado de la invitación (v1.16): pending/accepted/rejected/cancelled/expired. */
+  state: InvitationState;
+  network_id: string | null;
+  last_sent_at: string | null;
+  send_count: number;
+}
+
+export type InvitationState = 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'expired';
+
+export const INVITATION_STATE_LABELS: Record<InvitationState, string> = {
+  pending: 'Pendiente',
+  accepted: 'Aceptada',
+  rejected: 'Rechazada',
+  cancelled: 'Cancelada',
+  expired: 'Vencida',
+};
+
+/** Estado efectivo: una pendiente con fecha pasada se muestra como vencida. */
+export function effectiveInvitationState(inv: Pick<OrganizationInvitation, 'state' | 'expires_at'>): InvitationState {
+  if (inv.state === 'pending' && inv.expires_at && new Date(inv.expires_at).getTime() < Date.now()) return 'expired';
+  return inv.state;
+}
+
+export interface PublicInvitation {
+  email: string;
+  state: InvitationState;
+  expires_at: string;
+  role: OrganizationMemberRole;
+  organization_name: string;
+  network_name: string | null;
+  inviter_name: string | null;
+}
+
+/** Datos visibles para quien tiene el enlace (sin exponer otras invitaciones). */
+export async function getInvitationByToken(token: string): Promise<PublicInvitation | null> {
+  const { data, error } = await supabase.rpc('get_invitation_by_token', { _token: token });
+  if (error) throw error;
+  return (data as unknown as PublicInvitation) ?? null;
+}
+
+export async function rejectOrganizationInvitation(token: string) {
+  const { error } = await supabase.rpc('reject_organization_invitation', { _token: token });
+  if (error) throw error;
+}
+
+export async function cancelOrganizationInvitation(invitationId: string) {
+  const { error } = await supabase.rpc('cancel_organization_invitation', { _invitation_id: invitationId });
+  if (error) throw error;
 }
 
 export const INVITATION_STATUS_LABELS: Record<OrganizationMemberStatus, string> = {
@@ -72,6 +120,7 @@ export async function acceptOrganizationInvitation(token: string) {
     _token: token,
   });
   if (error) throw error;
+  if (!data) throw new Error('La invitación venció. Pedí que te envíen una nueva.');
   return data as unknown as OrganizationMember;
 }
 

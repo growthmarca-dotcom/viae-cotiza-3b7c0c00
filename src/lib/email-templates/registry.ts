@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { template as smartQuoteAcceptedTemplate } from './smart-quote-accepted'
+import { template as organizationInvitationTemplate } from './organization-invitation'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -16,4 +17,5 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'smart-quote-accepted': smartQuoteAcceptedTemplate,
+  'organization-invitation': organizationInvitationTemplate,
 }

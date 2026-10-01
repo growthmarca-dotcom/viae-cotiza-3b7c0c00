@@ -3656,13 +3656,20 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           email: string
           expires_at: string
           id: string
           invited_by: string
+          last_sent_at: string | null
+          network_id: string | null
           organization_id: string
+          responded_at: string | null
           role: Database["public"]["Enums"]["organization_member_role"]
+          send_count: number
+          state: Database["public"]["Enums"]["invitation_status"]
           status: Database["public"]["Enums"]["organization_member_status"]
           token: string
           updated_at: string
@@ -3670,13 +3677,20 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           email: string
           expires_at?: string
           id?: string
           invited_by: string
+          last_sent_at?: string | null
+          network_id?: string | null
           organization_id: string
+          responded_at?: string | null
           role: Database["public"]["Enums"]["organization_member_role"]
+          send_count?: number
+          state?: Database["public"]["Enums"]["invitation_status"]
           status?: Database["public"]["Enums"]["organization_member_status"]
           token?: string
           updated_at?: string
@@ -3684,18 +3698,32 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           email?: string
           expires_at?: string
           id?: string
           invited_by?: string
+          last_sent_at?: string | null
+          network_id?: string | null
           organization_id?: string
+          responded_at?: string | null
           role?: Database["public"]["Enums"]["organization_member_role"]
+          send_count?: number
+          state?: Database["public"]["Enums"]["invitation_status"]
           status?: Database["public"]["Enums"]["organization_member_status"]
           token?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "organization_invitations_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "agency_networks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "organization_invitations_organization_id_fkey"
             columns: ["organization_id"]
@@ -7624,6 +7652,10 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: boolean
       }
+      can_manage_org_invitations: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
       can_manage_organization_members: {
         Args: { _org_id: string }
         Returns: boolean
@@ -7666,6 +7698,10 @@ export type Database = {
         Returns: boolean
       }
       can_read_smart_quote: { Args: { _quote_id: string }; Returns: boolean }
+      cancel_organization_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       change_organization_member_role: {
         Args: {
           _member_id: string
@@ -7777,6 +7813,7 @@ export type Database = {
         Args: { _as_of?: string }
         Returns: Json
       }
+      get_invitation_by_token: { Args: { _token: string }; Returns: Json }
       has_org_role: {
         Args: { _org_id: string; _role: string; _user_id: string }
         Returns: boolean
@@ -7797,13 +7834,20 @@ export type Database = {
         Returns: {
           accepted_at: string | null
           accepted_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           email: string
           expires_at: string
           id: string
           invited_by: string
+          last_sent_at: string | null
+          network_id: string | null
           organization_id: string
+          responded_at: string | null
           role: Database["public"]["Enums"]["organization_member_role"]
+          send_count: number
+          state: Database["public"]["Enums"]["invitation_status"]
           status: Database["public"]["Enums"]["organization_member_status"]
           token: string
           updated_at: string
@@ -7851,6 +7895,36 @@ export type Database = {
       log_pipeline_close_issue: {
         Args: { _details?: Json; _opportunity_id: string }
         Returns: undefined
+      }
+      mark_invitation_sent: {
+        Args: { _invitation_id: string; _renew: boolean }
+        Returns: {
+          accepted_at: string | null
+          accepted_by: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          last_sent_at: string | null
+          network_id: string | null
+          organization_id: string
+          responded_at: string | null
+          role: Database["public"]["Enums"]["organization_member_role"]
+          send_count: number
+          state: Database["public"]["Enums"]["invitation_status"]
+          status: Database["public"]["Enums"]["organization_member_status"]
+          token: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organization_invitations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       notify_operations_team: {
@@ -7912,6 +7986,10 @@ export type Database = {
           _valid_from?: string
         }
         Returns: string
+      }
+      reject_organization_invitation: {
+        Args: { _token: string }
+        Returns: undefined
       }
       remove_organization_member: {
         Args: { _member_id: string }
@@ -8232,7 +8310,12 @@ export type Database = {
         | "other"
       incident_priority: "low" | "medium" | "high" | "urgent"
       incident_status: "open" | "in_review" | "resolved" | "closed"
-      invitation_status: "pending" | "accepted" | "rejected" | "expired"
+      invitation_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "expired"
+        | "cancelled"
       itinerary_request_source:
         | "crm"
         | "widget"
@@ -8902,7 +8985,13 @@ export const Constants = {
       ],
       incident_priority: ["low", "medium", "high", "urgent"],
       incident_status: ["open", "in_review", "resolved", "closed"],
-      invitation_status: ["pending", "accepted", "rejected", "expired"],
+      invitation_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "expired",
+        "cancelled",
+      ],
       itinerary_request_source: [
         "crm",
         "widget",

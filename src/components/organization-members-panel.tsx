@@ -1,6 +1,9 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, Loader2, Mail, UserMinus, Users } from "lucide-react";
+import { Copy, Loader2, Mail, RefreshCw, UserMinus, Users } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendOrganizationInvitationEmail } from "@/lib/invitation-email.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,15 +21,15 @@ import {
   type OrganizationMemberRole,
 } from "@/lib/organizationMembers";
 import {
+  cancelOrganizationInvitation,
   changeOrganizationMemberRole,
+  effectiveInvitationState,
+  INVITATION_STATE_LABELS,
   invitationLink,
-  invitationStatusLabel,
   inviteOrganizationMember,
-  isInvitationExpired,
   listOrganizationInvitations,
   listOrganizationMembers,
   removeOrganizationMember,
-  revokeOrganizationInvitation,
 } from "@/lib/organizationInvitations";
 
 /**
@@ -38,13 +41,24 @@ import {
 export function OrganizationMembersPanel({
   organizationId,
   canManage,
+  networkName,
 }: {
   organizationId: string;
   canManage: boolean;
+  networkName?: string | null;
 }) {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<OrganizationMemberRole>("agent");
+
+  const network = useQuery({
+    queryKey: ["organization-network", organizationId],
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("network:agency_networks(name)").eq("id", organizationId).maybeSingle();
+      return (data?.network as { name: string } | null)?.name ?? null;
+    },
+  });
+  const networkLabel = networkName ?? network.data ?? null;
 
   const members = useQuery({
     queryKey: ["organization-members", organizationId],
@@ -61,10 +75,26 @@ export function OrganizationMembersPanel({
     qc.invalidateQueries({ queryKey: ["organization-invitations", organizationId] });
   };
 
+  const sendEmail = useServerFn(sendOrganizationInvitationEmail);
+  const deliver = async (invitationId: string, renew: boolean) => {
+    const r = await sendEmail({ data: { invitationId, renew, origin: window.location.origin } });
+    if (!r.sent) throw new Error("El email fue bloqueado para esa dirección (rebotes o baja). Copiá el enlace y compartilo por otro medio.");
+  };
+
   const invite = useMutation({
-    mutationFn: () => inviteOrganizationMember(organizationId, email.trim(), role),
-    onSuccess: () => {
-      toast.success("Invitación creada");
+    mutationFn: async () => {
+      const inv = await inviteOrganizationMember(organizationId, email.trim(), role);
+      const reused = (inv.send_count ?? 0) > 0;
+      try {
+        await deliver(inv.id, false);
+      } catch (e) {
+        refresh();
+        throw new Error(`La invitación se creó, pero el email no se pudo enviar: ${(e as Error).message}`);
+      }
+      return reused;
+    },
+    onSuccess: (reused) => {
+      toast.success(reused ? "Ya había una invitación pendiente: la reenviamos" : "Invitación enviada por email");
       setEmail("");
       refresh();
     },
@@ -90,17 +120,26 @@ export function OrganizationMembersPanel({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const revokeInvite = useMutation({
-    mutationFn: (id: string) => revokeOrganizationInvitation(id),
+  const resend = useMutation({
+    mutationFn: (id: string) => deliver(id, true),
     onSuccess: () => {
-      toast.success("Invitación revocada");
+      toast.success("Invitación reenviada (vence en 7 días)");
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const revokeInvite = useMutation({
+    mutationFn: (id: string) => cancelOrganizationInvitation(id),
+    onSuccess: () => {
+      toast.success("Invitación cancelada");
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const rows = members.data ?? [];
-  const pending = (invitations.data ?? []).filter((i) => i.status === "pending");
+  const allInvites = invitations.data ?? [];
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -185,7 +224,10 @@ export function OrganizationMembersPanel({
 
       {canManage && (
         <div className="mt-6 rounded-xl border border-dashed border-border p-4">
-          <h3 className="text-sm font-semibold">Invitar a un usuario</h3>
+          <h3 className="text-sm font-semibold">Invitar agencia/persona</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Le llega un email con un enlace personal que vence en 7 días. Al aceptar queda dentro de esta agencia y de su red.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Input
               type="email"
@@ -227,46 +269,63 @@ export function OrganizationMembersPanel({
         </div>
       )}
 
-      {pending.length > 0 && (
+      {allInvites.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-sm font-semibold">Invitaciones pendientes</h3>
-          <div className="mt-3 space-y-2">
-            {pending.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{inv.email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {organizationMemberRoleLabel(inv.role)} ·{" "}
-                    {isInvitationExpired(inv) ? "Vencida" : invitationStatusLabel(inv.status)}
-                  </p>
-                </div>
-                {canManage && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(invitationLink(inv.token));
-                        toast.success("Enlace copiado");
-                      }}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copiar enlace
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => revokeInvite.mutate(inv.id)}
-                    >
-                      Revocar
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
+          <h3 className="text-sm font-semibold">Invitaciones enviadas</h3>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3 font-medium">Email</th>
+                  <th className="py-2 pr-3 font-medium">Red</th>
+                  <th className="py-2 pr-3 font-medium">Fecha</th>
+                  <th className="py-2 pr-3 font-medium">Estado</th>
+                  <th className="py-2 font-medium">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allInvites.map((inv) => {
+                  const st = effectiveInvitationState(inv);
+                  return (
+                    <tr key={inv.id} className="border-t border-border">
+                      <td className="py-2 pr-3">
+                        <p className="font-medium">{inv.email}</p>
+                        <p className="text-xs text-muted-foreground">{organizationMemberRoleLabel(inv.role)}</p>
+                      </td>
+                      <td className="py-2 pr-3">{networkLabel ?? "—"}</td>
+                      <td className="py-2 pr-3">{new Date(inv.created_at).toLocaleDateString("es-AR")}</td>
+                      <td className="py-2 pr-3">{INVITATION_STATE_LABELS[st]}</td>
+                      <td className="py-2">
+                        {canManage && (st === "pending" || st === "expired") && inv.state === "pending" ? (
+                          <div className="flex flex-wrap gap-2">
+                            <Button variant="outline" size="sm" disabled={resend.isPending} onClick={() => resend.mutate(inv.id)}>
+                              <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reenviar
+                            </Button>
+                            {st === "pending" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  await navigator.clipboard.writeText(invitationLink(inv.token));
+                                  toast.success("Enlace copiado");
+                                }}
+                              >
+                                <Copy className="mr-1 h-3.5 w-3.5" /> Copiar enlace
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" onClick={() => revokeInvite.mutate(inv.id)}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
