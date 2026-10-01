@@ -92,7 +92,7 @@ export function QuotationPrintDocument({
   const groups = QUOTATION_ITEM_CATEGORIES.map((c) => ({
     category: c.value as QuotationItemCategory,
     label: c.label,
-    list: items.filter((i) => i.category === c.value),
+    list: items.filter((i) => i.category === c.value && itemAmount(i) > 0),
   })).filter((g) => g.list.length > 0);
   const detail = (i: PrintQuotationItem) =>
     [

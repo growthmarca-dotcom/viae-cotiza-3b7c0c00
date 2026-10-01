@@ -1,5 +1,8 @@
 import { readRecommendationInterests, readRecommendations } from "@/lib/recommendations";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getPublicQuotation } from "@/lib/public-quotation.functions";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -96,6 +99,15 @@ function QuotationDetailPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [items, setItems] = useState<QuotationItemRow[]>([]);
+  // PDF: mismas fotos (Catálogo, en orden) que la propuesta web, misma fuente.
+  const fetchPublic = useServerFn(getPublicQuotation);
+  const printToken = (q as { share_token?: string | null } | null)?.share_token ?? null;
+  const { data: printData } = useQuery({
+    queryKey: ["public-quotation", printToken],
+    enabled: !!printToken,
+    retry: false,
+    queryFn: () => fetchPublic({ data: { token: printToken! } }),
+  });
   const [statusBusy, setStatusBusy] = useState<QuotationStatus | null>(null);
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [lostOpen, setLostOpen] = useState(false);
@@ -259,7 +271,15 @@ function QuotationDetailPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} />
+    <QuotationPrintDocument
+      quotation={q}
+      company={company}
+      imageUrls={urls}
+      items={printData?.items ?? items}
+      accommodationGallery={printData?.accommodationGallery ?? []}
+      accommodationMapsUrl={printData?.accommodationMapsUrl ?? null}
+      recommendations={printData?.recommendations ?? []}
+    />
     <div className="mx-auto max-w-4xl space-y-6 pb-24 print-screen-hide">
       <Link to="/quotations" data-print-hide className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver a cotizaciones

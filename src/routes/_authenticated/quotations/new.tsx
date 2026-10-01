@@ -267,8 +267,8 @@ function NewQuotationPage() {
             return;
           }
           // P0.1: el modelo vigente exige servicios estructurados en `quotation_items`.
-          if (items.length === 0) {
-            toast.error("Cargá al menos un servicio de la cotización antes de generarla.");
+          if (items.length === 0 && !form.accommodationName.trim()) {
+            toast.error("Cargá el alojamiento o al menos un servicio de la cotización antes de generarla.");
             return;
           }
           if (needsOrgChoice && !organizationId) {

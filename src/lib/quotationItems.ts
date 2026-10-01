@@ -209,6 +209,9 @@ export async function saveQuotationItems(quotationId: string, items: QuotationIt
     .delete()
     .eq("quotation_id", quotationId);
   if (delErr) throw delErr;
+  // Requerimientos precargados que nunca se completaron (sin importe) no se
+  // guardan: los servicios adicionales son opcionales.
+  items = items.filter((d) => !(d.requirement && itemSubtotal(d) === 0));
   if (items.length === 0) return;
   const payload = items.map((d, i) => draftToPayload(quotationId, d, i));
   const { error } = await supabase.from("quotation_items").insert(payload);
