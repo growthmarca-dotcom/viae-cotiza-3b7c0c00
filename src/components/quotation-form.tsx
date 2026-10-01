@@ -1,3 +1,4 @@
+import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,27 @@ export function QuotationForm({
       </Section>
 
       <Section title="Alojamiento">
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
+          <CatalogPickerButton
+            categories={["accommodation"]}
+            label="Elegir alojamiento del catálogo"
+            onPick={(p) => {
+              const m = (p.metadata ?? {}) as Record<string, string>;
+              // Copia (snapshot): editar el catálogo luego no altera esta cotización.
+              setForm((f) => ({
+                ...f,
+                accommodationName: p.name,
+                address: m.address ?? f.address,
+                description: p.description ?? p.short_description ?? f.description,
+                services: m.services ?? f.services,
+                cancellationPolicy: m.policies ?? f.cancellationPolicy,
+                pricePerNight: p.sale_amount != null ? String(Number(p.sale_amount)) : f.pricePerNight,
+                destination: f.destination || (p.destinations?.[0]?.destinations?.name ?? ""),
+              }));
+            }}
+          />
+          <span className="text-xs text-muted-foreground">Los datos se copian; podés ajustarlos.</span>
+        </div>
         <Field label="Nombre del alojamiento" required className="sm:col-span-2">
           <Input value={form.accommodationName} onChange={(e) => set("accommodationName", e.target.value)} required maxLength={140} />
         </Field>
