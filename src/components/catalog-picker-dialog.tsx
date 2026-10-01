@@ -18,6 +18,9 @@ import {
   type CatalogProduct,
 } from "@/lib/catalog";
 
+/** Sin mayúsculas, acentos ni espacios repetidos. */
+const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+
 const STATUS_LABELS: Record<string, string> = { active: "Activo", draft: "Borrador", inactive: "Inactivo", archived: "Archivado" };
 
 /**
@@ -56,7 +59,7 @@ export function CatalogPickerButton({
   );
   const statusOptions = useMemo(() => [...new Set(base.map((p) => p.status))], [base]);
   const list = useMemo(() => {
-    const s = q.trim().toLowerCase();
+    const s = norm(q);
     return base.filter(
       (p) =>
         (!status || p.status === status) &&
@@ -66,7 +69,7 @@ export function CatalogPickerButton({
         (!s ||
           [p.name, p.internal_code, p.provider?.trade_name, ...productDestinationNames(p)]
             .filter(Boolean)
-            .some((v) => String(v).toLowerCase().includes(s))),
+            .some((v) => norm(String(v)).includes(s))),
     );
   }, [base, q, cat, dest, prov, status]);
   const selCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
