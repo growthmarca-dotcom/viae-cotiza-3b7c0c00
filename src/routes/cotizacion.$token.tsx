@@ -287,6 +287,9 @@ function PublicQuotationPage() {
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="font-display text-2xl font-semibold">Tu alojamiento</h2>
             {q.accommodation_name && <p className="mt-2 text-lg font-medium">{q.accommodation_name}</p>}
+            {(data.accommodationGallery?.length ?? 0) > 0 && (
+              <PublicGallery images={data.accommodationGallery} title={q.accommodation_name ?? "Alojamiento"} />
+            )}
             {q.accommodation_address && <p className="text-sm text-muted-foreground">{q.accommodation_address}</p>}
             {q.accommodation_description && (
               <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{q.accommodation_description}</p>
