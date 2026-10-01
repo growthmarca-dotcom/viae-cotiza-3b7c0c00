@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Lead } from "@/lib/leads";
 import type { CatalogSnapshot } from "@/lib/catalog";
 
@@ -182,7 +182,7 @@ function draftToPayload(quotationId: string, d: QuotationItemDraft, position: nu
     taxes: num(d.taxes) ?? 0,
     notes: text(d.notes),
     details: d.catalog
-      ? { requirement: d.requirement, catalog: d.catalog }
+      ? ({ requirement: d.requirement, catalog: d.catalog } as unknown as Json)
       : { requirement: d.requirement },
     position,
   };

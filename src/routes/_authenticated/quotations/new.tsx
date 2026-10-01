@@ -120,11 +120,11 @@ function NewQuotationPage() {
   });
 
   const initial = useMemo(() => {
-    const base = quotationInitialFromContext({
+    const base = (quotationInitialFromContext({
       lead,
       opportunity: opportunity ?? null,
       client: contextClient ?? null,
-    });
+    }) ?? {}) as Record<string, string>;
     const p = catalogProduct;
     if (!p) return base;
     const dest = productDestinationNames(p)[0] ?? "";
