@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Lead } from "@/lib/leads";
+import type { CatalogSnapshot } from "@/lib/catalog";
 
 /**
  * Cotización integral (v1.14): una sola cotización puede reunir servicios de
@@ -58,6 +59,8 @@ export type QuotationItemDraft = {
   notes: string;
   /** true cuando proviene de un requerimiento de la Consulta y aún no fue cotizado. */
   requirement: boolean;
+  /** Snapshot inmutable del producto del catálogo usado (si corresponde). */
+  catalog?: CatalogSnapshot | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -155,6 +158,7 @@ export function rowToDraft(r: QuotationItemRow): QuotationItemDraft {
     taxes: String(Number(r.taxes ?? 0)),
     notes: r.notes ?? "",
     requirement: details.requirement === true,
+    catalog: (details.catalog as CatalogSnapshot | undefined) ?? null,
   };
 }
 
@@ -177,7 +181,9 @@ function draftToPayload(quotationId: string, d: QuotationItemDraft, position: nu
     unit_amount: num(d.unit_amount) ?? 0,
     taxes: num(d.taxes) ?? 0,
     notes: text(d.notes),
-    details: { requirement: d.requirement },
+    details: d.catalog
+      ? ({ requirement: d.requirement, catalog: d.catalog } as unknown as Json)
+      : { requirement: d.requirement },
     position,
   };
 }
