@@ -5585,6 +5585,8 @@ export type Database = {
           promotion_title: string | null
           promotions: Json
           quotation_number: string
+          recommendation_interests: Json
+          recommendations: Json
           rejected_at: string | null
           rejected_by: string | null
           sent_at: string | null
@@ -5640,6 +5642,8 @@ export type Database = {
           promotion_title?: string | null
           promotions?: Json
           quotation_number?: string
+          recommendation_interests?: Json
+          recommendations?: Json
           rejected_at?: string | null
           rejected_by?: string | null
           sent_at?: string | null
@@ -5695,6 +5699,8 @@ export type Database = {
           promotion_title?: string | null
           promotions?: Json
           quotation_number?: string
+          recommendation_interests?: Json
+          recommendations?: Json
           rejected_at?: string | null
           rejected_by?: string | null
           sent_at?: string | null
