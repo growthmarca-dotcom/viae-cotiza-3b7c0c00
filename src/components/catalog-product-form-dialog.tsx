@@ -139,34 +139,57 @@ export function CatalogProductFormDialog({
   const [f, setF] = useState<CatalogInput>(initial ?? blank());
   const [newDest, setNewDest] = useState("");
   const [newImg, setNewImg] = useState("");
-  const [pending, setPending] = useState<{ file: File; preview: string } | null>(null);
+  type Pending = { key: string; file: File; preview: string; status: "ready" | "uploading" | "error"; error?: string };
+  const [pending, setPending] = useState<Pending[]>([]);
   const [uploading, setUploading] = useState(false);
   const clearPending = () => {
-    if (pending) URL.revokeObjectURL(pending.preview);
-    setPending(null);
+    pending.forEach((p) => URL.revokeObjectURL(p.preview));
+    setPending([]);
   };
+  const removePending = (key: string) =>
+    setPending((list) => {
+      const p = list.find((x) => x.key === key);
+      if (p) URL.revokeObjectURL(p.preview);
+      return list.filter((x) => x.key !== key);
+    });
   const pickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
-    const err = validateCatalogImageFile(file);
-    if (err) return void toast.error(err);
-    clearPending();
-    setPending({ file, preview: URL.createObjectURL(file) });
+    const ok: Pending[] = [];
+    for (const file of files) {
+      const err = validateCatalogImageFile(file);
+      if (err) toast.error(`${file.name}: ${err}`);
+      else ok.push({ key: crypto.randomUUID(), file, preview: URL.createObjectURL(file), status: "ready" });
+    }
+    if (ok.length) setPending((list) => [...list, ...ok]);
   };
   const confirmUpload = async () => {
-    if (!pending) return;
+    const queue = pending.filter((p) => p.status !== "uploading");
+    if (!queue.length) return;
     setUploading(true);
-    try {
-      const ref = await uploadCatalogImage(f.organization_id, pending.file);
-      set("images", [...f.images, { url: ref, is_primary: f.images.length === 0 }]);
-      clearPending();
-      toast.success("Imagen subida");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setUploading(false);
+    const uploaded: string[] = [];
+    let failed = 0;
+    for (const p of queue) {
+      setPending((list) => list.map((x) => (x.key === p.key ? { ...x, status: "uploading", error: undefined } : x)));
+      try {
+        uploaded.push(await uploadCatalogImage(f.organization_id, p.file));
+        URL.revokeObjectURL(p.preview);
+        setPending((list) => list.filter((x) => x.key !== p.key));
+      } catch (e) {
+        failed += 1;
+        setPending((list) => list.map((x) => (x.key === p.key ? { ...x, status: "error", error: (e as Error).message } : x)));
+      }
     }
+    if (uploaded.length) {
+      const hasPrimary = f.images.some((m) => m.is_primary);
+      set("images", [
+        ...f.images,
+        ...uploaded.map((url, i) => ({ url, is_primary: !hasPrimary && f.images.length === 0 && i === 0 })),
+      ]);
+      toast.success(uploaded.length === 1 ? "Imagen subida" : `${uploaded.length} imágenes subidas`);
+    }
+    if (failed) toast.error(failed === 1 ? "Una imagen no se pudo subir" : `${failed} imágenes no se pudieron subir`);
+    setUploading(false);
   };
 
   const { data: orgs = [] } = useQuery({ queryKey: ["my-quotation-organizations"], queryFn: listMyQuotationOrganizations, enabled: open });
