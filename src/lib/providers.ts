@@ -91,6 +91,7 @@ export type ProviderInput = {
   tax_condition: string;
   provider_type: ProviderType;
   operation_mode: ProviderOperationMode;
+  source_kind: "direct" | "wholesaler_b2b" | "platform" | "api" | "other";
   is_company: boolean;
   website: string;
   email: string;
@@ -112,6 +113,7 @@ export const EMPTY_PROVIDER: ProviderInput = {
   tax_condition: "",
   provider_type: "other",
   operation_mode: "manual",
+  source_kind: "direct",
   is_company: true,
   website: "",
   email: "",
@@ -136,6 +138,7 @@ export function providerToInput(p: Provider): ProviderInput {
     tax_condition: p.tax_condition ?? "",
     provider_type: (p.provider_type ?? "other") as ProviderType,
     operation_mode: (p.operation_mode ?? "manual") as ProviderOperationMode,
+    source_kind: (p.source_kind ?? "direct") as ProviderInput["source_kind"],
     is_company: p.is_company ?? true,
     website: p.website ?? "",
     email: p.email ?? "",
@@ -159,6 +162,7 @@ function payload(input: ProviderInput) {
     tax_condition: text(input.tax_condition),
     provider_type: input.provider_type,
     operation_mode: input.operation_mode,
+    source_kind: input.source_kind,
     is_company: input.is_company,
     website: text(input.website),
     email: text(input.email),
