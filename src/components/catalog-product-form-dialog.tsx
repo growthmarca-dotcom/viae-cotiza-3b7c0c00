@@ -34,6 +34,9 @@ import {
   type CatalogCategory,
   type CatalogInput,
   type SourceType,
+  isStoredCatalogImage,
+  uploadCatalogImage,
+  validateCatalogImageFile,
 } from "@/lib/catalog";
 import { listMyQuotationOrganizations } from "@/lib/quotations";
 
@@ -125,6 +128,35 @@ export function CatalogProductFormDialog({
   const [f, setF] = useState<CatalogInput>(initial ?? blank());
   const [newDest, setNewDest] = useState("");
   const [newImg, setNewImg] = useState("");
+  const [pending, setPending] = useState<{ file: File; preview: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const clearPending = () => {
+    if (pending) URL.revokeObjectURL(pending.preview);
+    setPending(null);
+  };
+  const pickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const err = validateCatalogImageFile(file);
+    if (err) return void toast.error(err);
+    clearPending();
+    setPending({ file, preview: URL.createObjectURL(file) });
+  };
+  const confirmUpload = async () => {
+    if (!pending) return;
+    setUploading(true);
+    try {
+      const ref = await uploadCatalogImage(f.organization_id, pending.file);
+      set("images", [...f.images, { url: ref, is_primary: f.images.length === 0 }]);
+      clearPending();
+      toast.success("Imagen subida");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const { data: orgs = [] } = useQuery({ queryKey: ["my-quotation-organizations"], queryFn: listMyQuotationOrganizations, enabled: open });
   const { data: providers = [] } = useQuery({ queryKey: ["catalog-providers"], queryFn: listCatalogProviders, enabled: open });
