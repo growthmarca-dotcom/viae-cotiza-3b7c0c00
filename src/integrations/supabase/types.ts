@@ -7927,6 +7927,16 @@ export type Database = {
         }
       }
       mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
+      member_of_booking_org: { Args: { _booking_id: string }; Returns: boolean }
+      member_of_lead_org: { Args: { _lead_id: string }; Returns: boolean }
+      member_of_opportunity_org: {
+        Args: { _opportunity_id: string }
+        Returns: boolean
+      }
+      member_of_quotation_org: {
+        Args: { _quotation_id: string }
+        Returns: boolean
+      }
       notify_operations_team: {
         Args: {
           _body: string

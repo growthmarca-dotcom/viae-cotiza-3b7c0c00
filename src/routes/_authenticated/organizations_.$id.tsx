@@ -1,3 +1,4 @@
+import { useManagedOrganizations } from "@/hooks/use-managed-organizations";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,6 +65,8 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 function OrganizationDetailPage() {
   const { id } = Route.useParams();
   const { isOperations, isAdmin } = useAccount();
+  const { data: managed = [] } = useManagedOrganizations();
+  const canManageMembers = isAdmin || managed.some((m) => m.organization_id === id);
   const qc = useQueryClient();
   const [openEdit, setOpenEdit] = useState(false);
 

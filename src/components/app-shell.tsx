@@ -1,3 +1,4 @@
+import { useManagedOrganizations } from "@/hooks/use-managed-organizations";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Library,
@@ -75,6 +76,7 @@ const operationsNav = [
 export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { isAdmin, isOperations } = useAccount();
+  const { data: managedOrgs = [] } = useManagedOrganizations();
   const showDeveloperBranding = useDeveloperBranding();
   const nav = [
     ...baseNav,
@@ -123,6 +125,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {!isOperations &&
+              managedOrgs.map((m) => (
+                <Link
+                  key={m.organization_id}
+                  to="/organizations/$id"
+                  params={{ id: m.organization_id }}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    pathname === `/organizations/${m.organization_id}`
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Building2 className="h-4 w-4" />
+                  Mi agencia{managedOrgs.length > 1 ? `: ${m.name}` : ""}
+                </Link>
+              ))}
           </nav>
           <div className="border-t border-sidebar-border p-3">
             <button
