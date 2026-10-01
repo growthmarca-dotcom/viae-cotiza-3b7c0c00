@@ -181,11 +181,13 @@ export function CatalogProductFormDialog({
       }
     }
     if (uploaded.length) {
-      const hasPrimary = f.images.some((m) => m.is_primary);
-      set("images", [
-        ...f.images,
-        ...uploaded.map((url, i) => ({ url, is_primary: !hasPrimary && f.images.length === 0 && i === 0 })),
-      ]);
+      setF((prev) => {
+        const hasPrimary = prev.images.some((m) => m.is_primary);
+        return {
+          ...prev,
+          images: [...prev.images, ...uploaded.map((url, i) => ({ url, is_primary: !hasPrimary && i === 0 }))],
+        };
+      });
       toast.success(uploaded.length === 1 ? "Imagen subida" : `${uploaded.length} imágenes subidas`);
     }
     if (failed) toast.error(failed === 1 ? "Una imagen no se pudo subir" : `${failed} imágenes no se pudieron subir`);
