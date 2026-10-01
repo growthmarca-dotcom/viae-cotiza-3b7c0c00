@@ -1,3 +1,4 @@
+import { readRecommendationInterests, readRecommendations } from "@/lib/recommendations";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -518,6 +519,21 @@ function QuotationDetailPage() {
         <Row label="Servicios" value={q.accommodation_services} multiline />
         <Row label="Política de cancelación" value={q.cancellation_policy} multiline />
       </Card>
+
+      {readRecommendations((q as { recommendations?: unknown }).recommendations).length > 0 && (
+        <Card title="Recomendados (no incluidos en el total)">
+          {readRecommendations((q as { recommendations?: unknown }).recommendations).map((r) => {
+            const hit = readRecommendationInterests((q as { recommendation_interests?: unknown }).recommendation_interests).find((i) => i.product_id === r.product_id);
+            return (
+              <Row
+                key={r.product_id}
+                label={r.title}
+                value={hit ? `Cliente interesado · ${new Date(hit.at).toLocaleString("es-AR")}` : "Sin interés registrado"}
+              />
+            );
+          })}
+        </Card>
+      )}
 
       <Card title="Precios">
         <Row label="Precio por noche" value={q.price_per_night != null ? `${q.currency} ${q.price_per_night}` : null} />

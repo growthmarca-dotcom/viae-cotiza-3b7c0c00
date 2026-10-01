@@ -69,7 +69,9 @@ export function QuotationPrintDocument({
   items = [],
   accommodationGallery = [],
   accommodationMapsUrl = null,
+  recommendations = [],
 }: {
+  recommendations?: { product_id: string; title: string; description: string; destination: string; cover: string | null }[];
   accommodationGallery?: string[];
   accommodationMapsUrl?: string | null;
   quotation: PrintQuotation;
@@ -261,6 +263,23 @@ export function QuotationPrintDocument({
       {q.cancellation_policy ? (
         <PrintBlock title="Política de cancelación" color={company.primaryColor}>
           <p className="print-text">{q.cancellation_policy}</p>
+        </PrintBlock>
+      ) : null}
+
+      {recommendations.length > 0 ? (
+        <PrintBlock title="Recomendados (opcionales, no incluidos en el total)" color={company.primaryColor}>
+          {recommendations.map((r) => (
+            <div key={r.product_id} className="print-item" style={{ display: "flex", gap: 12, breakInside: "avoid" }}>
+              {r.cover ? (
+                <img src={r.cover} alt={r.title} style={{ width: 120, height: 80, objectFit: "cover", borderRadius: 6, flexShrink: 0 }} />
+              ) : null}
+              <div>
+                <p className="print-text" style={{ fontWeight: 600 }}>{r.title}</p>
+                {r.destination ? <p className="print-text">{r.destination}</p> : null}
+                {r.description ? <p className="print-text">{r.description}</p> : null}
+              </div>
+            </div>
+          ))}
         </PrintBlock>
       ) : null}
 
