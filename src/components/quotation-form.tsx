@@ -484,7 +484,7 @@ function PaymentAndPromotionSection({
   set: <K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) => void;
 }) {
   const { data: promotions = [] } = useQuery({ queryKey: ["promotions"], queryFn: listPromotions });
-  const available = promotions.filter(isPromotionAvailable);
+  const available = promotions.filter((p) => isPromotionAvailable(p));
   const selected = new Set(form.paymentMethods ?? []);
   const mode = form.promotionId ? form.promotionId : form.promotionTitle || form.promotionText ? "__custom" : "__none";
   const [custom, setCustom] = useState(mode === "__custom");
