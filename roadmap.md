@@ -45,3 +45,7 @@
 - [x] Catálogo sobre `products` existente, destinos, tipo de fuente en `providers`, origen e identificación externa, costo/venta/moneda, imágenes por URL
 - [x] Pantallas /catalog y /catalog/$id; selector "Desde catálogo" en cotización con copia inmutable de los datos
 - [ ] Integraciones externas (HotelDO, Civitatis, etc.) — fuera de alcance por decisión
+
+## Invitaciones por email (v1.16)
+- [x] Invitación única por email+agencia, red registrada, 7 días, estados pendiente/aceptada/rechazada/cancelada/vencida, reenviar/cancelar, email con el sistema de ViaE, aceptación solo con el mismo email
+- [ ] Prueba con una cuenta nueva real (requiere un email de prueba del usuario)
