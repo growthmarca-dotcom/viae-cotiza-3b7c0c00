@@ -64,6 +64,8 @@ export type OrganizationInput = {
   email: string;
   /** Casilla interna de alertas del sistema (v1.15). Distinta de `email`. */
   notification_email: string;
+  /** Red de agencias para productos compartidos del catálogo. */
+  network_id: string;
   website: string;
   logo_path: string;
   contact_name: string;
@@ -92,6 +94,7 @@ export const EMPTY_ORGANIZATION: OrganizationInput = {
   whatsapp: "",
   email: "",
   notification_email: "",
+  network_id: "",
   website: "",
   logo_path: "",
   contact_name: "",
@@ -122,6 +125,7 @@ export function organizationToInput(o: Organization): OrganizationInput {
     whatsapp: o.whatsapp ?? "",
     email: o.email ?? "",
     notification_email: o.notification_email ?? "",
+    network_id: (o as { network_id?: string | null }).network_id ?? "",
     website: o.website ?? "",
     logo_path: o.logo_path ?? "",
     contact_name: o.contact_name ?? "",
@@ -151,6 +155,7 @@ function payload(input: OrganizationInput) {
     whatsapp: text(input.whatsapp),
     email: text(input.email),
     notification_email: text(input.notification_email),
+    network_id: input.network_id || null,
     website: text(input.website),
     logo_path: text(input.logo_path),
     contact_name: text(input.contact_name),
