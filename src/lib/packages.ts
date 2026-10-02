@@ -6,6 +6,9 @@
  * personalizados. NO reserva, NO cobra, NO calcula el precio final.
  */
 
+import { supabase } from "@/integrations/supabase/client";
+import { lastQuotedByPackage, type LastQuoted } from "@/lib/packageApply";
+
 export const PACKAGE_TEMPLATE_STATUSES = [
   "draft",
   "active",
@@ -196,4 +199,202 @@ export interface PackageVersion {
   status: PackageVersionStatus;
   created_by: string | null;
   created_at: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Módulo Paquetes (plantillas reutilizables de productos del Catálogo) */
+/* ------------------------------------------------------------------ */
+
+export type PackageListRow = PackageTemplate & {
+  item_count: number;
+  last_quoted: LastQuoted | null;
+};
+
+export type PackageInput = {
+  organization_id: string;
+  name: string;
+  description: string | null;
+  destination_city: string | null;
+  destination_state: string | null;
+  destination_country: string | null;
+  duration_days: number | null;
+  status: PackageTemplateStatus;
+  priority: number;
+  notes: string | null;
+};
+
+export type PackageItemInput = {
+  product_id: string;
+  component_type: PackageItemComponentType;
+  quantity: number;
+  required: boolean;
+  order_index: number;
+};
+
+function friendlyPkg(e: { code?: string; message: string }) {
+  if (e.code === "42501") return new Error("No tenés permisos para modificar paquetes de esta agencia.");
+  return new Error(e.message);
+}
+
+export function packageDestinationLabel(p: Pick<PackageTemplate, "destination_city" | "destination_state" | "destination_country">) {
+  return [p.destination_city, p.destination_state, p.destination_country].filter(Boolean).join(", ");
+}
+
+async function lastQuotedFor(ids: string[]) {
+  if (!ids.length) return new Map<string, LastQuoted>();
+  const { data } = await supabase
+    .from("quotations")
+    .select("id, quotation_number, total_amount, currency, created_at, pax_count, nights, package_template_id")
+    .in("package_template_id", ids)
+    .order("created_at", { ascending: false })
+    .limit(500);
+  return lastQuotedByPackage(
+    (data ?? []).map((q) => ({
+      package_template_id: q.package_template_id,
+      quotation_id: q.id,
+      quotation_number: q.quotation_number,
+      total_amount: q.total_amount != null ? Number(q.total_amount) : null,
+      currency: q.currency,
+      created_at: q.created_at,
+      pax_count: q.pax_count,
+      nights: q.nights,
+    })),
+  );
+}
+
+export async function listPackages(): Promise<PackageListRow[]> {
+  const { data, error } = await supabase
+    .from("package_templates")
+    .select("*, items:package_template_items(count)")
+    .order("priority")
+    .order("name");
+  if (error) throw friendlyPkg(error);
+  const rows = (data ?? []) as unknown as (PackageTemplate & { items: { count: number }[] })[];
+  const last = await lastQuotedFor(rows.map((r) => r.id));
+  return rows.map(({ items, ...r }) => ({
+    ...r,
+    item_count: items?.[0]?.count ?? 0,
+    last_quoted: last.get(r.id) ?? null,
+  }));
+}
+
+export async function getPackage(id: string) {
+  const { data, error } = await supabase.from("package_templates").select("*").eq("id", id).maybeSingle();
+  if (error) throw friendlyPkg(error);
+  if (!data) return null;
+  const { data: items, error: e2 } = await supabase
+    .from("package_template_items")
+    .select("*")
+    .eq("package_template_id", id)
+    .order("order_index");
+  if (e2) throw friendlyPkg(e2);
+  const last = await lastQuotedFor([id]);
+  return {
+    pkg: data as unknown as PackageTemplate,
+    items: (items ?? []) as unknown as PackageTemplateItem[],
+    last_quoted: last.get(id) ?? null,
+  };
+}
+
+export function validatePackage(i: PackageInput, items: PackageItemInput[]): string | null {
+  if (!i.name.trim()) return "Ingresá el nombre del paquete.";
+  if (i.duration_days != null && (i.duration_days < 0 || !Number.isInteger(i.duration_days)))
+    return "La duración debe ser un número entero de días.";
+  if (items.some((it) => !(it.quantity > 0))) return "Cada producto debe tener una cantidad mayor a 0.";
+  return null;
+}
+
+function headerRow(i: PackageInput) {
+  return {
+    organization_id: i.organization_id,
+    name: i.name.trim(),
+    description: i.description?.trim() || null,
+    destination_city: i.destination_city?.trim() || null,
+    destination_state: i.destination_state?.trim() || null,
+    destination_country: i.destination_country?.trim() || null,
+    duration_days: i.duration_days,
+    status: i.status,
+    priority: i.priority,
+    metadata: i.notes?.trim() ? { notes: i.notes.trim() } : {},
+  };
+}
+
+async function replaceItems(id: string, items: PackageItemInput[]) {
+  const { error: d } = await supabase.from("package_template_items").delete().eq("package_template_id", id);
+  if (d) throw friendlyPkg(d);
+  if (!items.length) return;
+  const { error } = await supabase.from("package_template_items").insert(
+    items.map((it, idx) => ({
+      package_template_id: id,
+      product_id: it.product_id,
+      component_type: it.component_type,
+      quantity: it.quantity,
+      required: it.required,
+      order_index: idx,
+    })),
+  );
+  if (error) throw friendlyPkg(error);
+}
+
+export async function createPackage(i: PackageInput, items: PackageItemInput[]): Promise<string> {
+  const msg = validatePackage(i, items);
+  if (msg) throw new Error(msg);
+  const { data, error } = await supabase.from("package_templates").insert(headerRow(i)).select("id").single();
+  if (error) throw friendlyPkg(error);
+  await replaceItems(data.id, items);
+  return data.id;
+}
+
+export async function updatePackage(id: string, i: PackageInput, items: PackageItemInput[]) {
+  const msg = validatePackage(i, items);
+  if (msg) throw new Error(msg);
+  const { error } = await supabase
+    .from("package_templates")
+    .update({ ...headerRow(i), updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw friendlyPkg(error);
+  await replaceItems(id, items);
+}
+
+export async function setPackageStatus(id: string, status: PackageTemplateStatus) {
+  const { error } = await supabase
+    .from("package_templates")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw friendlyPkg(error);
+}
+
+/** Duplica cabecera + referencias a productos (nunca los productos). Nace en borrador. */
+export async function duplicatePackage(id: string): Promise<string> {
+  const full = await getPackage(id);
+  if (!full) throw new Error("Paquete no encontrado.");
+  const p = full.pkg;
+  const { data, error } = await supabase
+    .from("package_templates")
+    .insert({
+      organization_id: p.organization_id,
+      name: `${p.name} (copia)`,
+      description: p.description,
+      destination_city: p.destination_city,
+      destination_state: p.destination_state,
+      destination_country: p.destination_country,
+      duration_days: p.duration_days,
+      status: "draft",
+      priority: p.priority,
+      metadata: p.metadata as never,
+    })
+    .select("id")
+    .single();
+  if (error) throw friendlyPkg(error);
+  await replaceItems(
+    data.id,
+    full.items.map((it) => ({
+      product_id: it.product_id,
+      component_type: it.component_type,
+      quantity: Number(it.quantity),
+      required: it.required,
+      order_index: it.order_index,
+    })),
+  );
+  return data.id;
 }
