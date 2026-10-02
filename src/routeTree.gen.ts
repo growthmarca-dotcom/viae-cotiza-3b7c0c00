@@ -23,6 +23,7 @@ import { Route as AuthenticatedResourcesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
 import { Route as AuthenticatedPromotionsRouteImport } from './routes/_authenticated/promotions'
 import { Route as AuthenticatedPersonsRouteImport } from './routes/_authenticated/persons'
+import { Route as AuthenticatedPackagesRouteImport } from './routes/_authenticated/packages'
 import { Route as AuthenticatedOrganizationsRouteImport } from './routes/_authenticated/organizations'
 import { Route as AuthenticatedOpportunitiesRouteImport } from './routes/_authenticated/opportunities'
 import { Route as AuthenticatedOperationsRouteImport } from './routes/_authenticated/operations'
@@ -47,6 +48,7 @@ import { Route as AuthenticatedQuotationsNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedQuotationsIdRouteImport } from './routes/_authenticated/quotations/$id'
 import { Route as AuthenticatedProvidersIdRouteImport } from './routes/_authenticated/providers_.$id'
 import { Route as AuthenticatedPersonsIdRouteImport } from './routes/_authenticated/persons_.$id'
+import { Route as AuthenticatedPackagesIdRouteImport } from './routes/_authenticated/packages_.$id'
 import { Route as AuthenticatedOrganizationsIdRouteImport } from './routes/_authenticated/organizations_.$id'
 import { Route as AuthenticatedOpportunitiesIdRouteImport } from './routes/_authenticated/opportunities_.$id'
 import { Route as AuthenticatedLeadsIdRouteImport } from './routes/_authenticated/leads_.$id'
@@ -127,6 +129,11 @@ const AuthenticatedPromotionsRoute = AuthenticatedPromotionsRouteImport.update({
 const AuthenticatedPersonsRoute = AuthenticatedPersonsRouteImport.update({
   id: '/persons',
   path: '/persons',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPackagesRoute = AuthenticatedPackagesRouteImport.update({
+  id: '/packages',
+  path: '/packages',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOrganizationsRoute =
@@ -261,6 +268,11 @@ const AuthenticatedPersonsIdRoute = AuthenticatedPersonsIdRouteImport.update({
   path: '/persons/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPackagesIdRoute = AuthenticatedPackagesIdRouteImport.update({
+  id: '/packages_/$id',
+  path: '/packages/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrganizationsIdRoute =
   AuthenticatedOrganizationsIdRouteImport.update({
     id: '/organizations_/$id',
@@ -339,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/operations': typeof AuthenticatedOperationsRoute
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
+  '/packages': typeof AuthenticatedPackagesRoute
   '/persons': typeof AuthenticatedPersonsRoute
   '/promotions': typeof AuthenticatedPromotionsRoute
   '/providers': typeof AuthenticatedProvidersRoute
@@ -357,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
   '/opportunities/$id': typeof AuthenticatedOpportunitiesIdRoute
   '/organizations/$id': typeof AuthenticatedOrganizationsIdRoute
+  '/packages/$id': typeof AuthenticatedPackagesIdRoute
   '/persons/$id': typeof AuthenticatedPersonsIdRoute
   '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
@@ -389,6 +403,7 @@ export interface FileRoutesByTo {
   '/operations': typeof AuthenticatedOperationsRoute
   '/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/organizations': typeof AuthenticatedOrganizationsRoute
+  '/packages': typeof AuthenticatedPackagesRoute
   '/persons': typeof AuthenticatedPersonsRoute
   '/promotions': typeof AuthenticatedPromotionsRoute
   '/providers': typeof AuthenticatedProvidersRoute
@@ -407,6 +422,7 @@ export interface FileRoutesByTo {
   '/leads/$id': typeof AuthenticatedLeadsIdRoute
   '/opportunities/$id': typeof AuthenticatedOpportunitiesIdRoute
   '/organizations/$id': typeof AuthenticatedOrganizationsIdRoute
+  '/packages/$id': typeof AuthenticatedPackagesIdRoute
   '/persons/$id': typeof AuthenticatedPersonsIdRoute
   '/providers/$id': typeof AuthenticatedProvidersIdRoute
   '/quotations/$id': typeof AuthenticatedQuotationsIdRoute
@@ -441,6 +457,7 @@ export interface FileRoutesById {
   '/_authenticated/operations': typeof AuthenticatedOperationsRoute
   '/_authenticated/opportunities': typeof AuthenticatedOpportunitiesRoute
   '/_authenticated/organizations': typeof AuthenticatedOrganizationsRoute
+  '/_authenticated/packages': typeof AuthenticatedPackagesRoute
   '/_authenticated/persons': typeof AuthenticatedPersonsRoute
   '/_authenticated/promotions': typeof AuthenticatedPromotionsRoute
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
@@ -459,6 +476,7 @@ export interface FileRoutesById {
   '/_authenticated/leads_/$id': typeof AuthenticatedLeadsIdRoute
   '/_authenticated/opportunities_/$id': typeof AuthenticatedOpportunitiesIdRoute
   '/_authenticated/organizations_/$id': typeof AuthenticatedOrganizationsIdRoute
+  '/_authenticated/packages_/$id': typeof AuthenticatedPackagesIdRoute
   '/_authenticated/persons_/$id': typeof AuthenticatedPersonsIdRoute
   '/_authenticated/providers_/$id': typeof AuthenticatedProvidersIdRoute
   '/_authenticated/quotations/$id': typeof AuthenticatedQuotationsIdRoute
@@ -493,6 +511,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/opportunities'
     | '/organizations'
+    | '/packages'
     | '/persons'
     | '/promotions'
     | '/providers'
@@ -511,6 +530,7 @@ export interface FileRouteTypes {
     | '/leads/$id'
     | '/opportunities/$id'
     | '/organizations/$id'
+    | '/packages/$id'
     | '/persons/$id'
     | '/providers/$id'
     | '/quotations/$id'
@@ -543,6 +563,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/opportunities'
     | '/organizations'
+    | '/packages'
     | '/persons'
     | '/promotions'
     | '/providers'
@@ -561,6 +582,7 @@ export interface FileRouteTypes {
     | '/leads/$id'
     | '/opportunities/$id'
     | '/organizations/$id'
+    | '/packages/$id'
     | '/persons/$id'
     | '/providers/$id'
     | '/quotations/$id'
@@ -594,6 +616,7 @@ export interface FileRouteTypes {
     | '/_authenticated/operations'
     | '/_authenticated/opportunities'
     | '/_authenticated/organizations'
+    | '/_authenticated/packages'
     | '/_authenticated/persons'
     | '/_authenticated/promotions'
     | '/_authenticated/providers'
@@ -612,6 +635,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads_/$id'
     | '/_authenticated/opportunities_/$id'
     | '/_authenticated/organizations_/$id'
+    | '/_authenticated/packages_/$id'
     | '/_authenticated/persons_/$id'
     | '/_authenticated/providers_/$id'
     | '/_authenticated/quotations/$id'
@@ -738,6 +762,13 @@ declare module '@tanstack/react-router' {
       path: '/persons'
       fullPath: '/persons'
       preLoaderRoute: typeof AuthenticatedPersonsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/packages': {
+      id: '/_authenticated/packages'
+      path: '/packages'
+      fullPath: '/packages'
+      preLoaderRoute: typeof AuthenticatedPackagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/organizations': {
@@ -908,6 +939,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/packages_/$id': {
+      id: '/_authenticated/packages_/$id'
+      path: '/packages/$id'
+      fullPath: '/packages/$id'
+      preLoaderRoute: typeof AuthenticatedPackagesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/organizations_/$id': {
       id: '/_authenticated/organizations_/$id'
       path: '/organizations/$id'
@@ -1004,6 +1042,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperationsRoute: typeof AuthenticatedOperationsRoute
   AuthenticatedOpportunitiesRoute: typeof AuthenticatedOpportunitiesRoute
   AuthenticatedOrganizationsRoute: typeof AuthenticatedOrganizationsRoute
+  AuthenticatedPackagesRoute: typeof AuthenticatedPackagesRoute
   AuthenticatedPersonsRoute: typeof AuthenticatedPersonsRoute
   AuthenticatedPromotionsRoute: typeof AuthenticatedPromotionsRoute
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
@@ -1018,6 +1057,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsIdRoute: typeof AuthenticatedLeadsIdRoute
   AuthenticatedOpportunitiesIdRoute: typeof AuthenticatedOpportunitiesIdRoute
   AuthenticatedOrganizationsIdRoute: typeof AuthenticatedOrganizationsIdRoute
+  AuthenticatedPackagesIdRoute: typeof AuthenticatedPackagesIdRoute
   AuthenticatedPersonsIdRoute: typeof AuthenticatedPersonsIdRoute
   AuthenticatedProvidersIdRoute: typeof AuthenticatedProvidersIdRoute
   AuthenticatedQuotationsIdRoute: typeof AuthenticatedQuotationsIdRoute
@@ -1046,6 +1086,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOperationsRoute: AuthenticatedOperationsRoute,
   AuthenticatedOpportunitiesRoute: AuthenticatedOpportunitiesRoute,
   AuthenticatedOrganizationsRoute: AuthenticatedOrganizationsRoute,
+  AuthenticatedPackagesRoute: AuthenticatedPackagesRoute,
   AuthenticatedPersonsRoute: AuthenticatedPersonsRoute,
   AuthenticatedPromotionsRoute: AuthenticatedPromotionsRoute,
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
@@ -1060,6 +1101,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsIdRoute: AuthenticatedLeadsIdRoute,
   AuthenticatedOpportunitiesIdRoute: AuthenticatedOpportunitiesIdRoute,
   AuthenticatedOrganizationsIdRoute: AuthenticatedOrganizationsIdRoute,
+  AuthenticatedPackagesIdRoute: AuthenticatedPackagesIdRoute,
   AuthenticatedPersonsIdRoute: AuthenticatedPersonsIdRoute,
   AuthenticatedProvidersIdRoute: AuthenticatedProvidersIdRoute,
   AuthenticatedQuotationsIdRoute: AuthenticatedQuotationsIdRoute,

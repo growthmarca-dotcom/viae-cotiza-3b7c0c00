@@ -239,6 +239,13 @@
       "when": 1790886730325,
       "tag": "0033_quotation_recommendations",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790903588119,
+      "tag": "0034_package_templates_org_scope_and_quotation_ref",
+      "breakpoints": true
     }
   ]
 }
