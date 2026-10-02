@@ -5577,6 +5577,7 @@ export type Database = {
           opportunity_id: string | null
           organization_id: string
           other_charges: number | null
+          package_template_id: string | null
           pax_count: number | null
           payment_methods: string[]
           price_per_night: number | null
@@ -5634,6 +5635,7 @@ export type Database = {
           opportunity_id?: string | null
           organization_id: string
           other_charges?: number | null
+          package_template_id?: string | null
           pax_count?: number | null
           payment_methods?: string[]
           price_per_night?: number | null
@@ -5691,6 +5693,7 @@ export type Database = {
           opportunity_id?: string | null
           organization_id?: string
           other_charges?: number | null
+          package_template_id?: string | null
           pax_count?: number | null
           payment_methods?: string[]
           price_per_night?: number | null
@@ -5750,6 +5753,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_package_template_id_fkey"
+            columns: ["package_template_id"]
+            isOneToOne: false
+            referencedRelation: "package_templates"
             referencedColumns: ["id"]
           },
           {
