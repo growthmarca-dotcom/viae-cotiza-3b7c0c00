@@ -87,6 +87,7 @@ function EditQuotationPage() {
         submitting={submitting}
         submitLabel="Guardar cambios"
         itemsTotal={sumItems(items)}
+        onAddPackageItems={(d) => setItems((prev) => [...prev, ...d])}
         itemsSlot={(currency) => (
           <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
         )}

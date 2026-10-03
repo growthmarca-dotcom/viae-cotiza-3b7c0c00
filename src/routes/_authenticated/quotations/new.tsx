@@ -249,6 +249,7 @@ function NewQuotationPage() {
             </div>
           ) : null
         }
+        onAddPackageItems={(d) => setItems((prev) => [...prev, ...d])}
         itemsSlot={(currency) => (
           <QuotationItemsTabs currency={currency} items={items} onChange={setItems} />
         )}

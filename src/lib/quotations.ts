@@ -47,6 +47,7 @@ export function formToRow(form: QuotationFormState, autoTotal?: string) {
       .map((p) => ({ promotion_id: p.promotion_id, title: p.title.trim(), text: p.text.trim() }))
       .filter((p) => p.title || p.text),
     recommendations: form.recommendations ?? [],
+    package_template_id: form.packageTemplateId || null,
   };
 
 }
@@ -122,6 +123,7 @@ export function rowToForm(row: Record<string, unknown>): QuotationFormState {
     paymentMethods: Array.isArray(row.payment_methods) ? (row.payment_methods as string[]) : [],
     promotions: readQuotationPromotions(row.promotions),
     recommendations: readRecommendations(row.recommendations),
+    packageTemplateId: s(row.package_template_id),
   };
 
 }

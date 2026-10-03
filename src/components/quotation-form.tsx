@@ -1,3 +1,8 @@
+import { PackagePickerButton } from "@/components/package-picker-dialog";
+import type { PackagePlan } from "@/lib/packageApply";
+import { buildCatalogSnapshot, snapshotDescription, type CatalogProduct } from "@/lib/catalog";
+import { emptyItem, type QuotationItemCategory, type QuotationItemDraft } from "@/lib/quotationItems";
+import { toast } from "sonner";
 import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
 import { CatalogImage } from "@/components/catalog-image";
 import { useQuery } from "@tanstack/react-query";
@@ -52,6 +57,8 @@ export type QuotationFormState = {
   promotions?: QuotationPromotion[];
   /** Recomendados (venta cruzada): no suman al total ni pasan a la reserva. */
   recommendations?: QuotationRecommendation[];
+  /** Paquete aplicado (solo referencia histórica: la cotización no depende de él). */
+  packageTemplateId?: string;
 };
 
 
@@ -103,6 +110,8 @@ type Props = {
     keptPaths: string[];
   }) => void | Promise<void>;
   onCancel?: () => void;
+  /** Recibe los servicios (no alojamiento) cargados al aplicar un paquete. */
+  onAddPackageItems?: (items: QuotationItemDraft[]) => void;
 };
 
 export function QuotationForm({
@@ -116,6 +125,7 @@ export function QuotationForm({
   headerSlot,
   onSubmit,
   onCancel,
+  onAddPackageItems,
 }: Props) {
   const [form, setForm] = useState<QuotationFormState>({
     ...EMPTY_QUOTATION,
@@ -146,6 +156,45 @@ export function QuotationForm({
 
   function set<K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) {
     setForm((p) => ({ ...p, [k]: v }));
+  }
+
+  // Copia (snapshot): editar el catálogo luego no altera esta cotización.
+  function applyAccommodation(p: CatalogProduct) {
+    const m = (p.metadata ?? {}) as Record<string, string>;
+    setForm((f) => ({
+      ...f,
+      accommodationName: p.name,
+      accommodationCatalogProductId: p.id,
+      address: m.address ?? f.address,
+      description: p.description ?? p.short_description ?? f.description,
+      services: m.services ?? f.services,
+      cancellationPolicy: m.policies ?? f.cancellationPolicy,
+      pricePerNight: p.sale_amount != null ? String(Number(p.sale_amount)) : f.pricePerNight,
+      destination: f.destination || (p.destinations?.[0]?.destinations?.name ?? ""),
+    }));
+  }
+
+  function applyPackage(plan: PackagePlan<CatalogProduct>, packageId: string, packageName: string) {
+    if (plan.accommodation) applyAccommodation(plan.accommodation);
+    const mixed = [plan.accommodation, ...plan.services.map((s) => s.product)].some(
+      (p) => p && p.currency !== form.currency,
+    );
+    if (mixed) toast.warning(`Hay productos en otra moneda distinta de ${form.currency}. Revisá las tarifas: no se convierten.`);
+    onAddPackageItems?.(
+      plan.services.map((s) =>
+        emptyItem(s.category as QuotationItemCategory, {
+          title: s.product.name,
+          description: snapshotDescription(s.product),
+          provider_name: s.product.provider?.trade_name ?? "",
+          quantity: String(s.quantity),
+          unit_amount: s.product.sale_amount != null ? String(Number(s.product.sale_amount)) : "",
+          notes: s.required ? "" : "Opcional",
+          catalog: buildCatalogSnapshot(s.product),
+        }),
+      ),
+    );
+    setForm((f) => ({ ...f, packageTemplateId: packageId }));
+    toast.success(`Paquete "${packageName}" cargado. Podés editar cada servicio.`);
   }
 
   function autoNights(start: string, end: string) {
@@ -241,21 +290,7 @@ export function QuotationForm({
           <CatalogPickerButton
             categories={["accommodation"]}
             label="Elegir alojamiento del catálogo"
-            onPick={(p) => {
-              const m = (p.metadata ?? {}) as Record<string, string>;
-              // Copia (snapshot): editar el catálogo luego no altera esta cotización.
-              setForm((f) => ({
-                ...f,
-                accommodationName: p.name,
-                accommodationCatalogProductId: p.id,
-                address: m.address ?? f.address,
-                description: p.description ?? p.short_description ?? f.description,
-                services: m.services ?? f.services,
-                cancellationPolicy: m.policies ?? f.cancellationPolicy,
-                pricePerNight: p.sale_amount != null ? String(Number(p.sale_amount)) : f.pricePerNight,
-                destination: f.destination || (p.destinations?.[0]?.destinations?.name ?? ""),
-              }));
-            }}
+            onPick={applyAccommodation}
           />
           <span className="text-xs text-muted-foreground">Los datos se copian; podés ajustarlos.</span>
         </div>
@@ -416,6 +451,15 @@ export function QuotationForm({
           </div>
         )}
       </Section>
+
+      {onAddPackageItems && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-4" data-testid="add-package">
+          <PackagePickerButton onApply={applyPackage} />
+          <span className="text-xs text-muted-foreground">
+            Carga los productos del paquete como servicios normales, con los precios actuales del Catálogo.
+          </span>
+        </div>
+      )}
 
       {itemsSlot?.(form.currency)}
 
