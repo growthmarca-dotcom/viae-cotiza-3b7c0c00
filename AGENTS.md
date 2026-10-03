@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 - Catalog sharing: products keep a single row owned by `organization_id`; other agencies read it via `visibility` (network = same `organizations.network_id`, public = any active member) and never edit it. Why: avoids duplicate products and ownership conflicts.
 - Seller-agency commission is recorded only in the quotation item's catalog snapshot (owner org, pct, amounts); the selling agency is the quotation's organization. Why: no inter-agency settlement engine yet.
+- Packages (`package_templates` + `package_template_items`) are org-scoped templates of Catalog product references; applying one copies current Catalog data into normal quotation items, and `quotations.package_template_id` is only a historical reference. Why: quotations must stay independent of later package edits and never duplicate products.
