@@ -23,6 +23,7 @@ import {
   TicketCheck,
   Target,
   LogOut,
+  Package as PackageIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ const baseNav = [
   { to: "/quotations/new", label: "Nueva cotización", icon: PlusCircle },
   { to: "/quotations", label: "Cotizaciones", icon: FileText },
   { to: "/catalog", label: "Catálogo", icon: Library },
+  { to: "/packages", label: "Paquetes", icon: PackageIcon },
   { to: "/promotions", label: "Promociones", icon: BadgePercent },
   { to: "/bookings", label: "Reservas", icon: TicketCheck },
   { to: "/clients", label: "Clientes", icon: Users },
