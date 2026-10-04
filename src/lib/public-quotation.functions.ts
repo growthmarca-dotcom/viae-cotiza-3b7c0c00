@@ -100,7 +100,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       accommodationGallery: string[];
       accommodationMapsUrl: string | null;
       accommodationMapCoords: { lat: number; lng: number } | null;
-      recommendations: { product_id: string; title: string; description: string; destination: string; cover: string | null }[];
+      recommendations: { product_id: string; title: string; description: string; destination: string; from_price?: string; cover: string | null }[];
       company: PublicCompany;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -71,7 +71,7 @@ export function QuotationPrintDocument({
   accommodationMapsUrl = null,
   recommendations = [],
 }: {
-  recommendations?: { product_id: string; title: string; description: string; destination: string; cover: string | null }[];
+  recommendations?: { product_id: string; title: string; description: string; destination: string; from_price?: string; cover: string | null }[];
   accommodationGallery?: string[];
   accommodationMapsUrl?: string | null;
   quotation: PrintQuotation;
@@ -277,6 +277,7 @@ export function QuotationPrintDocument({
                 <p className="print-text" style={{ fontWeight: 600 }}>{r.title}</p>
                 {r.destination ? <p className="print-text">{r.destination}</p> : null}
                 {r.description ? <p className="print-text">{r.description}</p> : null}
+                {r.from_price?.trim() ? <p className="print-text" style={{ fontWeight: 600 }}>Desde $ {r.from_price.trim()}</p> : null}
               </div>
             </div>
           ))}

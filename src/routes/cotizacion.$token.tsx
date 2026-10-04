@@ -603,6 +603,7 @@ function PublicQuotationPage() {
                     <h3 className="font-display text-base font-semibold">{r.title}</h3>
                     {r.destination && <p className="text-xs uppercase tracking-wide text-muted-foreground">{r.destination}</p>}
                     {r.description && <p className="line-clamp-4 text-sm text-muted-foreground">{r.description}</p>}
+                    {r.from_price?.trim() ? <p className="text-sm font-semibold">Desde $ {r.from_price.trim()}</p> : null}
                     <Button
                       size="sm"
                       variant="outline"
