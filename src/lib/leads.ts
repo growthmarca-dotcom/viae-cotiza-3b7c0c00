@@ -479,6 +479,30 @@ export async function getOpportunityIdForLead(leadId: string): Promise<string | 
  * No duplica registros: si ya existe la devuelve tal cual.
  * Nunca bloquea la gestión de la Consulta si algo falla.
  */
+/**
+ * Organización de la Consulta para su oportunidad. Si la consulta no la tiene
+ * (usuario con varias agencias), usa la agencia que el usuario administra
+ * (owner/admin) o, en su defecto, la membresía más antigua, y la guarda en la consulta.
+ */
+async function resolveLeadOrganizationId(lead: Lead): Promise<string | null> {
+  if (lead.organization_id) return lead.organization_id;
+  const { data } = await supabase
+    .from("organization_members")
+    .select("organization_id, role, created_at")
+    .eq("user_id", lead.user_id)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  const rows = data ?? [];
+  const preferred =
+    rows.find((r) => r.role === "organization_owner" || r.role === "organization_admin") ??
+    rows[0];
+  const orgId = preferred?.organization_id ?? null;
+  if (orgId) {
+    await supabase.from("leads").update({ organization_id: orgId }).eq("id", lead.id);
+  }
+  return orgId;
+}
+
 export async function ensureOpportunityForLead(lead: Lead): Promise<string | null> {
   try {
     const existing = await getOpportunityIdForLead(lead.id);
@@ -486,6 +510,8 @@ export async function ensureOpportunityForLead(lead: Lead): Promise<string | nul
 
     const clientId = lead.client_id ?? (await convertLeadToClient(lead));
     if (!clientId) return null;
+
+    const organizationId = await resolveLeadOrganizationId(lead);
 
     const title =
       [leadFullName(lead), lead.destination].filter(Boolean).join(" — ") || "Consulta comercial";
@@ -498,12 +524,15 @@ export async function ensureOpportunityForLead(lead: Lead): Promise<string | nul
       leadSource: (lead.source as LeadSource) ?? "other",
       estimatedValue: lead.budget_amount != null ? Number(lead.budget_amount) : 0,
       currency: lead.budget_currency ?? "USD",
+      organizationId,
     });
 
-    await supabase
+    const { error: linkError } = await supabase
       .from("opportunities")
       .update({ lead_id: lead.id, assigned_agent_id: lead.assigned_agent_id ?? null })
       .eq("id", opportunityId);
+    if (linkError) throw linkError;
+
 
 
     return opportunityId;
