@@ -180,9 +180,13 @@ function OpportunityKanbanCard({
       </Link>
       <p className="mt-1 truncate text-xs text-muted-foreground">{clientName(o.client_id)}</p>
       {o.lead_id ? (
-        <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-          <Inbox className="h-3 w-3" /> Consulta
-        </span>
+        <Link
+          to="/leads/$id"
+          params={{ id: o.lead_id }}
+          className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:border-gold/60 hover:text-foreground"
+        >
+          <Inbox className="h-3 w-3" /> Ver consulta
+        </Link>
       ) : null}
 
 
