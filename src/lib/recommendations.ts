@@ -9,6 +9,8 @@ export type QuotationRecommendation = {
   title: string;
   description: string;
   destination: string;
+  /** "Desde $": dato informativo propio de esta cotización (opcional). */
+  from_price?: string;
 };
 
 export type RecommendationInterest = { product_id: string; title: string; at: string };
@@ -23,6 +25,7 @@ export function readRecommendations(raw: unknown): QuotationRecommendation[] {
         title: typeof o.title === "string" ? o.title : "",
         description: typeof o.description === "string" ? o.description : "",
         destination: typeof o.destination === "string" ? o.destination : "",
+        from_price: typeof o.from_price === "string" ? o.from_price : "",
       };
     })
     .filter((r) => r.product_id && r.title);

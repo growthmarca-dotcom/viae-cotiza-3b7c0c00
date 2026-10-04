@@ -648,6 +648,21 @@ function RecommendationsSection({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{r.title}</p>
                 {r.destination && <p className="text-xs text-muted-foreground">{r.destination}</p>}
+                <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  Desde $
+                  <Input
+                    className="h-8 w-32 text-sm"
+                    placeholder="Opcional"
+                    value={r.from_price ?? ""}
+                    aria-label={`Desde $ para ${r.title}`}
+                    onChange={(e) =>
+                      set(
+                        "recommendations",
+                        list.map((x) => (x.product_id === r.product_id ? { ...x, from_price: e.target.value } : x)),
+                      )
+                    }
+                  />
+                </label>
               </div>
               <Button
                 type="button"
@@ -675,6 +690,7 @@ function RecommendationsSection({
                 title: p.name,
                 description: p.short_description ?? p.description ?? "",
                 destination: productDestinationNames(p).join(", "),
+                from_price: "",
               },
             ]);
           }}
