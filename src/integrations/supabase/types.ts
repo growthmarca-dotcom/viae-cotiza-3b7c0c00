@@ -4652,6 +4652,83 @@ export type Database = {
           },
         ]
       }
+      product_availability_blocks: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string
+          external_uid: string | null
+          id: string
+          origin: Database["public"]["Enums"]["availability_block_origin"]
+          product_id: string
+          product_variant_id: string | null
+          reason: string | null
+          source_id: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          external_uid?: string | null
+          id?: string
+          origin?: Database["public"]["Enums"]["availability_block_origin"]
+          product_id: string
+          product_variant_id?: string | null
+          reason?: string | null
+          source_id?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          external_uid?: string | null
+          id?: string
+          origin?: Database["public"]["Enums"]["availability_block_origin"]
+          product_id?: string
+          product_variant_id?: string | null
+          reason?: string | null
+          source_id?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_availability_blocks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_availability_blocks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_availability_blocks_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_availability_blocks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "availability_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_availability_profiles: {
         Row: {
           availability_mode: Database["public"]["Enums"]["product_availability_mode"]
@@ -8048,6 +8125,13 @@ export type Database = {
       org_identity_can_delete: { Args: { _org_id: string }; Returns: boolean }
       org_identity_can_read: { Args: { _org_id: string }; Returns: boolean }
       org_identity_can_write: { Args: { _org_id: string }; Returns: boolean }
+      product_availability_status: {
+        Args: { _from: string; _product_ids: string[]; _to: string }
+        Returns: {
+          product_id: string
+          status: string
+        }[]
+      }
       provider_in_package_template: {
         Args: { _template_id: string }
         Returns: boolean
@@ -8304,6 +8388,14 @@ export type Database = {
         | "service_fee"
         | "custom"
       app_role: "admin" | "agent" | "provider" | "operations"
+      availability_block_origin:
+        | "manual"
+        | "viae_booking"
+        | "ical"
+        | "booking_engine"
+        | "channel_manager"
+        | "api"
+        | "other"
       availability_quantity_type:
         | "capacity"
         | "units"
@@ -8966,6 +9058,15 @@ export const Constants = {
         "custom",
       ],
       app_role: ["admin", "agent", "provider", "operations"],
+      availability_block_origin: [
+        "manual",
+        "viae_booking",
+        "ical",
+        "booking_engine",
+        "channel_manager",
+        "api",
+        "other",
+      ],
       availability_quantity_type: [
         "capacity",
         "units",

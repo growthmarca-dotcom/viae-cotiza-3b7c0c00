@@ -246,6 +246,13 @@
       "when": 1790903588119,
       "tag": "0034_package_templates_org_scope_and_quotation_ref",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791159581346,
+      "tag": "0035_accommodation_availability_blocks",
+      "breakpoints": true
     }
   ]
 }
