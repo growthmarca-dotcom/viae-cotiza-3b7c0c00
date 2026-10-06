@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getAvailabilityStatuses } from "@/lib/accommodationAvailability";
 import { useQuery } from "@tanstack/react-query";
 import { Library, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,13 @@ export function CatalogPickerButton({
   categories,
   onPick,
   label = "Desde catálogo",
+  context,
 }: {
   categories: string[];
   onPick: (p: CatalogProduct) => void;
   label?: string;
+  /** Destino y fechas de la cotización (check-out exclusivo) para mostrar disponibilidad de alojamientos. */
+  context?: { destination?: string; from?: string; to?: string };
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -58,7 +62,22 @@ export function CatalogPickerButton({
     [base],
   );
   const statusOptions = useMemo(() => [...new Set(base.map((p) => p.status))], [base]);
-  const list = useMemo(() => {
+  const withDates = !!(context?.from && context?.to && context.to > context.from);
+  const [hideUnavailable, setHideUnavailable] = useState(true);
+  const [destApplied, setDestApplied] = useState(false);
+  useEffect(() => {
+    if (!open) { setDestApplied(false); return; }
+    if (destApplied || !context?.destination || destOptions.length === 0) return;
+    const match = destOptions.find((d) => norm(d) === norm(context.destination!));
+    if (match) setDest(match);
+    setDestApplied(true);
+  }, [open, destApplied, context?.destination, destOptions]);
+  const { data: avail = {} } = useQuery({
+    queryKey: ["catalog-availability", context?.from, context?.to, base.map((p) => p.id).join(",")],
+    queryFn: () => getAvailabilityStatuses(base.map((p) => p.id), context!.from!, context!.to!),
+    enabled: open && withDates && base.length > 0,
+  });
+  const filtered = useMemo(() => {
     const s = norm(q);
     return base.filter(
       (p) =>
@@ -72,6 +91,20 @@ export function CatalogPickerButton({
             .some((v) => norm(String(v)).includes(s))),
     );
   }, [base, q, cat, dest, prov, status]);
+  const rank = { available: 0, unknown: 1, unavailable: 2 } as const;
+  const stateOf = (id: string) => avail[id] ?? "unknown";
+  const counts = useMemo(() => {
+    const c = { available: 0, unknown: 0, unavailable: 0 };
+    for (const p of filtered) c[stateOf(p.id)]++;
+    return c;
+  }, [filtered, avail]);
+  const list = useMemo(() => {
+    if (!withDates) return filtered;
+    return [...filtered]
+      .filter((p) => !hideUnavailable || stateOf(p.id) !== "unavailable")
+      .sort((a, b) => rank[stateOf(a.id)] - rank[stateOf(b.id)]);
+  }, [filtered, avail, withDates, hideUnavailable]);
+  const fmtD = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("es-AR");
   const selCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
   return (
@@ -112,6 +145,21 @@ export function CatalogPickerButton({
             </select>
             <Button type="button" variant="ghost" size="sm" onClick={clear}>Limpiar filtros</Button>
           </div>
+          {withDates && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 text-xs">
+              <span>
+                Resultados para {dest || context?.destination || "todos los destinos"} · {fmtD(context!.from!)} → {fmtD(context!.to!)}
+                <br />
+                🟢 {counts.available} con disponibilidad verificada · ⚪ {counts.unknown} consultar disponibilidad · 🔴 {counts.unavailable} no disponibles
+              </span>
+              {counts.unavailable > 0 && (
+                <label className="flex items-center gap-1">
+                  <input type="checkbox" checked={!hideUnavailable} onChange={(e) => setHideUnavailable(!e.target.checked)} />
+                  Mostrar no disponibles
+                </label>
+              )}
+            </div>
+          )}
           <div className="max-h-96 space-y-2 overflow-y-auto">
             {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Cargando…</p>}
             {!isLoading && list.length === 0 && (
@@ -136,6 +184,15 @@ export function CatalogPickerButton({
                     {productDestinationNames(p).length ? ` · ${productDestinationNames(p).join(", ")}` : ""}
                     {p.provider ? ` · ${p.provider.trade_name}` : ""}
                   </p>
+                  {withDates && (
+                    <p className="mt-0.5 text-xs">
+                      {stateOf(p.id) === "available"
+                        ? "🟢 Disponible · Disponibilidad verificada"
+                        : stateOf(p.id) === "unavailable"
+                          ? "🔴 No disponible"
+                          : "⚪ Consultar disponibilidad · No sincronizada"}
+                    </p>
+                  )}
                 </div>
                 <span className="shrink-0 text-sm font-medium">
                   {p.sale_amount != null ? formatMoney(p.currency, Number(p.sale_amount)) : "Sin precio"}

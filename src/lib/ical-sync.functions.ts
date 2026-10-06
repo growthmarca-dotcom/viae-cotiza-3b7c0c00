@@ -54,7 +54,8 @@ export const syncIcalSource = createServerFn({ method: "POST" })
       const text = await res.text();
       if (!text.includes("BEGIN:VCALENDAR")) throw new Error("La URL no devolvió un calendario iCal válido.");
       const today = new Date().toISOString().slice(0, 10);
-      const events = parseIcalEvents(text).filter((e) => e.end >= today);
+      const seen = new Set<string>();
+      const events = parseIcalEvents(text).filter((e) => e.end >= today && !seen.has(e.uid) && !!seen.add(e.uid));
 
       const { error: delErr } = await sb
         .from("product_availability_blocks")

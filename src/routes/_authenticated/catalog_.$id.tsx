@@ -1,3 +1,4 @@
+import { AccommodationAvailabilityPanel } from "@/components/accommodation-availability-panel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -227,6 +228,14 @@ function ProductPage() {
             </dl>
           )}
         </section>
+      )}
+
+      {p.category === "accommodation" && (
+        <AccommodationAvailabilityPanel
+          productId={p.id}
+          organizationId={p.organization_id ?? null}
+          canManage={isAdmin || myOrgs.some((o) => o.id === p.organization_id)}
+        />
       )}
 
       {p.internal_notes && (
