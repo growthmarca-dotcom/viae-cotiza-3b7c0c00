@@ -253,6 +253,13 @@
       "when": 1791159581346,
       "tag": "0035_accommodation_availability_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791248079440,
+      "tag": "0036_accommodation_units_and_ical_cron",
+      "breakpoints": true
     }
   ]
 }

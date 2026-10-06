@@ -5630,6 +5630,7 @@ export type Database = {
           accommodation_description: string | null
           accommodation_name: string | null
           accommodation_services: string | null
+          accommodation_unit_id: string | null
           archived: boolean
           cancellation_policy: string | null
           client_id: string | null
@@ -5688,6 +5689,7 @@ export type Database = {
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
+          accommodation_unit_id?: string | null
           archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
@@ -5746,6 +5748,7 @@ export type Database = {
           accommodation_description?: string | null
           accommodation_name?: string | null
           accommodation_services?: string | null
+          accommodation_unit_id?: string | null
           archived?: boolean
           cancellation_policy?: string | null
           client_id?: string | null
@@ -5802,6 +5805,13 @@ export type Database = {
             columns: ["accommodation_catalog_product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_accommodation_unit_id_fkey"
+            columns: ["accommodation_unit_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
           {
@@ -8132,6 +8142,15 @@ export type Database = {
           status: string
         }[]
       }
+      product_units_availability: {
+        Args: { _from: string; _product_ids: string[]; _to: string }
+        Returns: {
+          name: string
+          product_id: string
+          status: string
+          variant_id: string
+        }[]
+      }
       provider_in_package_template: {
         Args: { _template_id: string }
         Returns: boolean
@@ -8353,6 +8372,10 @@ export type Database = {
       validate_booking_organization: {
         Args: { _booking_id: string }
         Returns: Json
+      }
+      verify_cron_token: {
+        Args: { _name: string; _token: string }
+        Returns: boolean
       }
     }
     Enums: {
