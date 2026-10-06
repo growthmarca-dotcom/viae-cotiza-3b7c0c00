@@ -290,6 +290,7 @@ export function QuotationForm({
           <CatalogPickerButton
             categories={["accommodation"]}
             label="Elegir alojamiento del catálogo"
+            context={{ destination: form.destination, from: form.travelStart, to: form.travelEnd }}
             onPick={applyAccommodation}
           />
           <span className="text-xs text-muted-foreground">Los datos se copian; podés ajustarlos.</span>
