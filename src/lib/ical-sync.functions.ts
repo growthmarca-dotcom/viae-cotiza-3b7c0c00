@@ -45,7 +45,7 @@ export const syncIcalSource = createServerFn({ method: "POST" })
     const cfg = (src.configuration ?? {}) as Record<string, unknown>;
     const url = String(cfg.url ?? "").replace(/^webcal:\/\//i, "https://");
     const save = (extra: Record<string, unknown>) =>
-      sb.from("availability_sources").update({ configuration: { ...cfg, ...extra } }).eq("id", src.id);
+      sb.from("availability_sources").update({ configuration: { ...cfg, ...extra } as never }).eq("id", src.id);
 
     try {
       if (!url) throw new Error("La fuente no tiene URL iCal.");
