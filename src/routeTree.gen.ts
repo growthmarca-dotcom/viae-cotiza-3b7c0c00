@@ -56,6 +56,7 @@ import { Route as AuthenticatedResourcesIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSettlementsIdRouteImport } from './routes/_authenticated/settlements_.$id'
 import { Route as AuthenticatedSmartQuotesIndexRouteImport } from './routes/_authenticated/smart-quotes/index'
 import { Route as AuthenticatedSmartQuotesIdRouteImport } from './routes/_authenticated/smart-quotes/$id'
+import { Route as ApiPublicIcalSyncRouteImport } from './routes/api/public/ical-sync'
 import { Route as AuthenticatedQuotationsIdEditRouteImport } from './routes/_authenticated/quotations/$id_.edit'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -310,6 +311,11 @@ const AuthenticatedSmartQuotesIdRoute =
     path: '/smart-quotes/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicIcalSyncRoute = ApiPublicIcalSyncRouteImport.update({
+  id: '/api/public/ical-sync',
+  path: '/api/public/ical-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedQuotationsIdEditRoute =
   AuthenticatedQuotationsIdEditRouteImport.update({
     id: '/quotations/$id_/edit',
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
   '/settlements/$id': typeof AuthenticatedSettlementsIdRoute
   '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
+  '/api/public/ical-sync': typeof ApiPublicIcalSyncRoute
   '/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/resources/$id': typeof AuthenticatedResourcesIdRoute
   '/settlements/$id': typeof AuthenticatedSettlementsIdRoute
   '/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
+  '/api/public/ical-sync': typeof ApiPublicIcalSyncRoute
   '/quotations': typeof AuthenticatedQuotationsIndexRoute
   '/smart-quotes': typeof AuthenticatedSmartQuotesIndexRoute
   '/quotations/$id/edit': typeof AuthenticatedQuotationsIdEditRoute
@@ -484,6 +492,7 @@ export interface FileRoutesById {
   '/_authenticated/resources_/$id': typeof AuthenticatedResourcesIdRoute
   '/_authenticated/settlements_/$id': typeof AuthenticatedSettlementsIdRoute
   '/_authenticated/smart-quotes/$id': typeof AuthenticatedSmartQuotesIdRoute
+  '/api/public/ical-sync': typeof ApiPublicIcalSyncRoute
   '/_authenticated/quotations/': typeof AuthenticatedQuotationsIndexRoute
   '/_authenticated/smart-quotes/': typeof AuthenticatedSmartQuotesIndexRoute
   '/_authenticated/quotations/$id_/edit': typeof AuthenticatedQuotationsIdEditRoute
@@ -538,6 +547,7 @@ export interface FileRouteTypes {
     | '/resources/$id'
     | '/settlements/$id'
     | '/smart-quotes/$id'
+    | '/api/public/ical-sync'
     | '/quotations/'
     | '/smart-quotes/'
     | '/quotations/$id/edit'
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
     | '/resources/$id'
     | '/settlements/$id'
     | '/smart-quotes/$id'
+    | '/api/public/ical-sync'
     | '/quotations'
     | '/smart-quotes'
     | '/quotations/$id/edit'
@@ -643,6 +654,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resources_/$id'
     | '/_authenticated/settlements_/$id'
     | '/_authenticated/smart-quotes/$id'
+    | '/api/public/ical-sync'
     | '/_authenticated/quotations/'
     | '/_authenticated/smart-quotes/'
     | '/_authenticated/quotations/$id_/edit'
@@ -659,6 +671,7 @@ export interface RootRouteChildren {
   InvitacionTokenRoute: typeof InvitacionTokenRoute
   PropuestaTokenRoute: typeof PropuestaTokenRoute
   SeguimientoTokenRoute: typeof SeguimientoTokenRoute
+  ApiPublicIcalSyncRoute: typeof ApiPublicIcalSyncRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -995,6 +1008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSmartQuotesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/ical-sync': {
+      id: '/api/public/ical-sync'
+      path: '/api/public/ical-sync'
+      fullPath: '/api/public/ical-sync'
+      preLoaderRoute: typeof ApiPublicIcalSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/quotations/$id_/edit': {
       id: '/_authenticated/quotations/$id_/edit'
       path: '/quotations/$id/edit'
@@ -1125,6 +1145,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitacionTokenRoute: InvitacionTokenRoute,
   PropuestaTokenRoute: PropuestaTokenRoute,
   SeguimientoTokenRoute: SeguimientoTokenRoute,
+  ApiPublicIcalSyncRoute: ApiPublicIcalSyncRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
