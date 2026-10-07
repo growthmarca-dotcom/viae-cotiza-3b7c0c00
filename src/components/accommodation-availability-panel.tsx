@@ -17,7 +17,9 @@ import {
   removeUnit,
   saveIcalSource,
   setCalendarManaged,
+  type AvailabilityUnit,
 } from "@/lib/accommodationAvailability";
+import { UnitEditDialog } from "@/components/unit-edit-dialog";
 import { syncIcalSource } from "@/lib/ical-sync.functions";
 
 const fmt = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("es-AR");
@@ -44,6 +46,8 @@ export function AccommodationAvailabilityPanel({
   const [viewUnit, setViewUnit] = useState<string>("all");
   const [form, setForm] = useState({ unit: "", from: "", to: "", reason: "" });
   const [icalUrl, setIcalUrl] = useState<string | null>(null);
+  const [editing, setEditing] = useState<AvailabilityUnit | null>(null);
+  const today = new Date().toISOString().slice(0, 10);
   const sync = useServerFn(syncIcalSource);
   const syncM = useMutation({
     mutationFn: (sourceId: string) => sync({ data: { sourceId } }),
@@ -97,23 +101,31 @@ export function AccommodationAvailabilityPanel({
             </select>
           )}
           <Calendar
-            mode="multiple"
-            selected={busy}
             numberOfMonths={1}
             className="rounded-xl border"
-            modifiersClassNames={{ selected: "bg-destructive/80 text-destructive-foreground" }}
+            modifiers={{ busy }}
+            modifiersClassNames={{
+              busy: "rounded-md bg-destructive/85 [&_button]:!bg-transparent [&_button]:font-semibold [&_button]:!text-destructive-foreground",
+            }}
           />
-          <p className="text-xs text-muted-foreground">Marcadas = ocupadas. Sin marcar = disponibles.</p>
+          <p className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-destructive/85" /> Bloqueada</span>
+            <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm border" /> Disponible</span>
+            {units.length > 0 && <span>· {viewUnit === "all" ? "Todo el alojamiento: rojo solo si todas las unidades están ocupadas" : unitLabel(viewUnit)}</span>}
+          </p>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-2">
             <h3 className="text-sm font-semibold">Unidades / habitaciones</h3>
-            {units.length === 0 && <p className="text-xs text-muted-foreground">Sin unidades: se gestiona como una sola unidad.</p>}
+            {units.length === 0 ? <p className="text-xs text-muted-foreground">Sin unidades: se gestiona como una sola unidad.</p> : <p className="text-xs text-muted-foreground">Estado de hoy. Tocá una unidad para editar sus datos y fotos.</p>}
             <ul className="flex flex-wrap gap-2">
               {units.map((u) => (
                 <li key={u.id} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs">
-                  {u.name}
+                  <span title={occupiedDays(data.blocks, data.units, u.id).has(today) ? "Ocupada hoy" : "Disponible hoy"}>
+                    {occupiedDays(data.blocks, data.units, u.id).has(today) ? "🔴" : "🟢"}
+                  </span>
+                  <button type="button" className="hover:underline" onClick={() => setEditing(u)}>{u.name}</button>
                   {canManage && (
                     <button type="button" aria-label={`Quitar ${u.name}`} onClick={() => run(() => removeUnit(u.id), "Unidad quitada")}>
                       <Trash2 className="h-3 w-3" />
@@ -205,6 +217,9 @@ export function AccommodationAvailabilityPanel({
           )}
         </div>
       </div>
+      {canManage && (
+        <UnitEditDialog unit={editing} organizationId={organizationId} onClose={() => setEditing(null)} onSaved={refresh} />
+      )}
     </section>
   );
 }

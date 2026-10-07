@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+import { unitImages, type AvailabilityUnit } from "@/lib/accommodationAvailability";
 import { PackagePickerButton } from "@/components/package-picker-dialog";
 import type { PackagePlan } from "@/lib/packageApply";
 import { buildCatalogSnapshot, snapshotDescription, type CatalogProduct } from "@/lib/catalog";
@@ -40,6 +42,8 @@ export type QuotationFormState = {
   accommodationName: string;
   /** Producto del Catálogo elegido como alojamiento (su galería se publica). */
   accommodationCatalogProductId?: string;
+  /** Unidad/habitación concreta del alojamiento del Catálogo (opcional). */
+  accommodationUnitId?: string;
   address: string;
   description: string;
   services: string;
@@ -150,21 +154,32 @@ export function QuotationForm({
     queryFn: () => getCatalogProduct(catalogProductId),
     enabled: Boolean(catalogProductId),
   });
-  const catalogImages = [...(catalogAcc?.media ?? [])]
-    .filter((m) => m.type === "image")
-    .sort((a, b) => a.order_index - b.order_index);
+  const unitId = form.accommodationUnitId || "";
+  const { data: unitRow } = useQuery({
+    queryKey: ["catalog-unit", unitId],
+    queryFn: async () => (await supabase.from("product_variants").select("id, name, status, metadata").eq("id", unitId).maybeSingle()).data,
+    enabled: Boolean(unitId),
+  });
+  const unitPhotos = unitImages(unitRow as AvailabilityUnit | null);
+  // Si la unidad elegida tiene fotos propias se usan esas; si no, las generales de la propiedad.
+  const catalogImages = unitPhotos.length
+    ? unitPhotos.map((url, i) => ({ id: url, url, type: "image" as const, order_index: i }))
+    : [...(catalogAcc?.media ?? [])]
+        .filter((m) => m.type === "image")
+        .sort((a, b) => a.order_index - b.order_index);
 
   function set<K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) {
     setForm((p) => ({ ...p, [k]: v }));
   }
 
   // Copia (snapshot): editar el catálogo luego no altera esta cotización.
-  function applyAccommodation(p: CatalogProduct) {
+  function applyAccommodation(p: CatalogProduct, unit?: { id: string; name: string }) {
     const m = (p.metadata ?? {}) as Record<string, string>;
     setForm((f) => ({
       ...f,
-      accommodationName: p.name,
+      accommodationName: unit ? `${p.name} — ${unit.name}` : p.name,
       accommodationCatalogProductId: p.id,
+      accommodationUnitId: unit?.id ?? "",
       address: m.address ?? f.address,
       description: p.description ?? p.short_description ?? f.description,
       services: m.services ?? f.services,

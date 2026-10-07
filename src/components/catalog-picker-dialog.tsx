@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getAvailabilityStatuses } from "@/lib/accommodationAvailability";
+import { getAvailabilityStatuses, getUnitsAvailability } from "@/lib/accommodationAvailability";
 import { useQuery } from "@tanstack/react-query";
 import { Library, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,8 @@ export function CatalogPickerButton({
   context,
 }: {
   categories: string[];
-  onPick: (p: CatalogProduct) => void;
+  /** `unit` = unidad/habitación concreta elegida (solo alojamientos con unidades). */
+  onPick: (p: CatalogProduct, unit?: { id: string; name: string }) => void;
   label?: string;
   /** Destino y fechas de la cotización (check-out exclusivo) para mostrar disponibilidad de alojamientos. */
   context?: { destination?: string; from?: string; to?: string };
@@ -77,6 +78,16 @@ export function CatalogPickerButton({
     queryFn: () => getAvailabilityStatuses(base.map((p) => p.id), context!.from!, context!.to!),
     enabled: open && withDates && base.length > 0,
   });
+  const { data: unitRows = [] } = useQuery({
+    queryKey: ["catalog-units-availability", context?.from, context?.to, base.map((p) => p.id).join(",")],
+    queryFn: () => getUnitsAvailability(base.map((p) => p.id), withDates ? context!.from : undefined, withDates ? context!.to : undefined),
+    enabled: open && !!context && categories.includes("accommodation") && base.length > 0,
+  });
+  const unitsByProduct = useMemo(() => {
+    const m = new Map<string, typeof unitRows>();
+    for (const u of unitRows) m.set(u.product_id, [...(m.get(u.product_id) ?? []), u]);
+    return m;
+  }, [unitRows]);
   const filtered = useMemo(() => {
     const s = norm(q);
     return base.filter(
@@ -167,15 +178,17 @@ export function CatalogPickerButton({
                 No hay productos que coincidan con la búsqueda y los filtros.
               </p>
             )}
-            {list.map((p) => (
+            {list.map((p) => {
+              const units = unitsByProduct.get(p.id) ?? [];
+              return (
+              <div key={p.id} className="rounded-xl border border-border bg-background">
               <button
-                key={p.id}
-                type="button"
+                                type="button"
                 onClick={() => {
                   onPick(p);
                   setOpen(false);
                 }}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-left transition-colors hover:border-primary"
+                className="flex w-full items-center justify-between gap-3 rounded-xl p-3 text-left transition-colors hover:border-primary"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{p.name}</p>
@@ -198,7 +211,28 @@ export function CatalogPickerButton({
                   {p.sale_amount != null ? formatMoney(p.currency, Number(p.sale_amount)) : "Sin precio"}
                 </span>
               </button>
-            ))}
+                {units.length > 0 && (
+                  <div className="space-y-1 border-t px-3 pb-3 pt-2">
+                    <p className="text-xs font-medium text-muted-foreground">Unidades{withDates ? " para esas fechas" : ""} · elegí una:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {units.map((u) => (
+                        <button
+                          key={u.variant_id}
+                          type="button"
+                          disabled={u.status === "unavailable"}
+                          onClick={() => { onPick(p, { id: u.variant_id, name: u.name }); setOpen(false); }}
+                          className="rounded-full border px-3 py-1 text-xs hover:border-primary disabled:opacity-50"
+                        >
+                          {u.status === "available" ? "🟢" : u.status === "unavailable" ? "🔴" : "⚪"} {u.name}
+                          {u.status === "unavailable" ? " — No disponible" : u.status === "available" ? " — Disponible" : ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>

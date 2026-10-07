@@ -84,7 +84,7 @@ export type PublicCompany = {
 };
 
 const PUBLIC_FIELDS =
-  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, payment_methods, promotions, recommendations, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
+  "id, quotation_number, status, client_responded_at, client_response_note, title, destination, travel_start, travel_end, nights, pax_count, guest_first_name, guest_last_name, accommodation_name, accommodation_catalog_product_id, accommodation_unit_id, accommodation_address, accommodation_description, accommodation_services, cancellation_policy, payment_methods, promotions, recommendations, price_per_night, taxes, other_charges, total_amount, currency, exchange_rate, notes, created_at, images, expires_at, archived, user_id, organization_id";
 
 export const getPublicQuotation = createServerFn({ method: "GET" })
   .inputValidator((data) =>
@@ -257,7 +257,27 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         footerText: org?.footer_text ?? settings?.footer_text ?? null,
       };
 
-      const accommodationGallery = accProductId ? galleryByProduct.get(accProductId) ?? [] : [];
+      let accommodationGallery = accProductId ? galleryByProduct.get(accProductId) ?? [] : [];
+      // Unidad elegida con fotos propias: se muestran esas en lugar de las generales.
+      const accUnitId = (q as { accommodation_unit_id?: string | null }).accommodation_unit_id ?? null;
+      if (accProductId && accUnitId) {
+        const { data: unit } = await supabaseAdmin.from("product_variants").select("metadata, product_id").eq("id", accUnitId).maybeSingle();
+        const refs = unit?.product_id === accProductId ? ((unit?.metadata as { images?: unknown } | null)?.images ?? []) : [];
+        const list = Array.isArray(refs) ? refs.filter((r): r is string => typeof r === "string") : [];
+        if (list.length) {
+          const pre = "storage://catalog-images/";
+          const paths = list.filter((r) => r.startsWith(pre)).map((r) => r.slice(pre.length));
+          const signed = new Map<string, string>();
+          if (paths.length) {
+            const { data: sg } = await supabaseAdmin.storage.from("catalog-images").createSignedUrls(paths, 60 * 60 * 6);
+            (sg ?? []).forEach((x) => { if (x.path && x.signedUrl) signed.set(x.path, x.signedUrl); });
+          }
+          const urls = list
+            .map((r) => (r.startsWith(pre) ? signed.get(r.slice(pre.length)) : /^https:\/\//i.test(r) ? r : undefined))
+            .filter((u): u is string => !!u);
+          if (urls.length) accommodationGallery = urls;
+        }
+      }
       // Enlace de Google Maps del producto del Catálogo (solo si es una URL https de Google).
       let accommodationMapsUrl: string | null = null;
       if (accProductId) {

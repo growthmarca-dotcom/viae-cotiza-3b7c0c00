@@ -31,7 +31,50 @@ export const BLOCK_ORIGIN_LABELS: Record<BlockOrigin, string> = {
 /** Orígenes que hoy se pueden cargar a mano. */
 export const MANUAL_ORIGINS: BlockOrigin[] = ["manual"];
 
-export type AvailabilityUnit = { id: string; name: string; status: string };
+export type AvailabilityUnit = {
+  id: string;
+  name: string;
+  status: string;
+  description?: string | null;
+  capacity_max?: number | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+/** Fotos propias de la unidad (referencias de catalog-images o URLs https), en orden. */
+export function unitImages(u: Pick<AvailabilityUnit, "metadata"> | null | undefined): string[] {
+  const imgs = (u?.metadata as { images?: unknown } | null | undefined)?.images;
+  return Array.isArray(imgs) ? imgs.filter((x): x is string => typeof x === "string") : [];
+}
+
+export async function updateUnit(
+  unit: AvailabilityUnit,
+  patch: { name: string; description: string; capacity_max: number | null; images: string[] },
+) {
+  const { error } = await supabase
+    .from("product_variants")
+    .update({
+      name: patch.name.trim() || unit.name,
+      description: patch.description.trim() || null,
+      capacity_max: patch.capacity_max,
+      metadata: { ...(unit.metadata ?? {}), images: patch.images } as never,
+    })
+    .eq("id", unit.id);
+  if (error) throw error;
+}
+
+export type UnitAvailability = { product_id: string; variant_id: string; name: string; status: AvailabilityState };
+
+/** Unidades activas por alojamiento con su estado para las fechas (unknown si no hay fechas o calendario). */
+export async function getUnitsAvailability(productIds: string[], from?: string, to?: string) {
+  if (!productIds.length) return [] as UnitAvailability[];
+  const { data, error } = await supabase.rpc("product_units_availability", {
+    _product_ids: productIds,
+    _from: (from || null) as string,
+    _to: (to || null) as string,
+  });
+  if (error) throw error;
+  return (data ?? []) as UnitAvailability[];
+}
 export type AvailabilityBlock = {
   id: string;
   product_variant_id: string | null;
@@ -54,7 +97,7 @@ export type AvailabilityState = "available" | "unknown" | "unavailable";
 
 export async function getAvailabilityOverview(productId: string) {
   const [units, blocks, profile, source] = await Promise.all([
-    supabase.from("product_variants").select("id, name, status").eq("product_id", productId).order("created_at"),
+    supabase.from("product_variants").select("id, name, status, description, capacity_max, metadata").eq("product_id", productId).order("created_at"),
     supabase
       .from("product_availability_blocks")
       .select("id, product_variant_id, start_date, end_date, origin, reason, booking_id")
