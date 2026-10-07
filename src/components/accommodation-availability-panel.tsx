@@ -30,7 +30,9 @@ export function AccommodationAvailabilityPanel({
   productId,
   organizationId,
   canManage,
+  propertyImages = [],
 }: {
+  propertyImages?: string[];
   productId: string;
   organizationId: string | null;
   canManage: boolean;
@@ -218,7 +220,7 @@ export function AccommodationAvailabilityPanel({
         </div>
       </div>
       {canManage && (
-        <UnitEditDialog unit={editing} organizationId={organizationId} onClose={() => setEditing(null)} onSaved={refresh} />
+        <UnitEditDialog propertyImages={propertyImages} unit={editing} organizationId={organizationId} onClose={() => setEditing(null)} onSaved={refresh} />
       )}
     </section>
   );

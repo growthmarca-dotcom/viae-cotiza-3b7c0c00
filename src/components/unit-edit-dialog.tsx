@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Images, Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,10 @@ export function UnitEditDialog({
   organizationId,
   onClose,
   onSaved,
+  propertyImages = [],
 }: {
+  /** Fotos de la galería general de la propiedad (mismas referencias, sin copiar archivos). */
+  propertyImages?: string[];
   unit: AvailabilityUnit | null;
   organizationId: string | null;
   onClose: () => void;
@@ -26,6 +29,9 @@ export function UnitEditDialog({
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const toggleExisting = (src: string) =>
+    setImages((prev) => (prev.includes(src) ? prev.filter((x) => x !== src) : [...prev, src]));
   useEffect(() => {
     if (!unit) return;
     setName(unit.name);
@@ -90,10 +96,34 @@ export function UnitEditDialog({
               </div>
             ))}
           </div>
+          <div className="flex flex-wrap gap-2">
+          {propertyImages.length > 0 && (
+            <Button type="button" size="sm" variant="outline" onClick={() => setPicking((v) => !v)}>
+              <Images className="mr-2 h-4 w-4" /> {picking ? "Ocultar galería" : "Elegir fotos existentes"}
+            </Button>
+          )}
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Subir fotos (JPG, PNG, WebP · hasta 5 MB)
             <input type="file" multiple accept={CATALOG_IMAGE_TYPES.join(",")} className="hidden" onChange={(e) => { upload(e.target.files); e.target.value = ""; }} />
           </label>
+          </div>
+          {picking && (
+            <div className="space-y-1 rounded-lg border border-dashed p-2">
+              <p className="text-xs text-muted-foreground">Galería del alojamiento: tocá las fotos que pertenecen a esta unidad. La galería general no cambia.</p>
+              <div className="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-5">
+                {propertyImages.map((src, i) => {
+                  const on = images.includes(src);
+                  return (
+                    <button key={src} type="button" aria-pressed={on} aria-label={`Foto ${i + 1} de la galería`} onClick={() => toggleExisting(src)}
+                      className={`relative overflow-hidden rounded-md border-2 ${on ? "border-primary" : "border-transparent opacity-80"}`}>
+                      <CatalogImage src={src} alt={`Galería ${i + 1}`} className="aspect-[4/3] w-full object-cover" />
+                      {on && <Check className="absolute right-1 top-1 h-4 w-4 rounded-full bg-primary p-0.5 text-primary-foreground" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>

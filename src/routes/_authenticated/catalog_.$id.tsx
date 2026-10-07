@@ -234,6 +234,7 @@ function ProductPage() {
         <AccommodationAvailabilityPanel
           productId={p.id}
           organizationId={p.organization_id ?? null}
+          propertyImages={[...(p.media ?? [])].filter((m) => m.type === "image").sort((a, b) => a.order_index - b.order_index).map((m) => m.url)}
           canManage={isAdmin || myOrgs.some((o) => o.id === p.organization_id)}
         />
       )}
