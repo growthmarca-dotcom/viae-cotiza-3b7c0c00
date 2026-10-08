@@ -307,8 +307,8 @@ function PublicQuotationPage() {
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="font-display text-2xl font-semibold">Tu alojamiento</h2>
             {q.accommodation_name && <p className="mt-2 text-lg font-medium">{q.accommodation_name}</p>}
-            {(data.accommodationGallery?.length ?? 0) > 0 && (
-              <PublicGallery images={data.accommodationGallery} title={q.accommodation_name ?? "Alojamiento"} />
+            {((data.accommodationGallery?.length ?? 0) > 0 || data.accommodationVideo) && (
+              <PublicGallery images={data.accommodationGallery ?? []} video={data.accommodationVideo} title={q.accommodation_name ?? "Alojamiento"} />
             )}
             {!data.accommodationMapCoords && q.accommodation_address && (
               <p className="text-sm text-muted-foreground">{q.accommodation_address}</p>
@@ -380,20 +380,12 @@ function PublicQuotationPage() {
                         {i.notes}
                       </p>
                     )}
-                    {i.gallery?.length > 0 && (
-                      <PublicGallery images={i.gallery} title={i.title ?? CATEGORY_LABELS[g.category]} />
-                    )}
-                    {i.video_embed_url && (
-                      <div className="mt-3 aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border">
-                        <iframe
-                          src={i.video_embed_url}
-                          title={`Video: ${i.title ?? ""}`}
-                          className="h-full w-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          loading="lazy"
-                        />
-                      </div>
+                    {(i.gallery?.length > 0 || i.video_embed_url) && (
+                      <PublicGallery
+                        images={i.gallery ?? []}
+                        video={i.video_embed_url ? { url: i.video_embed_url, vertical: !!i.video_vertical } : null}
+                        title={i.title ?? CATEGORY_LABELS[g.category]}
+                      />
                     )}
                   </div>
                   <span className="font-medium">
