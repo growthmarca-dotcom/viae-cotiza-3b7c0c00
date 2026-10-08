@@ -54,6 +54,8 @@ export type PublicQuotationItem = {
   notes: string | null;
   /** Reproductor de YouTube/Vimeo copiado al agregar el producto; null si no hay. */
   video_embed_url: string | null;
+  /** true si el video es vertical (9:16, p. ej. YouTube Shorts). */
+  video_vertical?: boolean;
   /** Galería del producto en el orden definido en el Catálogo (primera = portada). */
   gallery: string[];
 };
@@ -65,6 +67,11 @@ function publicVideoEmbed(url: string): string | null {
   const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
   if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
   return null;
+}
+
+/** Formato vertical reconocible por la URL (YouTube Shorts). */
+function isVerticalVideo(url: string): boolean {
+  return /youtube\.com\/shorts\//i.test(url);
 }
 
 export type PublicCompany = {
@@ -98,6 +105,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       items: PublicQuotationItem[];
       imageUrls: string[];
       accommodationGallery: string[];
+      accommodationVideo: { url: string; vertical: boolean } | null;
       accommodationMapsUrl: string | null;
       accommodationMapCoords: { lat: number; lng: number } | null;
       recommendations: { product_id: string; title: string; description: string; destination: string; from_price?: string; cover: string | null }[];
@@ -152,7 +160,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         const cat = (details as { catalog?: { video_url?: unknown; product_id?: unknown } } | null)?.catalog;
         const raw = typeof cat?.video_url === "string" ? cat.video_url : null;
         const productId = typeof cat?.product_id === "string" ? cat.product_id : null;
-        return { rest, productId, video_embed_url: raw ? publicVideoEmbed(raw) : null };
+        return { rest, productId, video_embed_url: raw ? publicVideoEmbed(raw) : null, video_vertical: raw ? isVerticalVideo(raw) : false };
       });
       // Galería: única fuente = product_media del Catálogo, ordenada por order_index.
       // Solo se exponen las URLs de imagen (firmadas si son archivos propios).
@@ -185,6 +193,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       const items: PublicQuotationItem[] = rows.map((r) => ({
         ...r.rest,
         video_embed_url: r.video_embed_url,
+        video_vertical: r.video_vertical,
         gallery: r.productId ? galleryByProduct.get(r.productId) ?? [] : [],
       }));
 
@@ -280,8 +289,13 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
       }
       // Enlace de Google Maps del producto del Catálogo (solo si es una URL https de Google).
       let accommodationMapsUrl: string | null = null;
+      // Video del alojamiento: misma referencia del Catálogo que las fotos (no se copia).
+      let accommodationVideo: { url: string; vertical: boolean } | null = null;
       if (accProductId) {
-        const { data: prod } = await supabaseAdmin.from("products").select("metadata").eq("id", accProductId).maybeSingle();
+        const { data: prod } = await supabaseAdmin.from("products").select("metadata, video_url").eq("id", accProductId).maybeSingle();
+        const vraw = typeof prod?.video_url === "string" ? prod.video_url : null;
+        const vemb = vraw ? publicVideoEmbed(vraw) : null;
+        if (vemb && vraw) accommodationVideo = { url: vemb, vertical: isVerticalVideo(vraw) };
         const raw = (prod?.metadata as { maps_url?: unknown } | null)?.maps_url;
         if (typeof raw === "string" && /^https:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+|goo\.gl|maps\.app\.goo\.gl)\//i.test(raw.trim())) accommodationMapsUrl = raw.trim();
       }
@@ -310,7 +324,7 @@ export const getPublicQuotation = createServerFn({ method: "GET" })
         }
       }
       const recommendations = recs.map((r) => ({ ...r, cover: galleryByProduct.get(r.product_id)?.[0] ?? null }));
-      return { quotation, items, imageUrls, accommodationGallery, accommodationMapsUrl, accommodationMapCoords, recommendations, company };
+      return { quotation, items, imageUrls, accommodationGallery, accommodationVideo, accommodationMapsUrl, accommodationMapCoords, recommendations, company };
     },
   );
 
