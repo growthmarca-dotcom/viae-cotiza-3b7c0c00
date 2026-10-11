@@ -260,6 +260,13 @@
       "when": 1791248079440,
       "tag": "0036_accommodation_units_and_ical_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791683206590,
+      "tag": "0037_accommodation_nightly_rates",
+      "breakpoints": true
     }
   ]
 }
