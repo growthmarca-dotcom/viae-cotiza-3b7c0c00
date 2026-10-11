@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { CatalogPickerButton } from "@/components/catalog-picker-dialog";
 import { CatalogImage } from "@/components/catalog-image";
 import { useQuery } from "@tanstack/react-query";
+import { quoteAccommodationRate } from "@/lib/accommodationRates";
+import { useRef } from "react";
 import { getCatalogProduct } from "@/lib/catalog";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { QuotationRecommendation } from "@/lib/recommendations";
@@ -168,6 +170,28 @@ export function QuotationForm({
         .filter((m) => m.type === "image")
         .sort((a, b) => a.order_index - b.order_index);
 
+  // Tarifas por fecha: cálculo noche por noche en la base (entrada incluida, salida excluida).
+  const rateArgs = catalogProductId && form.travelStart && form.travelEnd && form.travelEnd > form.travelStart
+    ? [catalogProductId, unitId || null, form.travelStart, form.travelEnd] as const : null;
+  const { data: rateQuote } = useQuery({
+    queryKey: ["accommodation-rate-quote", ...(rateArgs ?? [])],
+    queryFn: () => quoteAccommodationRate(rateArgs![0], rateArgs![1], rateArgs![2], rateArgs![3]),
+    enabled: Boolean(rateArgs),
+  });
+  const rateKey = rateArgs?.join("|") ?? "";
+  const initialRateKey = useRef(rateKey);
+  // Solo se aplica ante un cambio del usuario: abrir una cotización existente no recalcula su importe.
+  useEffect(() => {
+    if (!rateQuote?.has_rates || rateKey === initialRateKey.current) return;
+    const ref = catalogAcc?.sale_amount != null ? String(Number(catalogAcc.sale_amount)) : null;
+    if (rateQuote.ok && rateQuote.total != null && rateQuote.nights_count) {
+      const avg = String(Math.round((rateQuote.total / rateQuote.nights_count) * 1e6) / 1e6);
+      setForm((p) => ({ ...p, pricePerNight: avg, nights: String(rateQuote.nights_count), currency: rateQuote.currency ?? p.currency }));
+    } else if (ref !== null) {
+      setForm((p) => (p.pricePerNight === ref ? { ...p, pricePerNight: "" } : p));
+    }
+  }, [rateQuote, rateKey]);
+
   function set<K extends keyof QuotationFormState>(k: K, v: QuotationFormState[K]) {
     setForm((p) => ({ ...p, [k]: v }));
   }
@@ -310,6 +334,22 @@ export function QuotationForm({
           />
           <span className="text-xs text-muted-foreground">Los datos se copian; podés ajustarlos.</span>
         </div>
+        {rateQuote?.has_rates && (
+          <div className="space-y-1 rounded-md border p-3 text-sm sm:col-span-2">
+            <p className="font-medium">Tarifa por fechas ({rateQuote.nights_count} {rateQuote.nights_count === 1 ? "noche" : "noches"})</p>
+            {(rateQuote.nights ?? []).map((n) => (
+              <p key={n.date} className="text-xs text-muted-foreground">
+                {new Date(n.date + "T00:00:00").toLocaleDateString("es-AR")} · {n.period_name}{n.level === "unit" ? " (unidad)" : ""} · {n.currency} {Number(n.price).toLocaleString("es-AR")}
+              </p>
+            ))}
+            {rateQuote.ok && <p className="text-xs font-medium">Total alojamiento: {rateQuote.currency} {Number(rateQuote.total).toLocaleString("es-AR")} — aplicado como precio promedio por noche.</p>}
+            {!!rateQuote.missing?.length && <p className="text-xs text-destructive">Sin tarifa configurada: {rateQuote.missing.map((d) => new Date(d + "T00:00:00").toLocaleDateString("es-AR")).join(", ")}.</p>}
+            {!!rateQuote.conflicts?.length && <p className="text-xs text-destructive">Tarifas superpuestas (resolvelas en el Catálogo): {rateQuote.conflicts.map((d) => new Date(d + "T00:00:00").toLocaleDateString("es-AR")).join(", ")}.</p>}
+            {rateQuote.mixed_currency && <p className="text-xs text-destructive">La estadía combina tarifas en monedas distintas.</p>}
+            {rateQuote.min_stay_ok === false && <p className="text-xs text-destructive">Estadía mínima: {rateQuote.min_stay} noches. La estadía elegida no la cumple.</p>}
+            {!rateQuote.ok && catalogAcc?.sale_amount != null && <p className="text-xs text-muted-foreground">Precio de referencia del Catálogo: {catalogAcc.currency} {Number(catalogAcc.sale_amount).toLocaleString("es-AR")} (no es una tarifa válida para estas fechas).</p>}
+          </div>
+        )}
         <Field label="Nombre del alojamiento" required className="sm:col-span-2">
           <Input value={form.accommodationName} onChange={(e) => set("accommodationName", e.target.value)} required maxLength={140} />
         </Field>

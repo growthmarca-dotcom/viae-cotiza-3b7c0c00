@@ -7775,6 +7775,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      accommodation_rate_quote: {
+        Args: {
+          _from: string
+          _product_id: string
+          _to: string
+          _unit_id: string
+        }
+        Returns: Json
+      }
       accrue_booking_commissions: {
         Args: { _booking_id: string }
         Returns: Json
