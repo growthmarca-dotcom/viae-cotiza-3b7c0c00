@@ -19,6 +19,7 @@ import {
   setCalendarManaged,
   type AvailabilityUnit,
 } from "@/lib/accommodationAvailability";
+import { AccommodationRatesPanel } from "@/components/accommodation-rates-panel";
 import { UnitEditDialog } from "@/components/unit-edit-dialog";
 import { syncIcalSource } from "@/lib/ical-sync.functions";
 
@@ -219,6 +220,7 @@ export function AccommodationAvailabilityPanel({
           )}
         </div>
       </div>
+      <AccommodationRatesPanel productId={productId} units={units} canManage={canManage} />
       {canManage && (
         <UnitEditDialog propertyImages={propertyImages} unit={editing} organizationId={organizationId} onClose={() => setEditing(null)} onSaved={refresh} />
       )}
