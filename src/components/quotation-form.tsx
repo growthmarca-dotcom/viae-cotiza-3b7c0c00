@@ -180,15 +180,20 @@ export function QuotationForm({
   });
   const rateKey = rateArgs?.join("|") ?? "";
   const initialRateKey = useRef(rateKey);
+  const lastAutoPrice = useRef<string | null>(null);
   // Solo se aplica ante un cambio del usuario: abrir una cotización existente no recalcula su importe.
   useEffect(() => {
     if (!rateQuote?.has_rates || rateKey === initialRateKey.current) return;
     const ref = catalogAcc?.sale_amount != null ? String(Number(catalogAcc.sale_amount)) : null;
     if (rateQuote.ok && rateQuote.total != null && rateQuote.nights_count) {
       const avg = String(Math.round((rateQuote.total / rateQuote.nights_count) * 1e6) / 1e6);
+      lastAutoPrice.current = avg;
       setForm((p) => ({ ...p, pricePerNight: avg, nights: String(rateQuote.nights_count), currency: rateQuote.currency ?? p.currency }));
-    } else if (ref !== null) {
-      setForm((p) => (p.pricePerNight === ref ? { ...p, pricePerNight: "" } : p));
+    } else {
+      // Sin tarifa válida: se quita el precio de referencia o el promedio calculado antes; un precio cargado a mano se respeta.
+      const auto = lastAutoPrice.current;
+      setForm((p) => (p.pricePerNight !== "" && (p.pricePerNight === ref || p.pricePerNight === auto) ? { ...p, pricePerNight: "" } : p));
+      lastAutoPrice.current = null;
     }
   }, [rateQuote, rateKey]);
 
