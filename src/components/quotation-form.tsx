@@ -265,11 +265,11 @@ export function QuotationForm({
   // El total se mantiene sincronizado con precio por noche, noches, impuestos y otros cargos.
   const lastAutoTotal = useRef<string | null>(null);
   useEffect(() => {
-    console.log("[totalfx]", { autoTotal, last: lastAutoTotal.current, rateInvalid });
     if (autoTotal === "") {
       // Si el total mostrado venía de un cálculo automático, se limpia; un total cargado a mano se respeta.
-      setForm((p) => { console.log("[totalfx-clear]", p.totalAmount, lastAutoTotal.current); return lastAutoTotal.current != null && p.totalAmount === lastAutoTotal.current ? { ...p, totalAmount: "" } : p; });
+      const last = lastAutoTotal.current;
       lastAutoTotal.current = null;
+      if (last != null) setForm((p) => (p.totalAmount === last ? { ...p, totalAmount: "" } : p));
       return;
     }
     lastAutoTotal.current = autoTotal;
