@@ -275,15 +275,12 @@ export function QuotationForm({
     setForm((p) => (p.totalAmount === autoTotal ? p : { ...p, totalAmount: autoTotal }));
   }, [autoTotal]);
 
-  const totals = useMemo(
-    () =>
-      convertTotals(
-        Number(form.totalAmount || autoTotal) || 0,
-        form.currency,
-        form.exchangeRate ? Number(form.exchangeRate) : null,
-      ),
-    [form.totalAmount, form.currency, form.exchangeRate, autoTotal],
-  );
+  const totals = useMemo(() => {
+    const raw = form.totalAmount || autoTotal;
+    // Sin importe calculable no se muestra un total en 0: el panel queda oculto.
+    if (raw === "" || raw == null) return { total: null, totalArs: null, totalUsd: null, rate: null };
+    return convertTotals(Number(raw) || 0, form.currency, form.exchangeRate ? Number(form.exchangeRate) : null);
+  }, [form.totalAmount, form.currency, form.exchangeRate, autoTotal]);
 
 
 
