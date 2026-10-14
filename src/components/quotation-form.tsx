@@ -466,6 +466,11 @@ export function QuotationForm({
       )}
 
       <Section title="Precio del alojamiento">
+        {rateInvalid && (
+          <p className="sm:col-span-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+            No se puede calcular el total: falta una tarifa válida para las fechas seleccionadas. Ingresá el precio manualmente para continuar.
+          </p>
+        )}
         <Field label="Precio por noche">
           <Input type="number" min={0} step="0.01" value={form.pricePerNight} onChange={(e) => set("pricePerNight", e.target.value)} />
         </Field>
