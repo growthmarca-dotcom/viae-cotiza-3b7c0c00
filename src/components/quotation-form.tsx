@@ -267,8 +267,9 @@ export function QuotationForm({
   useEffect(() => {
     if (autoTotal === "") {
       // Si el total mostrado venía de un cálculo automático, se limpia; un total cargado a mano se respeta.
-      setForm((p) => (lastAutoTotal.current != null && p.totalAmount === lastAutoTotal.current ? { ...p, totalAmount: "" } : p));
+      const last = lastAutoTotal.current;
       lastAutoTotal.current = null;
+      if (last != null) setForm((p) => (p.totalAmount === last ? { ...p, totalAmount: "" } : p));
       return;
     }
     lastAutoTotal.current = autoTotal;
