@@ -249,7 +249,10 @@ export function QuotationForm({
     if (diff > 0) set("nights", String(diff));
   }
 
+  // Sin tarifa válida para las fechas y sin precio manual, el total no se puede calcular: queda vacío, nunca 0.
+  const rateInvalid = Boolean(rateQuote?.has_rates && !rateQuote.ok && form.pricePerNight === "");
   const autoTotal = useMemo(() => {
+    if (rateInvalid) return "";
     const pn = Number(form.pricePerNight) || 0;
     const n = Number(form.nights) || 0;
     const t = Number(form.taxes) || 0;
@@ -257,11 +260,18 @@ export function QuotationForm({
     const it = Number(itemsTotal) || 0;
     if (pn === 0 && n === 0 && t === 0 && oc === 0 && it === 0) return "";
     return String(Math.round((pn * n + t + oc + it) * 100) / 100);
-  }, [form.pricePerNight, form.nights, form.taxes, form.otherCharges, itemsTotal]);
+  }, [rateInvalid, form.pricePerNight, form.nights, form.taxes, form.otherCharges, itemsTotal]);
 
   // El total se mantiene sincronizado con precio por noche, noches, impuestos y otros cargos.
+  const lastAutoTotal = useRef<string | null>(null);
   useEffect(() => {
-    if (autoTotal === "") return;
+    if (autoTotal === "") {
+      // Si el total mostrado venía de un cálculo automático, se limpia; un total cargado a mano se respeta.
+      setForm((p) => (lastAutoTotal.current != null && p.totalAmount === lastAutoTotal.current ? { ...p, totalAmount: "" } : p));
+      lastAutoTotal.current = null;
+      return;
+    }
+    lastAutoTotal.current = autoTotal;
     setForm((p) => (p.totalAmount === autoTotal ? p : { ...p, totalAmount: autoTotal }));
   }, [autoTotal]);
 
