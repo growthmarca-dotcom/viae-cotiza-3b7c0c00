@@ -71,6 +71,38 @@ export function findOverlaps(periods: RatePeriod[]): Set<string> {
   return ids;
 }
 
+export type DayRate =
+  | { kind: "rate"; price: number; currency: string; minNights: number; name: string; level: "unit" | "general" }
+  | { kind: "conflict"; level: "unit" | "general" };
+
+const addDay = (d: string) => {
+  const x = new Date(d + "T00:00:00Z");
+  x.setUTCDate(x.getUTCDate() + 1);
+  return x.toISOString().slice(0, 10);
+};
+
+/**
+ * Precio por noche para cada fecha, para mostrar en el calendario (misma regla que accommodation_rate_quote):
+ * la tarifa de la unidad prevalece sobre la general; dos períodos activos del mismo nivel = conflicto
+ * (no se elige ninguno); fechas sin tarifa no aparecen en el mapa (sin precio, nunca 0).
+ */
+export function dailyRates(periods: RatePeriod[], unitId: string | null): Map<string, DayRate> {
+  const byLevel = (level: "unit" | "general") => {
+    const m = new Map<string, DayRate>();
+    for (const p of periods) {
+      if (!p.active || !p.from || !p.to || p.to < p.from) continue;
+      if (level === "unit" ? !unitId || p.unitId !== unitId : p.unitId !== null) continue;
+      for (let d = p.from; d <= p.to; d = addDay(d)) {
+        m.set(d, m.has(d) ? { kind: "conflict", level } : { kind: "rate", price: p.price, currency: p.currency, minNights: p.minNights, name: p.name, level });
+      }
+    }
+    return m;
+  };
+  const out = byLevel("general");
+  for (const [d, r] of byLevel("unit")) out.set(d, r);
+  return out;
+}
+
 export type RatePeriodInput = Omit<RatePeriod, "id" | "ruleId" | "active">;
 
 function validate(i: RatePeriodInput) {
