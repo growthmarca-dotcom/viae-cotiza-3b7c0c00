@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import {
   addBlock,
   addUnit,
@@ -114,18 +114,21 @@ export function AccommodationAvailabilityPanel({
               busy: "rounded-md bg-destructive/85 [&_button]:!bg-transparent [&_button]:font-semibold [&_button]:!text-destructive-foreground",
             }}
             components={{
-              DayButton: ({ children, day, ...props }) => {
+              // Los días del calendario no son seleccionables: se renderiza la celda (Day), no un botón.
+              Day: ({ children, day, modifiers: _m, ...props }) => {
                 const d = day.date;
                 const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                const r = rates.get(k);
+                const r = day.outside ? undefined : rates.get(k);
                 const title = !r ? "Sin tarifa" : r.kind === "conflict" ? "Conflicto: períodos superpuestos" : `${r.name} · ${r.currency} ${r.price.toLocaleString("es-AR")}/noche · mín. ${r.minNights} ${r.minNights === 1 ? "noche" : "noches"}${r.level === "unit" ? " · tarifa de la unidad" : ""}`;
                 return (
-                  <CalendarDayButton day={day} {...props} title={title} data-rate={r ? (r.kind === "conflict" ? "conflict" : r.price) : "none"}>
-                    {children}
-                    {r && (r.kind === "conflict"
-                      ? <span className="font-semibold text-destructive">⚠</span>
-                      : <span className="text-[10px]">{r.price.toLocaleString("es-AR", { maximumFractionDigits: 0 })}{r.minNights > 1 ? ` ·${r.minNights}n` : ""}</span>)}
-                  </CalendarDayButton>
+                  <td {...props} data-date={k} title={title} data-rate={r ? (r.kind === "conflict" ? "conflict" : r.price) : "none"}>
+                    <div className="flex flex-col items-center leading-tight">
+                      {children}
+                      {r && (r.kind === "conflict"
+                        ? <span className="text-[10px] font-semibold text-destructive">⚠</span>
+                        : <span className="text-[10px] opacity-80">{r.price.toLocaleString("es-AR", { maximumFractionDigits: 0 })}{r.minNights > 1 ? ` ·${r.minNights}n` : ""}</span>)}
+                    </div>
+                  </td>
                 );
               },
             }}
