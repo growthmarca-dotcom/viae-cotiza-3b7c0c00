@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
   addBlock,
   addUnit,
@@ -19,6 +19,7 @@ import {
   setCalendarManaged,
   type AvailabilityUnit,
 } from "@/lib/accommodationAvailability";
+import { dailyRates, listRatePeriods } from "@/lib/accommodationRates";
 import { AccommodationRatesPanel } from "@/components/accommodation-rates-panel";
 import { UnitEditDialog } from "@/components/unit-edit-dialog";
 import { syncIcalSource } from "@/lib/ical-sync.functions";
@@ -63,6 +64,8 @@ export function AccommodationAvailabilityPanel({
     () => [...occupiedDays(data?.blocks ?? [], data?.units ?? [], viewUnit)].map((d) => new Date(d + "T00:00:00")),
     [data, viewUnit],
   );
+  const { data: periods = [] } = useQuery({ queryKey: ["accommodation-rates", productId], queryFn: () => listRatePeriods(productId) });
+  const rates = useMemo(() => dailyRates(periods, viewUnit === "all" ? null : viewUnit), [periods, viewUnit]);
   const unitLabel = (id: string | null) => (id ? units.find((u) => u.id === id)?.name ?? "Unidad" : "Todo el alojamiento");
 
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Cargando disponibilidad…</p>;
