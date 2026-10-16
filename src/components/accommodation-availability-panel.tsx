@@ -105,17 +105,38 @@ export function AccommodationAvailabilityPanel({
           )}
           <Calendar
             numberOfMonths={1}
-            className="rounded-xl border"
+            className="rounded-xl border [--cell-size:2.75rem]"
             modifiers={{ busy }}
             modifiersClassNames={{
               busy: "rounded-md bg-destructive/85 [&_button]:!bg-transparent [&_button]:font-semibold [&_button]:!text-destructive-foreground",
             }}
+            components={{
+              DayButton: ({ children, day, ...props }) => {
+                const d = day.date;
+                const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const r = rates.get(k);
+                const title = !r ? "Sin tarifa" : r.kind === "conflict" ? "Conflicto: períodos superpuestos" : `${r.name} · ${r.currency} ${r.price.toLocaleString("es-AR")}/noche · mín. ${r.minNights} ${r.minNights === 1 ? "noche" : "noches"}${r.level === "unit" ? " · tarifa de la unidad" : ""}`;
+                return (
+                  <CalendarDayButton day={day} {...props} title={title} data-rate={r ? (r.kind === "conflict" ? "conflict" : r.price) : "none"}>
+                    {children}
+                    {r && (r.kind === "conflict"
+                      ? <span className="font-semibold text-destructive">⚠</span>
+                      : <span className="text-[10px]">{r.price.toLocaleString("es-AR", { maximumFractionDigits: 0 })}{r.minNights > 1 ? ` ·${r.minNights}n` : ""}</span>)}
+                  </CalendarDayButton>
+                );
+              },
+            }}
           />
-          <p className="flex items-center gap-3 text-xs text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-destructive/85" /> Bloqueada</span>
             <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded-sm border" /> Disponible</span>
             {units.length > 0 && <span>· {viewUnit === "all" ? "Todo el alojamiento: rojo solo si todas las unidades están ocupadas" : unitLabel(viewUnit)}</span>}
           </p>
+          {periods.length > 0 && (
+            <p className="max-w-xs text-xs text-muted-foreground">
+              Debajo de cada día: precio por noche{viewUnit === "all" ? " (tarifa general)" : " (la de la unidad prevalece sobre la general)"}; "·3n" = estadía mínima. ⚠ = períodos superpuestos, sin precio elegido. Días sin número: sin tarifa.
+            </p>
+          )}
         </div>
 
         <div className="space-y-6">
