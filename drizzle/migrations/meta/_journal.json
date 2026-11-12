@@ -267,6 +267,13 @@
       "when": 1791683206590,
       "tag": "0037_accommodation_nightly_rates",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794443598357,
+      "tag": "0038_restrict_tautology_read_policies",
+      "breakpoints": true
     }
   ]
 }
