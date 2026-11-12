@@ -320,7 +320,7 @@ function PublicQuotationPage() {
             {data.accommodationMapCoords && (
               <div className="mt-6" data-testid="accommodation-location">
                 <h3 className="font-display text-lg font-semibold">📍 Ubicación</h3>
-                <div className="mt-3 overflow-hidden rounded-xl border border-border">
+                <div className="mt-3 w-full max-w-[560px] overflow-hidden rounded-xl border border-border">
                   <StaticAccommodationMap lat={data.accommodationMapCoords.lat} lng={data.accommodationMapCoords.lng} />
                 </div>
                 {q.accommodation_address && (

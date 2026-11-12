@@ -361,6 +361,8 @@
   }
   .print-map {
     margin-top: 8px;
+    max-width: 480px;
+    border: 1px solid #e4e2dc;
     break-inside: avoid;
     border-radius: 6px;
     overflow: hidden;
