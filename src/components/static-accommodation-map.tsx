@@ -29,8 +29,8 @@ export function StaticAccommodationMap({
       role="img"
       style={{ position: "relative", overflow: "hidden", width: "100%", maxWidth: width, aspectRatio: `${width} / ${height}`, pointerEvents: "none", userSelect: "none" }}
     >
-      <div style={{ position: "absolute", inset: 0, transform: `scale(var(--static-map-scale, 1))`, transformOrigin: "0 0" }}>
-        <div style={{ position: "relative", width, height, containerType: "size" } as React.CSSProperties}>
+      <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+        <div style={{ position: "relative", width, height }}>
           {tiles.map(({ tx, ty }) => (
             <img
               key={`${tx}-${ty}`}

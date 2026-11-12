@@ -359,6 +359,12 @@
     font-size: 9pt;
     color: #666;
   }
+  .print-map {
+    margin-top: 8px;
+    break-inside: avoid;
+    border-radius: 6px;
+    overflow: hidden;
+  }
   .print-maps {
     display: inline-block;
     margin-top: 8px;
