@@ -277,7 +277,7 @@ function QuotationDetailPage() {
       imageUrls={urls}
       items={printData?.items ?? items}
       accommodationGallery={printData?.accommodationGallery ?? []}
-      accommodationMapsUrl={printData?.accommodationMapsUrl ?? null}
+      accommodationMapCoords={printData?.accommodationMapCoords ?? null}
       recommendations={printData?.recommendations ?? []}
     />
     <div className="mx-auto max-w-4xl space-y-6 pb-24 print-screen-hide">

@@ -30,6 +30,7 @@ import {
   registerRecommendationInterest,
 } from "@/lib/public-quotation.functions";
 import { QuotationPrintDocument } from "@/components/quotation-print";
+import { StaticAccommodationMap } from "@/components/static-accommodation-map";
 import { convertTotals, formatMoney } from "@/lib/currency";
 import {
   CATEGORY_LABELS,
@@ -208,7 +209,7 @@ function PublicQuotationPage() {
 
   return (
     <>
-    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} accommodationGallery={data.accommodationGallery ?? []} accommodationMapsUrl={data.accommodationMapsUrl ?? null} recommendations={data.recommendations ?? []} />
+    <QuotationPrintDocument quotation={q} company={company} imageUrls={urls} items={items} accommodationGallery={data.accommodationGallery ?? []} accommodationMapCoords={data.accommodationMapCoords ?? null} recommendations={data.recommendations ?? []} />
     <div
       className="min-h-screen bg-background print-screen-hide"
       style={
@@ -316,31 +317,17 @@ function PublicQuotationPage() {
             {q.accommodation_description && (
               <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{q.accommodation_description}</p>
             )}
-            {data.accommodationMapCoords && data.accommodationMapsUrl && (
+            {data.accommodationMapCoords && (
               <div className="mt-6" data-testid="accommodation-location">
                 <h3 className="font-display text-lg font-semibold">📍 Ubicación</h3>
-                <div className="mt-3 overflow-hidden rounded-xl border border-border">
-                  <iframe
-                    title={`Mapa de ${q.accommodation_name ?? "el alojamiento"}`}
-                    src={`https://maps.google.com/maps?q=${data.accommodationMapCoords.lat},${data.accommodationMapCoords.lng}&z=15&output=embed`}
-                    className="block h-64 w-full sm:h-80"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
+                <div className="mt-3 w-full max-w-[560px] overflow-hidden rounded-xl border border-border">
+                  <StaticAccommodationMap lat={data.accommodationMapCoords.lat} lng={data.accommodationMapCoords.lng} />
                 </div>
                 {q.accommodation_address && (
                   <p className="mt-3 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">Dirección:</span> {q.accommodation_address}
                   </p>
                 )}
-                <a
-                  href={data.accommodationMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                >
-                  Ver ubicación en Google Maps
-                </a>
               </div>
             )}
           </section>

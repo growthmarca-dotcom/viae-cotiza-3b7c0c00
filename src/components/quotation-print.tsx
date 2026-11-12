@@ -1,3 +1,4 @@
+import { StaticAccommodationMap } from "@/components/static-accommodation-map";
 import { paymentMethodLabels, readQuotationPromotions } from "@/lib/promotions";
 import type { CompanyInfo } from "@/lib/company";
 import { convertTotals, formatMoney } from "@/lib/currency";
@@ -68,12 +69,12 @@ export function QuotationPrintDocument({
   imageUrls = [],
   items = [],
   accommodationGallery = [],
-  accommodationMapsUrl = null,
+  accommodationMapCoords = null,
   recommendations = [],
 }: {
   recommendations?: { product_id: string; title: string; description: string; destination: string; from_price?: string; cover: string | null }[];
   accommodationGallery?: string[];
-  accommodationMapsUrl?: string | null;
+  accommodationMapCoords?: { lat: number; lng: number } | null;
   quotation: PrintQuotation;
   items?: PrintQuotationItem[];
   // El documento del cliente nunca lleva ajustes internos (moneda de análisis
@@ -168,10 +169,10 @@ export function QuotationPrintDocument({
         <PrintField label="Nombre" value={q.accommodation_name} />
         <PrintField label="Dirección" value={q.accommodation_address} />
         <PrintField label="Destino" value={q.destination} />
-        {accommodationMapsUrl ? (
-          <a href={accommodationMapsUrl} className="print-maps" style={{ background: company.primaryColor }}>
-            Ver ubicación en Google Maps
-          </a>
+        {accommodationMapCoords ? (
+          <div className="print-map">
+            <StaticAccommodationMap lat={accommodationMapCoords.lat} lng={accommodationMapCoords.lng} width={480} height={180} />
+          </div>
         ) : null}
         {q.accommodation_description ? (
           <p className="print-text">{q.accommodation_description}</p>
