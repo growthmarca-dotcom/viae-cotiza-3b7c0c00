@@ -6,14 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
  * y se descarga un archivo con el contenido visible para el usuario actual.
  */
 
-function escapeCell(value: unknown): string {
+export function escapeCell(value: unknown): string {
   if (value == null) return "";
   const s = Array.isArray(value)
     ? value.join(" | ")
     : typeof value === "object"
       ? JSON.stringify(value)
       : String(value);
-  return `"${s.replace(/"/g, '""')}"`;
+  // Neutraliza valores que Excel/LibreOffice interpretarían como fórmula.
+  const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return `"${safe.replace(/"/g, '""')}"`;
 }
 
 export function toCsv(rows: Record<string, unknown>[]): string {
